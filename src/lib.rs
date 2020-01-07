@@ -5,6 +5,7 @@
 
 use core::ops::{Deref, DerefMut};
 use core::mem::replace;
+use core::mem::needs_drop;
 
 extern crate alloc;
 use alloc::vec::Vec;
@@ -110,6 +111,24 @@ impl<T: Default> TinyVec<T> {
       }
       Payload::Heap(ref mut vec) => {
         vec.pop()
+      }
+    }
+  }
+
+  pub fn truncate(&mut self, new_len: usize) {
+    match &mut self.0 {
+      Payload::Inline { len, data } => {
+        if needs_drop::<T>() {
+          while *len > new_len {
+            replace(&mut data[*len - 1], T::default());
+            *len -= 1;
+          }
+        } else {
+          *len = (*len).min(new_len);
+        }
+      }
+      Payload::Heap(ref mut vec) => {
+        vec.truncate(new_len)
       }
     }
   }

@@ -1,10 +1,11 @@
-
-extern crate std;
+#![allow(bad_style)]
 
 use tinyvec::*;
 
+use core::ops::Deref;
+
 #[test]
-fn test_push_pop() {
+fn TinyVec_push_pop() {
   let mut tv = TinyVec::new();
 
   assert_eq!(tv.pop(), None);
@@ -30,4 +31,33 @@ fn test_push_pop() {
   assert_eq!(tv.pop(), None);
   assert_eq!(tv.pop(), None);
   assert_eq!(tv.pop(), None);
+}
+
+#[test]
+fn TinyVec_truncate() {
+  // Truncating a five element vector to two elements
+  let mut tv = TinyVec::new();
+  tv.push(1_i32);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+  tv.push(5);
+  tv.truncate(2);
+  assert_eq!(tv.deref(), [1, 2]);
+
+  // No truncation occurs when len is greater than the vector's current length
+  let mut tv = TinyVec::new();
+  tv.push(1_i32);
+  tv.push(2);
+  tv.push(3);
+  tv.truncate(8);
+  assert_eq!(tv.deref(), [1, 2, 3]);
+
+  // Truncating when len == 0 is equivalent to calling the clear method.
+  let mut tv = TinyVec::new();
+  tv.push(1_i32);
+  tv.push(2);
+  tv.push(3);
+  tv.truncate(0);
+  assert_eq!(tv.deref(), []);
 }
