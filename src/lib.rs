@@ -23,7 +23,7 @@ enum Payload<T: Default> {
 /// A `TinyVec<T>` is like a `Vec<T>`, but it will store up to 8 elements
 /// "inline" on the stack before transitioning into being a normal `Vec<T>`.
 #[derive(Debug, Clone)]
-#[repr(transparent)]
+#[cfg_attr(feature = "rustc_28", repr(transparent))]
 pub struct TinyVec<T: Default>(Payload<T>);
 
 // TODO: impl a better Debug
