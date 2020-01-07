@@ -10,3 +10,7 @@ categories = ["data-structures", "no-std"]
 
 [dependencies]
 # not even std!
+
+[badges]
+appveyor = { repository = "Lokathor/tinyvec" }
+travis-ci = { repository = "Lokathor/tinyvec" }
