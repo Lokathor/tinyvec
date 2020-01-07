@@ -1,7 +1,9 @@
 #![allow(bad_style)]
 
+extern crate tinyvec;
 use tinyvec::*;
 
+extern crate core;
 use core::ops::Deref;
 
 #[test]
@@ -9,12 +11,12 @@ fn TinyVec_push_pop() {
   let mut tv = TinyVec::new();
 
   assert_eq!(tv.pop(), None);
-  
+
   tv.push(5_i32);
   assert_eq!(tv.pop(), Some(5_i32));
   assert_eq!(tv.len(), 0);
 
-  for i in 0 .. 10 {
+  for i in 0..10 {
     tv.push(i);
   }
   assert_eq!(tv.len(), 10);

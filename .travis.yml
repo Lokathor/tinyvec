@@ -1,0 +1,21 @@
+
+git:
+  quiet: true
+
+language: rust
+
+cache:
+  cargo
+
+rust:
+  - 1.24.0
+  - stable
+
+matrix:
+  include:
+    - os: linux
+    - os: osx
+
+script:
+  - cargo build
+  - cargo test
