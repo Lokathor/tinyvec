@@ -8,7 +8,7 @@ cache:
   cargo
 
 rust:
-  - 1.24.0
+  - 1.36.0
   - stable
 
 matrix:

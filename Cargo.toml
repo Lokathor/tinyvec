@@ -13,7 +13,6 @@ categories = ["data-structures", "no-std"]
 
 [features]
 default = []
-rustc_28 = []
 
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
