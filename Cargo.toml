@@ -1,0 +1,12 @@
+[package]
+name = "tinyvec"
+description = "Just, really the littlest Vec you could need. So smol."
+version = "0.0.0-alpha"
+authors = ["Lokathor <zefria@gmail.com>"]
+edition = "2018"
+license = "Zlib"
+keywords = ["vec", "no_std", "smol"]
+categories = ["data-structures", "no-std"]
+
+[dependencies]
+# not even std!
