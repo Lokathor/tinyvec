@@ -3,8 +3,10 @@
 
 //! Just, really the littlest Vec you could need. So smol.
 
-use core::ops::{Deref, DerefMut};
-use core::mem::replace;
+use core::{
+  mem::{needs_drop, replace},
+  ops::{Deref, DerefMut},
+};
 
 extern crate alloc;
 use alloc::vec::Vec;
@@ -26,35 +28,27 @@ pub struct TinyVec<T: Default>(Payload<T>);
 
 // TODO: impl a better Debug
 
-impl<T:Default> Default for TinyVec<T> {
+impl<T: Default> Default for TinyVec<T> {
   fn default() -> Self {
     Self::new()
   }
 }
 
-impl<T:Default> Deref for TinyVec<T> {
+impl<T: Default> Deref for TinyVec<T> {
   type Target = [T];
   fn deref(&self) -> &[T] {
     match &self.0 {
-      Payload::Inline { len, data } => {
-        &data[..*len]
-      }
-      Payload::Heap(vec) => {
-        &vec
-      }
+      Payload::Inline { len, data } => &data[..*len],
+      Payload::Heap(vec) => &vec,
     }
   }
 }
 
-impl<T:Default> DerefMut for TinyVec<T> {
+impl<T: Default> DerefMut for TinyVec<T> {
   fn deref_mut(&mut self) -> &mut [T] {
     match &mut self.0 {
-      Payload::Inline { len, data } => {
-        &mut data[..*len]
-      }
-      Payload::Heap(ref mut vec) => {
-        &mut vec[..]
-      }
+      Payload::Inline { len, data } => &mut data[..*len],
+      Payload::Heap(ref mut vec) => &mut vec[..],
     }
   }
 }
@@ -91,26 +85,36 @@ impl<T: Default> TinyVec<T> {
         data[*len] = val;
         *len += 1;
       }
-      Payload::Heap(ref mut vec) => {
-        vec.push(val)
-      }
+      Payload::Heap(ref mut vec) => vec.push(val),
     }
   }
 
   pub fn pop(&mut self) -> Option<T> {
     match &mut self.0 {
-      Payload::Inline { len: 0, .. } => {
-        None
-      }
+      Payload::Inline { len: 0, .. } => None,
       Payload::Inline { len, data } => {
         debug_assert!(*len > 0, "pop: illegal len: {}", len);
         let out = replace(&mut data[*len - 1], T::default());
         *len -= 1;
         Some(out)
       }
-      Payload::Heap(ref mut vec) => {
-        vec.pop()
+      Payload::Heap(ref mut vec) => vec.pop(),
+    }
+  }
+
+  pub fn truncate(&mut self, new_len: usize) {
+    match &mut self.0 {
+      Payload::Inline { len, data } => {
+        if needs_drop::<T>() {
+          while *len > new_len {
+            replace(&mut data[*len - 1], T::default());
+            *len -= 1;
+          }
+        } else {
+          *len = (*len).min(new_len);
+        }
       }
+      Payload::Heap(ref mut vec) => vec.truncate(new_len),
     }
   }
 }
