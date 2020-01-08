@@ -350,19 +350,14 @@ where
   A::Item: Binary,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        Binary::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      Binary::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -371,19 +366,14 @@ where
   A::Item: Debug,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        Debug::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      Debug::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -392,19 +382,14 @@ where
   A::Item: Display,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        Display::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      Display::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -413,19 +398,14 @@ where
   A::Item: LowerExp,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        LowerExp::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      LowerExp::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -434,19 +414,14 @@ where
   A::Item: LowerHex,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        LowerHex::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      LowerHex::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -455,19 +430,14 @@ where
   A::Item: Octal,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        Octal::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      Octal::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -476,19 +446,14 @@ where
   A::Item: Pointer,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        Pointer::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      Pointer::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -497,19 +462,14 @@ where
   A::Item: UpperExp,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        UpperExp::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      UpperExp::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
 
@@ -518,18 +478,13 @@ where
   A::Item: UpperHex,
 {
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    if self.len == 0 {
-      write!(f, "[]")
-    } else {
-      write!(f, "[")?;
-      let oxford = self.len - 1;
-      for (i, elem) in self.iter().enumerate() {
-        UpperHex::fmt(elem, f)?;
-        if i < oxford {
-          write!(f, ", ")?;
-        }
+    write!(f, "[")?;
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ", ")?;
       }
-      write!(f, "]")
+      UpperHex::fmt(elem, f)?;
     }
+    write!(f, "]")
   }
 }
