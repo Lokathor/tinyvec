@@ -4,12 +4,29 @@
 //! Just, really the littlest Vec you could need. So smol.
 
 use core::{
+  borrow::{Borrow, BorrowMut},
+  cmp::PartialEq,
+  convert::AsMut,
+  default::Default,
+  fmt::{
+    Binary, Debug, Display, Formatter, LowerExp, LowerHex, Octal, Pointer,
+    UpperExp, UpperHex,
+  },
+  iter::{FromIterator, IntoIterator, Iterator},
   mem::{needs_drop, replace},
-  ops::{Deref, DerefMut},
+  ops::{Deref, DerefMut, Index, IndexMut},
 };
 
+#[cfg(feature = "extern_crate_alloc")]
 extern crate alloc;
-use alloc::vec::Vec;
+
+mod arrayish;
+pub use arrayish::*;
+
+mod arrayish_vec;
+pub use arrayish_vec::*;
+
+/*
 
 // Note(Lokathor): We just want to hide the enum details away. Rust doesn't let
 // you be an enum with private variants, so instead we make this be a private
@@ -118,3 +135,5 @@ impl<T: Default> TinyVec<T> {
     }
   }
 }
+
+*/

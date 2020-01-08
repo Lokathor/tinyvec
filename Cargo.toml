@@ -12,8 +12,14 @@ categories = ["data-structures", "no-std"]
 # not even std!
 
 [features]
-default = []
+default = ["extern_crate_alloc"]
+
+# Provide additional types and impls related to the `alloc` trait.
+extern_crate_alloc = []
 
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
 travis-ci = { repository = "Lokathor/tinyvec" }
+
+[package.metadata.docs.rs]
+all-features = true
