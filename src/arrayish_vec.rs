@@ -84,19 +84,33 @@ impl<A: Arrayish> ArrayishVec<A> {
   // TODO(Vec): dedup_by_key
   // TODO(Vec): drain
   // TODO(Vec): drain_filter #nightly
-  // TODO(Vec): extend_from_slice
 
   #[inline]
+  pub fn extend_from_slice(&mut self, sli: &[A::Item])
+  where
+    A::Item: Clone,
+  {
+    for i in sli {
+      self.push(i.clone())
+    }
+  }
+
+  /// Wraps up an array and uses the given length as the initial length.
+  ///
+  /// Note that the `From` impl for arrays assumes the full length is used.
+  ///
+  /// ## Panics
+  ///
+  /// The length must be less than or equal to the capacity of the array.
+  #[inline]
   #[must_use]
+  #[allow(clippy::match_wild_err_arm)]
   pub fn from_array_len(data: A, len: usize) -> Self {
-    if len <= A::CAPACITY {
-      Self { data, len }
-    } else {
-      panic!(
-        "ArrayishVec: len {} is greater than capacity {}!",
-        len,
-        A::CAPACITY
-      );
+    match Self::try_from_array_len(data, len) {
+      Ok(out) => out,
+      Err(_) => {
+        panic!("ArrayishVec: length {} exceeds capacity {}!", len, A::CAPACITY)
+      }
     }
   }
 
@@ -135,21 +149,17 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
-  #[inline]
+  #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
-    if self.len < A::CAPACITY {
-      replace(&mut self.data.slice_mut()[self.len], val);
-      self.len += 1;
-    } else {
-      panic!("ArrayVec: overflow!")
+    if self.try_push(val).is_err() {
+      panic!("ArrayishVec: overflow!")
     }
   }
 
   // TODO(Vec): remove
   // TODO(Vec): remove_item
-  // TODO(Vec): resize
-  // TODO(Vec): resize_default
-  // TODO(Vec): resize_with
+  // TODO(Vec): resize (val that's clone)
+  // TODO(Vec): resize_with (fn that generates a new one each time)
   // TODO(Vec): retain
   // TODO(Vec): splice
   // TODO(Vec): split_off
@@ -166,8 +176,40 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
-  // TODO: try_from_array_len
-  // TODO: try_push
+  /// Wraps an array, using the given length as the starting length.
+  ///
+  /// If you want to use the whole length of the array, you can just use the
+  /// `From` impl.
+  ///
+  /// ## Failure
+  ///
+  /// If the given length is greater than the capacity of the array this will
+  /// error, and you'll get the array back in the `Err`.
+  #[inline]
+  pub fn try_from_array_len(data: A, len: usize) -> Result<Self, A> {
+    if len <= A::CAPACITY {
+      Ok(Self { data, len })
+    } else {
+      Err(data)
+    }
+  }
+
+  /// Pushes an item if there's room.
+  ///
+  /// ## Failure
+  ///
+  /// If there's no more capacity the vec is unchanged, and you get the item
+  /// back in the `Err`.
+  #[inline]
+  pub fn try_push(&mut self, val: A::Item) -> Result<(), A::Item> {
+    if self.len < A::CAPACITY {
+      replace(&mut self.data.slice_mut()[self.len], val);
+      self.len += 1;
+      Ok(())
+    } else {
+      Err(val)
+    }
+  }
 }
 
 impl<A: Arrayish> AsMut<[A::Item]> for ArrayishVec<A> {
@@ -209,21 +251,12 @@ impl<A: Arrayish> From<A> for ArrayishVec<A> {
   #[inline(always)]
   #[must_use]
   /// The output has a length equal to the full array.
+  ///
+  /// If you want to select a length, use [`from_array_len`]
   fn from(data: A) -> Self {
     Self { len: data.slice().len(), data }
   }
 }
-
-// TODO(Vec): From<&'a [T]>
-// TODO(Vec): From<&'a mut [T]>
-// TODO(Vec): From<&'_ str>
-// TODO(Vec): From<&'a Vec<T>>
-// TODO(Vec): From<BinaryHeap<T>>
-// TODO(Vec): From<Box<[T]>>
-// TODO(Vec): From<Cow<'a, [T]>>
-// TODO(Vec): From<String>
-// TODO(Vec): From<Vec<T>>
-// TODO(Vec): From<VecDeque<T>>
 
 impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
   #[must_use]
