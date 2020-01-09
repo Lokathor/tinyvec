@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/tinyvec.svg)](https://crates.io/crates/tinyvec)
 [![docs.rs](https://docs.rs/tinyvec/badge.svg)](https://docs.rs/tinyvec/)
 
-![Unsafe-Zero-Percent](https://img.shields.io/badge/Unsafety-0%-green.svg)
+![Unsafe-Zero-Percent](https://img.shields.io/badge/Unsafety-0%25-green.svg)
 
 # tinyvec
 
