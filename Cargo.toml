@@ -5,17 +5,22 @@ version = "0.0.1-alpha.0"
 authors = ["Lokathor <zefria@gmail.com>"]
 edition = "2018"
 license = "Zlib"
-keywords = ["vec", "no_std", "smol"]
+keywords = ["vec", "no_std", "no-std", "smol"]
 categories = ["data-structures", "no-std"]
 
 [dependencies]
 # not even std!
 
 [features]
-default = ["extern_crate_alloc"]
+default = ["extern_crate_alloc", "nightly_slice_partition_dedup"]
 
-# Provide additional types and impls related to the `alloc` trait.
+# Provide additional types and impls related to the `alloc` crate.
 extern_crate_alloc = []
+
+# allow use of nightly feature `slice_partition_dedup`,
+# will become useless once that is stabilized:
+# https://github.com/rust-lang/rust/issues/54279
+nightly_slice_partition_dedup = []
 
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }

@@ -24,19 +24,19 @@ impl<A: Arrayish> DerefMut for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> Index<usize> for ArrayishVec<A> {
-  type Output = A::Item;
+impl<A: Arrayish, I: SliceIndex<[A::Item]>> Index<I> for ArrayishVec<A> {
+  type Output = <I as SliceIndex<[A::Item]>>::Output;
   #[inline(always)]
   #[must_use]
-  fn index(&self, index: usize) -> &Self::Output {
+  fn index(&self, index: I) -> &Self::Output {
     &self.deref()[index]
   }
 }
 
-impl<A: Arrayish> IndexMut<usize> for ArrayishVec<A> {
+impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayishVec<A> {
   #[inline(always)]
   #[must_use]
-  fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+  fn index_mut(&mut self, index: I) -> &mut Self::Output {
     &mut self.deref_mut()[index]
   }
 }
@@ -49,7 +49,8 @@ impl<A: Arrayish> ArrayishVec<A> {
       panic!("ArrayishVec: overflow!");
     }
     let target_slice = &mut self.data.slice_mut()[self.len..final_len];
-    for (target_mut, app_mut) in target_slice.iter_mut().zip(other.deref_mut()) {
+    for (target_mut, app_mut) in target_slice.iter_mut().zip(other.deref_mut())
+    {
       replace(target_mut, replace(app_mut, A::Item::default()));
     }
     self.len = final_len;
@@ -91,9 +92,38 @@ impl<A: Arrayish> ArrayishVec<A> {
     self.truncate(0)
   }
 
-  // TODO(Vec): dedup
-  // TODO(Vec): dedup_by
-  // TODO(Vec): dedup_by_key
+  #[cfg(feature = "nightly_slice_partition_dedup")]
+  #[inline(always)]
+  pub fn dedup(&mut self)
+  where
+    A::Item: PartialEq,
+  {
+    self.dedup_by(|a, b| a == b)
+  }
+
+  #[cfg(feature = "nightly_slice_partition_dedup")]
+  #[inline(always)]
+  pub fn dedup_by<F>(&mut self, same_bucket: F)
+  where
+    F: FnMut(&mut A::Item, &mut A::Item) -> bool,
+  {
+    let len = {
+      let (dedup, _) = self.as_mut_slice().partition_dedup_by(same_bucket);
+      dedup.len()
+    };
+    self.truncate(len);
+  }
+
+  #[cfg(feature = "nightly_slice_partition_dedup")]
+  #[inline(always)]
+  pub fn dedup_by_key<F, K>(&mut self, mut key: F)
+  where
+    F: FnMut(&mut A::Item) -> K,
+    K: PartialEq,
+  {
+    self.dedup_by(|a, b| key(a) == key(b))
+  }
+
   // TODO(Vec): drain
   // TODO(Vec): drain_filter #nightly
 
@@ -256,8 +286,13 @@ impl<A: Arrayish> BorrowMut<[A::Item]> for ArrayishVec<A> {
   }
 }
 
-// TODO(Vec): Extend<&'a T>
-// TODO(Vec): Extend<T>
+impl<A: Arrayish> Extend<A::Item> for ArrayishVec<A> {
+  fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
+    for t in iter {
+      self.push(t)
+    }
+  }
+}
 
 impl<A: Arrayish> From<A> for ArrayishVec<A> {
   #[inline(always)]
@@ -280,9 +315,6 @@ impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
     av
   }
 }
-
-// TODO(Vec): Index<I: SliceIndex>
-// TODO(Vec): IndexMut<I: SliceIndex>
 
 pub struct ArrayishVecIterator<A: Arrayish> {
   base: usize,
@@ -343,19 +375,40 @@ impl<A: Arrayish> PartialEq for ArrayishVec<A>
 where
   A::Item: PartialEq,
 {
-  #[inline(always)]
+  #[inline]
   #[must_use]
   fn eq(&self, other: &Self) -> bool {
-    self.deref() == other.deref()
+    self.deref().eq(other.deref())
   }
 }
 impl<A: Arrayish> Eq for ArrayishVec<A> where A::Item: Eq {}
+
+impl<A: Arrayish> PartialOrd for ArrayishVec<A>
+where
+  A::Item: PartialOrd,
+{
+  #[inline]
+  #[must_use]
+  fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+    self.deref().partial_cmp(other.deref())
+  }
+}
+impl<A: Arrayish> Ord for ArrayishVec<A>
+where
+  A::Item: Ord,
+{
+  #[inline]
+  #[must_use]
+  fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+    self.deref().cmp(other.deref())
+  }
+}
 
 impl<A: Arrayish> PartialEq<&A> for ArrayishVec<A>
 where
   A::Item: PartialEq,
 {
-  #[inline(always)]
+  #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
     self.deref() == other.slice()
@@ -366,25 +419,31 @@ impl<A: Arrayish> PartialEq<&[A::Item]> for ArrayishVec<A>
 where
   A::Item: PartialEq,
 {
-  #[inline(always)]
+  #[inline]
   #[must_use]
   fn eq(&self, other: &&[A::Item]) -> bool {
     self.deref() == *other
   }
 }
 
+/*
+
+I think, in retrospect, this is useless?
+
+The `&mut [A::Item]` should coerce to `&[A::Item]` and use the above impl.
+I'll leave it here for now though since we already had it written out..
+
 impl<A: Arrayish> PartialEq<&mut [A::Item]> for ArrayishVec<A>
 where
   A::Item: PartialEq,
 {
-  #[inline(always)]
+  #[inline]
   #[must_use]
   fn eq(&self, other: &&mut [A::Item]) -> bool {
     self.deref() == *other
   }
 }
-
-// TODO: PartialOrd, Ord, Hash
+*/
 
 // //
 // Formatting impls
