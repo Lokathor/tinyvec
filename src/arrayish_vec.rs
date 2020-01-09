@@ -42,7 +42,19 @@ impl<A: Arrayish> IndexMut<usize> for ArrayishVec<A> {
 }
 
 impl<A: Arrayish> ArrayishVec<A> {
-  // TODO(Vec): append
+  #[inline]
+  pub fn append(&mut self, other: &mut Self) {
+    let final_len = self.len + other.len;
+    if final_len > A::CAPACITY {
+      panic!("ArrayishVec: overflow!");
+    }
+    let target_slice = &mut self.data.slice_mut()[self.len..final_len];
+    for (target_mut, app_mut) in target_slice.iter_mut().zip(other.deref_mut()) {
+      replace(target_mut, replace(app_mut, A::Item::default()));
+    }
+    self.len = final_len;
+    other.len = 0;
+  }
 
   #[inline(always)]
   #[must_use]

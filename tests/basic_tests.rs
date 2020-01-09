@@ -97,3 +97,19 @@ fn ArrayishVec_iteration() {
   let av2: ArrayishVec<[i32; 4]> = av.clone().into_iter().collect();
   assert_eq!(av, av2);
 }
+
+#[test]
+fn ArrayishVec_append() {
+  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+  let mut av2: ArrayishVec<[i32; 10]> = Default::default();
+  av2.push(4);
+  av2.push(5);
+  av2.push(6);
+  //
+  av.append(&mut av2);
+  assert_eq!(av.as_slice(), &[1_i32, 2, 3, 4, 5, 6]);
+  assert_eq!(av2.as_slice(), &[]);
+}
