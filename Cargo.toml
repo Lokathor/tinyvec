@@ -12,7 +12,7 @@ categories = ["data-structures", "no-std"]
 # not even std!
 
 [features]
-default = ["extern_crate_alloc", "nightly_slice_partition_dedup"]
+default = ["extern_crate_alloc"]
 
 # Provide additional types and impls related to the `alloc` crate.
 extern_crate_alloc = []

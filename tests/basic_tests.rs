@@ -3,6 +3,18 @@
 use tinyvec::*;
 
 #[test]
+fn test_a_vec() {
+  let mut expected: ArrayishVec<[i32; 4]> = Default::default();
+  expected.push(1);
+  expected.push(2);
+  expected.push(3);
+
+  let actual = arr_vec!([i32; 4], 1, 2, 3);
+
+  assert_eq!(expected, actual);
+}
+
+#[test]
 fn ArrayishVec_push_pop() {
   let mut av: ArrayishVec<[i32; 4]> = Default::default();
   assert_eq!(av.len(), 0);
@@ -75,11 +87,7 @@ fn ArrayishVec_formatting() {
 
 #[test]
 fn ArrayishVec_iteration() {
-  let mut av: ArrayishVec<[i32; 4]> = Default::default();
-  av.push(10);
-  av.push(11);
-  av.push(12);
-  av.push(13);
+  let av = arr_vec!([i32; 4], 10, 11, 12, 13);
 
   let mut i = av.into_iter();
   assert_eq!(i.next(), Some(10));
@@ -88,11 +96,7 @@ fn ArrayishVec_iteration() {
   assert_eq!(i.next(), Some(13));
   assert_eq!(i.next(), None);
 
-  let mut av: ArrayishVec<[i32; 4]> = Default::default();
-  av.push(10);
-  av.push(11);
-  av.push(12);
-  av.push(13);
+  let av = arr_vec!([i32; 4], 10, 11, 12, 13);
 
   let av2: ArrayishVec<[i32; 4]> = av.clone().into_iter().collect();
   assert_eq!(av, av2);
@@ -100,16 +104,20 @@ fn ArrayishVec_iteration() {
 
 #[test]
 fn ArrayishVec_append() {
-  let mut av: ArrayishVec<[i32; 10]> = Default::default();
-  av.push(1);
-  av.push(2);
-  av.push(3);
-  let mut av2: ArrayishVec<[i32; 10]> = Default::default();
-  av2.push(4);
-  av2.push(5);
-  av2.push(6);
+  let mut av = arr_vec!([i32; 8], 1, 2, 3);
+  let mut av2 = arr_vec!([i32; 8], 4, 5, 6);
   //
   av.append(&mut av2);
   assert_eq!(av.as_slice(), &[1_i32, 2, 3, 4, 5, 6]);
   assert_eq!(av2.as_slice(), &[]);
+}
+
+#[test]
+fn ArrayishVec_remove() {
+  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+  assert_eq!(av.remove(1), 2);
+  assert_eq!(&av[..], &[1, 3][..]);
 }

@@ -1,5 +1,22 @@
 use super::*;
 
+#[macro_export]
+macro_rules! arr_vec {
+  ($array_type:ty) => {
+    {
+      let mut av: ArrayishVec<$array_type> = Default::default();
+      av
+    }
+  };
+  ($array_type:ty, $($elem:expr),*) => {
+    {
+      let mut av: ArrayishVec<$array_type> = Default::default();
+      $( av.push($elem); )*
+      av
+    }
+  };
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct ArrayishVec<A: Arrayish> {
@@ -124,8 +141,60 @@ impl<A: Arrayish> ArrayishVec<A> {
     self.dedup_by(|a, b| key(a) == key(b))
   }
 
-  // TODO(Vec): drain
-  // TODO(Vec): drain_filter #nightly
+  /// Creates a draining iterator that removes the specified range in the vector
+  /// and yields the removed items.
+  ///
+  /// ## Panics
+  /// * If the start is greater than the end
+  /// * If the end is past the edge of the vec.
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// let av2: ArrayishVec<[i32; 4]> = av.drain(1..).collect();
+  /// assert_eq!(av.as_slice(), &[1][..]);
+  /// assert_eq!(av2.as_slice(), &[2, 3][..]);
+  ///
+  /// av.drain(..);
+  /// assert_eq!(av.as_slice(), &[]);
+  /// ```
+  #[inline]
+  pub fn drain<R: RangeBounds<usize>>(
+    &mut self,
+    range: R,
+  ) -> ArrayishVecDrain<'_, A> {
+    use core::ops::Bound;
+    let start = match range.start_bound() {
+      Bound::Included(x) => *x,
+      Bound::Excluded(x) => x + 1,
+      Bound::Unbounded => 0,
+    };
+    let end = match range.end_bound() {
+      Bound::Included(x) => *x,
+      Bound::Excluded(x) => x - 1,
+      Bound::Unbounded => self.len,
+    };
+    assert!(
+      start <= end,
+      "ArrayishVec::drain> Illegal range, {} to {}",
+      start,
+      end
+    );
+    assert!(
+      end <= self.len,
+      "ArrayishVec::drain> Range ends at {} but length is only {}!",
+      end,
+      self.len
+    );
+    ArrayishVecDrain {
+      parent: self,
+      target_index: start,
+      target_count: end - start,
+    }
+  }
+
+  // LATER(Vec): drain_filter #nightly https://github.com/rust-lang/rust/issues/43244
 
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[A::Item])
@@ -156,7 +225,44 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
-  // TODO(Vec): insert
+  /// Inserts an item at the position given, moving all following elements +1
+  /// index.
+  ///
+  /// ## Panics
+  /// * If `index` > `len`
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
+  /// av.insert(1, 4);
+  /// assert_eq!(av.as_slice(), &[1, 4, 2, 3]);
+  /// av.insert(4, 5);
+  /// assert_eq!(av.as_slice(), &[1, 4, 2, 3, 5]);
+  /// ```
+  #[inline]
+  pub fn insert(&mut self, index: usize, item: A::Item) {
+    use core::cmp::Ordering;
+    match index.cmp(&self.len) {
+      Ordering::Less => {
+        let targets: &mut [A::Item] = &mut self.as_mut_slice()[index..];
+        let mut temp = item;
+        for target in targets.iter_mut() {
+          temp = replace(target, temp);
+        }
+        self.push(temp);
+      }
+      Ordering::Equal => {
+        self.push(item);
+      }
+      Ordering::Greater => {
+        panic!(
+          "ArrayishVec::insert> index {} is out of bounds {}",
+          index, self.len
+        );
+      }
+    }
+  }
 
   #[inline(always)]
   #[must_use]
@@ -198,14 +304,228 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
-  // TODO(Vec): remove
-  // TODO(Vec): remove_item
-  // TODO(Vec): resize (val that's clone)
-  // TODO(Vec): resize_with (fn that generates a new one each time)
-  // TODO(Vec): retain
-  // TODO(Vec): splice
-  // TODO(Vec): split_off
-  // TODO(Vec): swap_remove
+  /// Removes the item at `index`, shifting all others down by one index.
+  ///
+  /// Returns the removed element.
+  ///
+  /// ## Panics
+  ///
+  /// If the index is out of bounds.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// assert_eq!(av.remove(1), 2);
+  /// assert_eq!(av.as_slice(), &[1, 3][..]);
+  /// ```
+  #[inline]
+  pub fn remove(&mut self, index: usize) -> A::Item {
+    let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
+    let mut spare = A::Item::default();
+    for target in targets.iter_mut().rev() {
+      spare = replace(target, spare);
+    }
+    self.len -= 1;
+    spare
+  }
+
+  // NIGHTLY: remove_item, https://github.com/rust-lang/rust/issues/40062
+
+  /// Resize the vec to the new length.
+  ///
+  /// If it needs to be longer, it's filled with clones of the provided value.
+  /// If it needs to be shorter, it's truncated.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  ///
+  /// let mut av = arr_vec!([&str; 10], "hello");
+  /// av.resize(3, "world");
+  /// assert_eq!(av.as_slice(), &["hello", "world", "world"][..]);
+  ///
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
+  /// av.resize(2, 0);
+  /// assert_eq!(av.as_slice(), &[1, 2][..]);
+  /// ```
+  #[inline]
+  pub fn resize(&mut self, new_len: usize, new_val: A::Item)
+  where
+    A::Item: Clone,
+  {
+    use core::cmp::Ordering;
+    match new_len.cmp(&self.len) {
+      Ordering::Less => self.truncate(new_len),
+      Ordering::Equal => (),
+      Ordering::Greater => {
+        while self.len < new_len {
+          self.push(new_val.clone());
+        }
+      }
+    }
+  }
+
+  /// Resize the vec to the new size.
+  ///
+  /// If it needs to be longer the length is simply increased (in constant
+  /// time), if it needs to be shorter then it's truncated.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  ///
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
+  /// av.resize_default(5);
+  /// assert_eq!(av.as_slice(), &[1, 2, 3, 0, 0][..]);
+  ///
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
+  /// av.resize_default(2);
+  /// assert_eq!(av.as_slice(), &[1, 2][..]);
+  /// ```
+  #[inline]
+  pub fn resize_default(&mut self, new_len: usize) {
+    use core::cmp::Ordering;
+    match new_len.cmp(&self.len) {
+      Ordering::Less => self.truncate(new_len),
+      Ordering::Equal => (),
+      Ordering::Greater => self.len = new_len,
+    }
+  }
+
+  /// Resize the vec to the new length.
+  ///
+  /// If it needs to be longer, it's filled with repeated calls to the provided
+  /// function. If it needs to be shorter, it's truncated.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  ///
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
+  /// av.resize_with(5, Default::default);
+  /// assert_eq!(av.as_slice(), &[1, 2, 3, 0, 0][..]);
+  ///
+  /// let mut av = arr_vec!([i32; 10]);
+  /// let mut p = 1;
+  /// av.resize_with(4, || {
+  ///   p *= 2;
+  ///   p
+  /// });
+  /// assert_eq!(av.as_slice(), &[2, 4, 8, 16][..]);
+  /// ```
+  #[inline]
+  pub fn resize_with<F: FnMut() -> A::Item>(
+    &mut self,
+    new_len: usize,
+    mut f: F,
+  ) {
+    use core::cmp::Ordering;
+    match new_len.cmp(&self.len) {
+      Ordering::Less => self.truncate(new_len),
+      Ordering::Equal => (),
+      Ordering::Greater => {
+        while self.len < new_len {
+          self.push(f());
+        }
+      }
+    }
+  }
+
+  /// Walk the vec and keep only the elements that pass the predicate given.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  ///
+  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
+  /// av.retain(|&x| x % 2 == 0);
+  /// assert_eq!(av.as_slice(), &[2, 4][..]);
+  /// ```
+  #[inline]
+  pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, mut acceptable: F) {
+    let mut i = 0;
+    while i < self.len {
+      if !acceptable(&self[i]) {
+        self.remove(i);
+      }
+      i += 1;
+    }
+  }
+
+  // LATER(Vec): splice
+
+  /// Splits the collection at the point given.
+  ///
+  /// * `[0, at)` stays in this vec
+  /// * `[at, len)` ends up in the new vec.
+  ///
+  /// ## Panics
+  /// * if at > len
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// let av2 = av.split_off(1);
+  /// assert_eq!(av.as_slice(), &[1][..]);
+  /// assert_eq!(av2.as_slice(), &[2, 3][..]);
+  /// ```
+  #[inline]
+  pub fn split_off(&mut self, at: usize) -> Self
+  where
+    Self: Default,
+  {
+    if at > self.len {
+      panic!(
+        "ArrayishVec::split_off> at value {} exceeds length of {}",
+        at, self.len
+      );
+    }
+    let mut new = Self::default();
+    let moves = &mut self.as_mut_slice()[at..];
+    let targets = new.data.slice_mut();
+    for (m, t) in moves.iter_mut().zip(targets) {
+      replace(t, replace(m, A::Item::default()));
+    }
+    new.len = self.len - at;
+    self.len = at;
+    new
+  }
+
+  /// Remove an element, swapping the end of the vec into its place.
+  ///
+  /// ## Panics
+  /// * If the index is out of bounds.
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = arr_vec!([&str; 4], "foo", "bar", "quack", "zap");
+  ///
+  /// assert_eq!(av.swap_remove(1), "bar");
+  /// assert_eq!(av.as_slice(), &["foo", "zap", "quack"][..]);
+  ///
+  /// assert_eq!(av.swap_remove(0), "foo");
+  /// assert_eq!(av.as_slice(), &["quack", "zap"][..]);
+  /// ```
+  #[inline]
+  pub fn swap_remove(&mut self, index: usize) -> A::Item {
+    assert!(
+      index < self.len,
+      "ArrayishVec::swap_remove> index {} is out of bounds {}",
+      index,
+      self.len
+    );
+    let i = self.pop().unwrap();
+    replace(&mut self[index], i)
+  }
 
   #[inline]
   pub fn truncate(&mut self, new_len: usize) {
@@ -251,6 +571,36 @@ impl<A: Arrayish> ArrayishVec<A> {
     } else {
       Err(val)
     }
+  }
+
+  // LATER: try_insert ?
+
+  // LATER: try_remove ?
+}
+
+// GoodFirstIssue: this entire type is correct but slow.
+pub struct ArrayishVecDrain<'p, A: Arrayish> {
+  parent: &'p mut ArrayishVec<A>,
+  target_index: usize,
+  target_count: usize,
+}
+// NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
+impl<'p, A: Arrayish> Iterator for ArrayishVecDrain<'p, A> {
+  type Item = A::Item;
+  #[inline]
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.target_count > 0 {
+      let out = self.parent.remove(self.target_index);
+      self.target_count -= 1;
+      Some(out)
+    } else {
+      None
+    }
+  }
+}
+impl<'p, A: Arrayish> Drop for ArrayishVecDrain<'p, A> {
+  fn drop(&mut self) {
+    for _ in self {}
   }
 }
 

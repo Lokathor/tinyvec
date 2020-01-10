@@ -18,7 +18,7 @@ use core::{
   },
   iter::{Extend, FromIterator, IntoIterator, Iterator},
   mem::{needs_drop, replace},
-  ops::{Deref, DerefMut, Index, IndexMut},
+  ops::{Deref, DerefMut, Index, IndexMut, RangeBounds},
   slice::SliceIndex,
 };
 
