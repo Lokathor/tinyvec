@@ -1,4 +1,5 @@
-/// A trait for types that can be the backing store of an [`ArrayishVec`].
+/// A trait for types that can be the backing store of an
+/// [`ArrayishVec`](ArrayishVec::<A>).
 ///
 /// You are not generally expected to need to implement this yourself. You can
 /// if you want I guess. Impls are provided for arrays of length `0..=32`, 33,

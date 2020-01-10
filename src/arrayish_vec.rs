@@ -1,5 +1,20 @@
 use super::*;
 
+/// Helper to make an `ArrayishVec`.
+///
+/// You specify the backing array type, and optionally give all the elements you
+/// want to initially place into the array.
+///
+/// As an unfortunate restriction, the backing array type must support `Default`
+/// for it to work with this macro.
+///
+/// ```rust
+/// use tinyvec::*;
+/// 
+/// let empty_av = arr_vec!([u8; 16]);
+/// 
+/// let some_ints = arr_vec!([i32; 4], 1, 2, 3);
+/// ```
 #[macro_export]
 macro_rules! arr_vec {
   ($array_type:ty) => {
@@ -17,6 +32,11 @@ macro_rules! arr_vec {
   };
 }
 
+/// An array-backed vector-like data structure.
+///
+/// * Fixed capacity (based on array size)
+/// * Variable length
+/// * All of the array memory is always initialized.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct ArrayishVec<A: Arrayish> {
@@ -59,6 +79,7 @@ impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayishVec<A> {
 }
 
 impl<A: Arrayish> ArrayishVec<A> {
+  /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     let final_len = self.len + other.len;
@@ -74,36 +95,52 @@ impl<A: Arrayish> ArrayishVec<A> {
     other.len = 0;
   }
 
+  /// A mutable pointer to the backing array.
+  /// 
+  /// ## Safety
+  /// 
+  /// This pointer has provenance over the _entire_ backing array.
   #[inline(always)]
   #[must_use]
   pub fn as_mut_ptr(&mut self) -> *mut A::Item {
     self.data.slice_mut().as_mut_ptr()
   }
 
+  /// Helper for getting the mut slice.
   #[inline(always)]
   #[must_use]
   pub fn as_mut_slice(&mut self) -> &mut [A::Item] {
     self.deref_mut()
   }
 
+  /// A const pointer to the backing array.
+  /// 
+  /// ## Safety
+  /// 
+  /// This pointer has provenance over the _entire_ backing array.
   #[inline(always)]
   #[must_use]
   pub fn as_ptr(&self) -> *const A::Item {
     self.data.slice().as_ptr()
   }
 
+  /// Helper for getting the shared slice.
   #[inline(always)]
   #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
     self.deref()
   }
 
+  /// The capacity of the `ArrayishVec`.
+  /// 
+  /// This is fixed based on the array type.
   #[inline(always)]
   #[must_use]
   pub fn capacity(&self) -> usize {
     A::CAPACITY
   }
 
+  /// Removes all elements from the vec.
   #[inline(always)]
   pub fn clear(&mut self) {
     self.truncate(0)
@@ -196,6 +233,7 @@ impl<A: Arrayish> ArrayishVec<A> {
 
   // LATER(Vec): drain_filter #nightly https://github.com/rust-lang/rust/issues/43244
 
+  /// Clone each element of the slice into this vec.
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[A::Item])
   where
@@ -264,18 +302,21 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
+  /// If the vec is empty.
   #[inline(always)]
   #[must_use]
   pub fn is_empty(&self) -> bool {
     self.len == 0
   }
 
+  /// The length of the vec (in elements).
   #[inline(always)]
   #[must_use]
   pub fn len(&self) -> usize {
     self.len
   }
 
+  /// Makes a new, empty vec.
   #[inline(always)]
   #[must_use]
   pub fn new() -> Self
@@ -285,6 +326,10 @@ impl<A: Arrayish> ArrayishVec<A> {
     Self::default()
   }
 
+  /// Remove and return the last element of the vec, if there is one.
+  /// 
+  /// ## Failure
+  /// * If the vec is empty you get `None`.
   #[inline]
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
@@ -297,6 +342,11 @@ impl<A: Arrayish> ArrayishVec<A> {
     }
   }
 
+  /// Place an element onto the end of the vec.
+  /// 
+  /// See also, [`try_push`](ArrayishVec::try_push)
+  /// ## Panics
+  /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
     if self.try_push(val).is_err() {
@@ -365,34 +415,6 @@ impl<A: Arrayish> ArrayishVec<A> {
           self.push(new_val.clone());
         }
       }
-    }
-  }
-
-  /// Resize the vec to the new size.
-  ///
-  /// If it needs to be longer the length is simply increased (in constant
-  /// time), if it needs to be shorter then it's truncated.
-  ///
-  /// ## Example
-  ///
-  /// ```rust
-  /// use tinyvec::*;
-  ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
-  /// av.resize_default(5);
-  /// assert_eq!(av.as_slice(), &[1, 2, 3, 0, 0][..]);
-  ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
-  /// av.resize_default(2);
-  /// assert_eq!(av.as_slice(), &[1, 2][..]);
-  /// ```
-  #[inline]
-  pub fn resize_default(&mut self, new_len: usize) {
-    use core::cmp::Ordering;
-    match new_len.cmp(&self.len) {
-      Ordering::Less => self.truncate(new_len),
-      Ordering::Equal => (),
-      Ordering::Greater => self.len = new_len,
     }
   }
 
@@ -527,6 +549,9 @@ impl<A: Arrayish> ArrayishVec<A> {
     replace(&mut self[index], i)
   }
 
+  /// Reduces the vec's length to the given value.
+  /// 
+  /// If the vec is already shorter than the input, nothing happens.
   #[inline]
   pub fn truncate(&mut self, new_len: usize) {
     if needs_drop::<A::Item>() {
@@ -534,7 +559,7 @@ impl<A: Arrayish> ArrayishVec<A> {
         self.pop();
       }
     } else {
-      self.len = new_len;
+      self.len = self.len.min(new_len);
     }
   }
 
@@ -578,12 +603,15 @@ impl<A: Arrayish> ArrayishVec<A> {
   // LATER: try_remove ?
 }
 
-// GoodFirstIssue: this entire type is correct but slow.
+/// Draining iterator for `ArrayishVecDrain`
+/// 
+/// See [`ArrayishVecDrain::drain`](ArrayishVecDrain::<A>::drain)
 pub struct ArrayishVecDrain<'p, A: Arrayish> {
   parent: &'p mut ArrayishVec<A>,
   target_index: usize,
   target_count: usize,
 }
+// GoodFirstIssue: this entire type is correct but slow.
 // NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
 impl<'p, A: Arrayish> Iterator for ArrayishVecDrain<'p, A> {
   type Item = A::Item;
@@ -599,6 +627,7 @@ impl<'p, A: Arrayish> Iterator for ArrayishVecDrain<'p, A> {
   }
 }
 impl<'p, A: Arrayish> Drop for ArrayishVecDrain<'p, A> {
+  #[inline]
   fn drop(&mut self) {
     for _ in self {}
   }
@@ -637,6 +666,7 @@ impl<A: Arrayish> BorrowMut<[A::Item]> for ArrayishVec<A> {
 }
 
 impl<A: Arrayish> Extend<A::Item> for ArrayishVec<A> {
+  #[inline]
   fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
     for t in iter {
       self.push(t)
@@ -649,13 +679,15 @@ impl<A: Arrayish> From<A> for ArrayishVec<A> {
   #[must_use]
   /// The output has a length equal to the full array.
   ///
-  /// If you want to select a length, use [`from_array_len`]
+  /// If you want to select a length, use
+  /// [`from_array_len`](ArrayishVec::from_array_len)
   fn from(data: A) -> Self {
     Self { len: data.slice().len(), data }
   }
 }
 
 impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
+  #[inline]
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
     let mut av = Self::default();
@@ -666,6 +698,7 @@ impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
   }
 }
 
+/// Iterator for consuming an `ArrayishVec` and returning owned elements.
 pub struct ArrayishVecIterator<A: Arrayish> {
   base: usize,
   len: usize,
@@ -803,6 +836,7 @@ impl<A: Arrayish> Binary for ArrayishVec<A>
 where
   A::Item: Binary,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -819,6 +853,7 @@ impl<A: Arrayish> Debug for ArrayishVec<A>
 where
   A::Item: Debug,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -835,6 +870,7 @@ impl<A: Arrayish> Display for ArrayishVec<A>
 where
   A::Item: Display,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -851,6 +887,7 @@ impl<A: Arrayish> LowerExp for ArrayishVec<A>
 where
   A::Item: LowerExp,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -867,6 +904,7 @@ impl<A: Arrayish> LowerHex for ArrayishVec<A>
 where
   A::Item: LowerHex,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -883,6 +921,7 @@ impl<A: Arrayish> Octal for ArrayishVec<A>
 where
   A::Item: Octal,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -899,6 +938,7 @@ impl<A: Arrayish> Pointer for ArrayishVec<A>
 where
   A::Item: Pointer,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -915,6 +955,7 @@ impl<A: Arrayish> UpperExp for ArrayishVec<A>
 where
   A::Item: UpperExp,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
@@ -931,6 +972,7 @@ impl<A: Arrayish> UpperHex for ArrayishVec<A>
 where
   A::Item: UpperHex,
 {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
     for (i, elem) in self.iter().enumerate() {
