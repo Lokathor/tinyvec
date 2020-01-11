@@ -66,3 +66,8 @@ pub use arrayish::*;
 
 mod arrayish_vec;
 pub use arrayish_vec::*;
+
+#[cfg(feature = "extern_crate_alloc")]
+mod tiny_vec;
+#[cfg(feature = "extern_crate_alloc")]
+pub use tiny_vec::*;
