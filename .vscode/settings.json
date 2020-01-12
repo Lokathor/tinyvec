@@ -1,0 +1,6 @@
+{
+  "rust.features": [
+    "extern_crate_alloc",
+    "nightly_slice_partition_dedup"
+  ]
+}

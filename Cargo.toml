@@ -13,7 +13,7 @@ repository = "https://github.com/Lokathor/tinyvec"
 # not even std!
 
 [features]
-default = ["extern_crate_alloc"]
+default = []
 
 # Provide additional types and impls related to the `alloc` crate.
 extern_crate_alloc = []
