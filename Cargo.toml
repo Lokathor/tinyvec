@@ -32,3 +32,7 @@ all-features = true
 
 [workspace]
 members = ["fuzz"]
+
+[[test]]
+name = "tinyvec"
+required-features = ["extern_crate_alloc"]
