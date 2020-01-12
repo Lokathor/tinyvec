@@ -195,13 +195,13 @@ impl<A: Arrayish> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
-  /// let av2: TinyVec<[i32; 4]> = av.drain(1..).collect();
-  /// assert_eq!(av.as_slice(), &[1][..]);
-  /// assert_eq!(av2.as_slice(), &[2, 3][..]);
+  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// let tv2: TinyVec<[i32; 4]> = tv.drain(1..).collect();
+  /// assert_eq!(tv.as_slice(), &[1][..]);
+  /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   ///
-  /// av.drain(..);
-  /// assert_eq!(av.as_slice(), &[]);
+  /// tv.drain(..);
+  /// assert_eq!(tv.as_slice(), &[]);
   /// ```
   #[inline]
   pub fn drain<R: RangeBounds<usize>>(
@@ -279,11 +279,11 @@ impl<A: Arrayish> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
-  /// av.insert(1, 4);
-  /// assert_eq!(av.as_slice(), &[1, 4, 2, 3]);
-  /// av.insert(4, 5);
-  /// assert_eq!(av.as_slice(), &[1, 4, 2, 3, 5]);
+  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3);
+  /// tv.insert(1, 4);
+  /// assert_eq!(tv.as_slice(), &[1, 4, 2, 3]);
+  /// tv.insert(4, 5);
+  /// assert_eq!(tv.as_slice(), &[1, 4, 2, 3, 5]);
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
@@ -367,9 +367,9 @@ impl<A: Arrayish> TinyVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
-  /// assert_eq!(av.remove(1), 2);
-  /// assert_eq!(av.as_slice(), &[1, 3][..]);
+  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// assert_eq!(tv.remove(1), 2);
+  /// assert_eq!(tv.as_slice(), &[1, 3][..]);
   /// ```
   #[inline]
   pub fn remove(&mut self, index: usize) -> A::Item {
@@ -391,13 +391,13 @@ impl<A: Arrayish> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([&str; 10], "hello");
-  /// av.resize(3, "world");
-  /// assert_eq!(av.as_slice(), &["hello", "world", "world"][..]);
+  /// let mut tv = tiny_vec!([&str; 10], "hello");
+  /// tv.resize(3, "world");
+  /// assert_eq!(tv.as_slice(), &["hello", "world", "world"][..]);
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
-  /// av.resize(2, 0);
-  /// assert_eq!(av.as_slice(), &[1, 2][..]);
+  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3, 4);
+  /// tv.resize(2, 0);
+  /// assert_eq!(tv.as_slice(), &[1, 2][..]);
   /// ```
   #[inline]
   pub fn resize(&mut self, new_len: usize, new_val: A::Item)
@@ -420,23 +420,23 @@ impl<A: Arrayish> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
-  /// av.resize_with(5, Default::default);
-  /// assert_eq!(av.as_slice(), &[1, 2, 3, 0, 0][..]);
+  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3);
+  /// tv.resize_with(5, Default::default);
+  /// assert_eq!(tv.as_slice(), &[1, 2, 3, 0, 0][..]);
   ///
-  /// let mut av = arr_vec!([i32; 10]);
+  /// let mut tv = tiny_vec!([i32; 10]);
   /// let mut p = 1;
-  /// av.resize_with(4, || {
+  /// tv.resize_with(4, || {
   ///   p *= 2;
   ///   p
   /// });
-  /// assert_eq!(av.as_slice(), &[2, 4, 8, 16][..]);
+  /// assert_eq!(tv.as_slice(), &[2, 4, 8, 16][..]);
   /// ```
   #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(
     &mut self,
     new_len: usize,
-    mut f: F,
+    f: F,
   ) {
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
@@ -451,12 +451,12 @@ impl<A: Arrayish> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
-  /// av.retain(|&x| x % 2 == 0);
-  /// assert_eq!(av.as_slice(), &[2, 4][..]);
+  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3, 4);
+  /// tv.retain(|&x| x % 2 == 0);
+  /// assert_eq!(tv.as_slice(), &[2, 4][..]);
   /// ```
   #[inline]
-  pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, mut acceptable: F) {
+  pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, acceptable: F) {
     match self {
       TinyVec::Inline(a) => a.retain(acceptable),
       TinyVec::Heap(v) => v.retain(acceptable),
@@ -477,10 +477,10 @@ impl<A: Arrayish> TinyVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
-  /// let av2 = av.split_off(1);
-  /// assert_eq!(av.as_slice(), &[1][..]);
-  /// assert_eq!(av2.as_slice(), &[2, 3][..]);
+  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// let tv2 = tv.split_off(1);
+  /// assert_eq!(tv.as_slice(), &[1][..]);
+  /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   /// ```
   #[inline]
   pub fn split_off(&mut self, at: usize) -> Self
@@ -501,13 +501,13 @@ impl<A: Arrayish> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([&str; 4], "foo", "bar", "quack", "zap");
+  /// let mut tv = tiny_vec!([&str; 4], "foo", "bar", "quack", "zap");
   ///
-  /// assert_eq!(av.swap_remove(1), "bar");
-  /// assert_eq!(av.as_slice(), &["foo", "zap", "quack"][..]);
+  /// assert_eq!(tv.swap_remove(1), "bar");
+  /// assert_eq!(tv.as_slice(), &["foo", "zap", "quack"][..]);
   ///
-  /// assert_eq!(av.swap_remove(0), "foo");
-  /// assert_eq!(av.as_slice(), &["quack", "zap"][..]);
+  /// assert_eq!(tv.swap_remove(0), "foo");
+  /// assert_eq!(tv.as_slice(), &["quack", "zap"][..]);
   /// ```
   #[inline]
   pub fn swap_remove(&mut self, index: usize) -> A::Item {
