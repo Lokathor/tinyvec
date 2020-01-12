@@ -82,17 +82,9 @@ impl<A: Arrayish> ArrayishVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    let final_len = self.len + other.len;
-    if final_len > A::CAPACITY {
-      panic!("ArrayishVec: overflow!");
+    for item in other.drain(..) {
+      self.push(item)
     }
-    let target_slice = &mut self.data.slice_mut()[self.len..final_len];
-    for (target_mut, app_mut) in target_slice.iter_mut().zip(other.deref_mut())
-    {
-      replace(target_mut, replace(app_mut, A::Item::default()));
-    }
-    self.len = final_len;
-    other.len = 0;
   }
 
   /// A mutable pointer to the backing array.
@@ -504,6 +496,7 @@ impl<A: Arrayish> ArrayishVec<A> {
   where
     Self: Default,
   {
+    // FIXME: should this just use drain into the output?
     if at > self.len {
       panic!(
         "ArrayishVec::split_off> at value {} exceeds length of {}",
