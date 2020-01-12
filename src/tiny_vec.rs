@@ -625,7 +625,7 @@ impl<A: Arrayish> From<ArrayishVec<A>> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn from(arr: ArrayishVec<A>) -> Self {
-    Self::Inline(arr)
+    TinyVec::Inline(arr)
   }
 }
 
