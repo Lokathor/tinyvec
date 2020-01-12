@@ -29,3 +29,6 @@ travis-ci = { repository = "Lokathor/tinyvec" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[workspace]
+members = ["fuzz"]
