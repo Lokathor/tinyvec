@@ -17,10 +17,10 @@
 //! * `ArrayishVec`: Like the `ArrayVec` from the
 //!   [arrayvec](https://docs.rs/arrayvec) crate. It's an array backed linear
 //!   data store. If you push too much data it will panic.
-//! * `TinyVec`: **NOT YET IMPLEMENTED. PLANNED FOR 0.2, SOON(TM)** This will be
-//!   like the `SmallVec` from [smallvec](https://docs.rs/smallvec). It starts
-//!   as an `ArrayishVec`, and when that _would have_ overflowed it will instead
-//!   transition everything into a normal `Vec` on the heap.
+//! * `TinyVec`: This is like the `SmallVec` from
+//!   [smallvec](https://docs.rs/smallvec). It starts as an `ArrayishVec`, and
+//!   when that _would have_ overflowed it will instead automatically transition
+//!   everything into a normal `Vec` on the heap and continue operations.
 //!
 //! ## How Is This Different From Those Other Crates?
 //!
