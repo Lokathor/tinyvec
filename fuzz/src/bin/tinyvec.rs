@@ -26,11 +26,16 @@ arbitrary_stateful_operations! {
             fn insert(&mut self, index: usize, item: T);
             fn is_empty(&self) -> bool;
             fn len(&self) -> usize;
+            fn pop(&mut self) -> Option<T>;
             fn push(&mut self, item: T);
+            fn remove(&mut self, index: usize) -> T;
+            fn resize(&mut self, new_len: usize, new_val: T);
+            fn swap_remove(&mut self, index: usize) -> T;
             fn truncate(&mut self, new_len: usize);
         }
 
         equal_with(Vec::from_iter) {
+            fn split_off(&mut self, at: usize) -> impl IntoIterator<Item = T>;
             fn drain(&self, range: R) -> impl Iterator<Item = T>;
             fn iter(&self) -> impl Iterator<Item = &T>;
             fn iter_mut(&self) -> impl Iterator<Item = &mut T>;
@@ -39,8 +44,16 @@ arbitrary_stateful_operations! {
 
     pre {
         match self {
-            Self::insert { index, .. } if index > model.len() => {
+            Self::insert { index, .. } | Self::split_off { at: index } if index > model.len() => {
                 // TODO: Should test that these identically panic
+                return;
+            }
+            Self::remove { index } | Self::swap_remove { index } if index >= model.len() => {
+                // TODO: Should test that these identically panic
+                return;
+            }
+            // Arbitrary limit to avoid allocating too large a buffer
+            Self::resize { new_len, .. } if new_len > 4 * CAPACITY => {
                 return;
             }
             Self::drain { ref range } => {
