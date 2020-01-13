@@ -1,6 +1,7 @@
 #![allow(bad_style)]
 
 use tinyvec::*;
+use std::iter::FromIterator;
 
 #[test]
 fn test_a_vec() {
@@ -120,4 +121,33 @@ fn ArrayishVec_remove() {
   av.push(3);
   assert_eq!(av.remove(1), 2);
   assert_eq!(&av[..], &[1, 3][..]);
+}
+
+#[test]
+fn ArrayishVec_drain() {
+  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(..)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(..2)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(..3)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(..=1)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(..=2)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(0..)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().drain(1..)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(0..2)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(0..3)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().drain(1..2)), vec![2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(1..3)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().drain(0..=1)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(0..=2)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().drain(1..=1)), vec![2]);
+  assert_eq!(Vec::from_iter(av.clone().drain(1..=2)), vec![2, 3]);
 }

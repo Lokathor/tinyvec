@@ -1,0 +1,14 @@
+[package]
+name = "tinyvec-fuzz"
+version = "0.1.0"
+authors = []
+edition = "2018"
+publish = false
+
+[dependencies]
+tinyvec = { path = "..", features = ["extern_crate_alloc", "nightly_slice_partition_dedup"] }
+arbitrary-model-tests = { git = "https://github.com/jakubadamw/arbitrary-model-tests" }
+honggfuzz = "0.5.45"
+arbitrary = "0.2.0"
+better-panic = "0.2.0"
+derive_arbitrary = "0.2.0"

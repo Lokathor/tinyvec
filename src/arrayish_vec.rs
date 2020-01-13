@@ -200,8 +200,8 @@ impl<A: Arrayish> ArrayishVec<A> {
       Bound::Unbounded => 0,
     };
     let end = match range.end_bound() {
-      Bound::Included(x) => *x,
-      Bound::Excluded(x) => x - 1,
+      Bound::Included(x) => x + 1,
+      Bound::Excluded(x) => *x,
       Bound::Unbounded => self.len,
     };
     assert!(

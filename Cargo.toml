@@ -29,3 +29,10 @@ travis-ci = { repository = "Lokathor/tinyvec" }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[workspace]
+members = ["fuzz"]
+
+[[test]]
+name = "tinyvec"
+required-features = ["extern_crate_alloc"]
