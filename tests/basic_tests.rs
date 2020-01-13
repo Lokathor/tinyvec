@@ -124,6 +124,23 @@ fn ArrayishVec_remove() {
 }
 
 #[test]
+fn ArrayishVec_swap_remove() {
+  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+  av.push(4);
+  assert_eq!(av.swap_remove(3), 4);
+  assert_eq!(&av[..], &[1, 2, 3][..]);
+  assert_eq!(av.swap_remove(0), 1);
+  assert_eq!(&av[..], &[3, 2][..]);
+  assert_eq!(av.swap_remove(0), 3);
+  assert_eq!(&av[..], &[2][..]);
+  assert_eq!(av.swap_remove(0), 2);
+  assert_eq!(&av[..], &[][..]);
+}
+
+#[test]
 fn ArrayishVec_drain() {
   let mut av: ArrayishVec<[i32; 10]> = Default::default();
   av.push(1);

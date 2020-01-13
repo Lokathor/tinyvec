@@ -538,8 +538,12 @@ impl<A: Arrayish> ArrayishVec<A> {
       index,
       self.len
     );
-    let i = self.pop().unwrap();
-    replace(&mut self[index], i)
+    if index == self.len - 1 {
+        self.pop().unwrap()
+    } else {
+        let i = self.pop().unwrap();
+        replace(&mut self[index], i)
+    }
   }
 
   /// Reduces the vec's length to the given value.
