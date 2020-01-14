@@ -21,5 +21,5 @@ matrix:
 script:
   - cargo build
   - cargo test
-  - cargo build --features="extern_crate_alloc"
-  - cargo test --features="extern_crate_alloc"
+  - cargo build --features="alloc"
+  - cargo test --features="alloc"
