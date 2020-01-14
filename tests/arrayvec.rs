@@ -5,7 +5,7 @@ use std::iter::FromIterator;
 
 #[test]
 fn test_a_vec() {
-  let mut expected: ArrayishVec<[i32; 4]> = Default::default();
+  let mut expected: ArrayVec<[i32; 4]> = Default::default();
   expected.push(1);
   expected.push(2);
   expected.push(3);
@@ -16,8 +16,8 @@ fn test_a_vec() {
 }
 
 #[test]
-fn ArrayishVec_push_pop() {
-  let mut av: ArrayishVec<[i32; 4]> = Default::default();
+fn ArrayVec_push_pop() {
+  let mut av: ArrayVec<[i32; 4]> = Default::default();
   assert_eq!(av.len(), 0);
   assert_eq!(av.pop(), None);
 
@@ -50,16 +50,16 @@ fn ArrayishVec_push_pop() {
 
 #[test]
 #[should_panic]
-fn ArrayishVec_push_overflow() {
-  let mut av: ArrayishVec<[i32; 0]> = Default::default();
+fn ArrayVec_push_overflow() {
+  let mut av: ArrayVec<[i32; 0]> = Default::default();
   av.push(7);
 }
 
 #[test]
-fn ArrayishVec_formatting() {
+fn ArrayVec_formatting() {
   // check that we get the comma placement correct
 
-  let mut av: ArrayishVec<[i32; 4]> = Default::default();
+  let mut av: ArrayVec<[i32; 4]> = Default::default();
   assert_eq!(format!("{:?}", av), "[]");
   av.push(10);
   assert_eq!(format!("{:?}", av), "[10]");
@@ -71,23 +71,23 @@ fn ArrayishVec_formatting() {
   // below here just asserts that the impls exist.
 
   //
-  let av: ArrayishVec<[i32; 4]> = Default::default();
+  let av: ArrayVec<[i32; 4]> = Default::default();
   assert_eq!(format!("{:b}", av), "[]");
   assert_eq!(format!("{:o}", av), "[]");
   assert_eq!(format!("{:x}", av), "[]");
   assert_eq!(format!("{:X}", av), "[]");
   assert_eq!(format!("{}", av), "[]");
   //
-  let av: ArrayishVec<[f32; 4]> = Default::default();
+  let av: ArrayVec<[f32; 4]> = Default::default();
   assert_eq!(format!("{:e}", av), "[]");
   assert_eq!(format!("{:E}", av), "[]");
   //
-  let av: ArrayishVec<[&'static str; 4]> = Default::default();
+  let av: ArrayVec<[&'static str; 4]> = Default::default();
   assert_eq!(format!("{:p}", av), "[]");
 }
 
 #[test]
-fn ArrayishVec_iteration() {
+fn ArrayVec_iteration() {
   let av = arr_vec!([i32; 4], 10, 11, 12, 13);
 
   let mut i = av.into_iter();
@@ -99,12 +99,12 @@ fn ArrayishVec_iteration() {
 
   let av = arr_vec!([i32; 4], 10, 11, 12, 13);
 
-  let av2: ArrayishVec<[i32; 4]> = av.clone().into_iter().collect();
+  let av2: ArrayVec<[i32; 4]> = av.clone().into_iter().collect();
   assert_eq!(av, av2);
 }
 
 #[test]
-fn ArrayishVec_append() {
+fn ArrayVec_append() {
   let mut av = arr_vec!([i32; 8], 1, 2, 3);
   let mut av2 = arr_vec!([i32; 8], 4, 5, 6);
   //
@@ -114,8 +114,8 @@ fn ArrayishVec_append() {
 }
 
 #[test]
-fn ArrayishVec_remove() {
-  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+fn ArrayVec_remove() {
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);
   av.push(2);
   av.push(3);
@@ -124,8 +124,8 @@ fn ArrayishVec_remove() {
 }
 
 #[test]
-fn ArrayishVec_swap_remove() {
-  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+fn ArrayVec_swap_remove() {
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);
   av.push(2);
   av.push(3);
@@ -141,8 +141,8 @@ fn ArrayishVec_swap_remove() {
 }
 
 #[test]
-fn ArrayishVec_drain() {
-  let mut av: ArrayishVec<[i32; 10]> = Default::default();
+fn ArrayVec_drain() {
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);
   av.push(2);
   av.push(3);

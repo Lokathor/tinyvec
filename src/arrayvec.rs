@@ -1,6 +1,6 @@
 use super::*;
 
-/// Helper to make an `ArrayishVec`.
+/// Helper to make an `ArrayVec`.
 ///
 /// You specify the backing array type, and optionally give all the elements you
 /// want to initially place into the array.
@@ -19,13 +19,13 @@ use super::*;
 macro_rules! arr_vec {
   ($array_type:ty) => {
     {
-      let mut av: ArrayishVec<$array_type> = Default::default();
+      let mut av: ArrayVec<$array_type> = Default::default();
       av
     }
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      let mut av: ArrayishVec<$array_type> = Default::default();
+      let mut av: ArrayVec<$array_type> = Default::default();
       $( av.push($elem); )*
       av
     }
@@ -39,12 +39,12 @@ macro_rules! arr_vec {
 /// * All of the array memory is always initialized.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
-pub struct ArrayishVec<A: Arrayish> {
+pub struct ArrayVec<A: Array> {
   len: usize,
   data: A,
 }
 
-impl<A: Arrayish> Deref for ArrayishVec<A> {
+impl<A: Array> Deref for ArrayVec<A> {
   type Target = [A::Item];
   #[inline(always)]
   #[must_use]
@@ -53,7 +53,7 @@ impl<A: Arrayish> Deref for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> DerefMut for ArrayishVec<A> {
+impl<A: Array> DerefMut for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref_mut(&mut self) -> &mut Self::Target {
@@ -61,7 +61,7 @@ impl<A: Arrayish> DerefMut for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish, I: SliceIndex<[A::Item]>> Index<I> for ArrayishVec<A> {
+impl<A: Array, I: SliceIndex<[A::Item]>> Index<I> for ArrayVec<A> {
   type Output = <I as SliceIndex<[A::Item]>>::Output;
   #[inline(always)]
   #[must_use]
@@ -70,7 +70,7 @@ impl<A: Arrayish, I: SliceIndex<[A::Item]>> Index<I> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayishVec<A> {
+impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
@@ -78,7 +78,7 @@ impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> ArrayishVec<A> {
+impl<A: Array> ArrayVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
@@ -123,7 +123,7 @@ impl<A: Arrayish> ArrayishVec<A> {
     self.deref()
   }
 
-  /// The capacity of the `ArrayishVec`.
+  /// The capacity of the `ArrayVec`.
   /// 
   /// This is fixed based on the array type.
   #[inline(always)]
@@ -181,7 +181,7 @@ impl<A: Arrayish> ArrayishVec<A> {
   /// ```rust
   /// use tinyvec::*;
   /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
-  /// let av2: ArrayishVec<[i32; 4]> = av.drain(1..).collect();
+  /// let av2: ArrayVec<[i32; 4]> = av.drain(1..).collect();
   /// assert_eq!(av.as_slice(), &[1][..]);
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
   ///
@@ -192,7 +192,7 @@ impl<A: Arrayish> ArrayishVec<A> {
   pub fn drain<R: RangeBounds<usize>>(
     &mut self,
     range: R,
-  ) -> ArrayishVecDrain<'_, A> {
+  ) -> ArrayVecDrain<'_, A> {
     use core::ops::Bound;
     let start = match range.start_bound() {
       Bound::Included(x) => *x,
@@ -206,17 +206,17 @@ impl<A: Arrayish> ArrayishVec<A> {
     };
     assert!(
       start <= end,
-      "ArrayishVec::drain> Illegal range, {} to {}",
+      "ArrayVec::drain> Illegal range, {} to {}",
       start,
       end
     );
     assert!(
       end <= self.len,
-      "ArrayishVec::drain> Range ends at {} but length is only {}!",
+      "ArrayVec::drain> Range ends at {} but length is only {}!",
       end,
       self.len
     );
-    ArrayishVecDrain {
+    ArrayVecDrain {
       parent: self,
       target_index: start,
       target_count: end - start,
@@ -250,7 +250,7 @@ impl<A: Arrayish> ArrayishVec<A> {
     match Self::try_from_array_len(data, len) {
       Ok(out) => out,
       Err(_) => {
-        panic!("ArrayishVec: length {} exceeds capacity {}!", len, A::CAPACITY)
+        panic!("ArrayVec: length {} exceeds capacity {}!", len, A::CAPACITY)
       }
     }
   }
@@ -287,7 +287,7 @@ impl<A: Arrayish> ArrayishVec<A> {
       }
       Ordering::Greater => {
         panic!(
-          "ArrayishVec::insert> index {} is out of bounds {}",
+          "ArrayVec::insert> index {} is out of bounds {}",
           index, self.len
         );
       }
@@ -336,13 +336,13 @@ impl<A: Arrayish> ArrayishVec<A> {
 
   /// Place an element onto the end of the vec.
   /// 
-  /// See also, [`try_push`](ArrayishVec::try_push)
+  /// See also, [`try_push`](ArrayVec::try_push)
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
     if self.try_push(val).is_err() {
-      panic!("ArrayishVec: overflow!")
+      panic!("ArrayVec: overflow!")
     }
   }
 
@@ -499,7 +499,7 @@ impl<A: Arrayish> ArrayishVec<A> {
     // FIXME: should this just use drain into the output?
     if at > self.len {
       panic!(
-        "ArrayishVec::split_off> at value {} exceeds length of {}",
+        "ArrayVec::split_off> at value {} exceeds length of {}",
         at, self.len
       );
     }
@@ -534,7 +534,7 @@ impl<A: Arrayish> ArrayishVec<A> {
   pub fn swap_remove(&mut self, index: usize) -> A::Item {
     assert!(
       index < self.len,
-      "ArrayishVec::swap_remove> index {} is out of bounds {}",
+      "ArrayVec::swap_remove> index {} is out of bounds {}",
       index,
       self.len
     );
@@ -600,17 +600,17 @@ impl<A: Arrayish> ArrayishVec<A> {
   // LATER: try_remove ?
 }
 
-/// Draining iterator for `ArrayishVecDrain`
+/// Draining iterator for `ArrayVecDrain`
 /// 
-/// See [`ArrayishVecDrain::drain`](ArrayishVecDrain::<A>::drain)
-pub struct ArrayishVecDrain<'p, A: Arrayish> {
-  parent: &'p mut ArrayishVec<A>,
+/// See [`ArrayVecDrain::drain`](ArrayVecDrain::<A>::drain)
+pub struct ArrayVecDrain<'p, A: Array> {
+  parent: &'p mut ArrayVec<A>,
   target_index: usize,
   target_count: usize,
 }
 // GoodFirstIssue: this entire type is correct but slow.
 // NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
-impl<'p, A: Arrayish> Iterator for ArrayishVecDrain<'p, A> {
+impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
@@ -623,14 +623,14 @@ impl<'p, A: Arrayish> Iterator for ArrayishVecDrain<'p, A> {
     }
   }
 }
-impl<'p, A: Arrayish> Drop for ArrayishVecDrain<'p, A> {
+impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
     for _ in self {}
   }
 }
 
-impl<A: Arrayish> AsMut<[A::Item]> for ArrayishVec<A> {
+impl<A: Array> AsMut<[A::Item]> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn as_mut(&mut self) -> &mut [A::Item] {
@@ -638,7 +638,7 @@ impl<A: Arrayish> AsMut<[A::Item]> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> AsRef<[A::Item]> for ArrayishVec<A> {
+impl<A: Array> AsRef<[A::Item]> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn as_ref(&self) -> &[A::Item] {
@@ -646,7 +646,7 @@ impl<A: Arrayish> AsRef<[A::Item]> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> Borrow<[A::Item]> for ArrayishVec<A> {
+impl<A: Array> Borrow<[A::Item]> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn borrow(&self) -> &[A::Item] {
@@ -654,7 +654,7 @@ impl<A: Arrayish> Borrow<[A::Item]> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> BorrowMut<[A::Item]> for ArrayishVec<A> {
+impl<A: Array> BorrowMut<[A::Item]> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn borrow_mut(&mut self) -> &mut [A::Item] {
@@ -662,7 +662,7 @@ impl<A: Arrayish> BorrowMut<[A::Item]> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> Extend<A::Item> for ArrayishVec<A> {
+impl<A: Array> Extend<A::Item> for ArrayVec<A> {
   #[inline]
   fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
     for t in iter {
@@ -671,19 +671,19 @@ impl<A: Arrayish> Extend<A::Item> for ArrayishVec<A> {
   }
 }
 
-impl<A: Arrayish> From<A> for ArrayishVec<A> {
+impl<A: Array> From<A> for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   /// The output has a length equal to the full array.
   ///
   /// If you want to select a length, use
-  /// [`from_array_len`](ArrayishVec::from_array_len)
+  /// [`from_array_len`](ArrayVec::from_array_len)
   fn from(data: A) -> Self {
     Self { len: data.slice().len(), data }
   }
 }
 
-impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
+impl<A: Array + Default> FromIterator<A::Item> for ArrayVec<A> {
   #[inline]
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
@@ -695,13 +695,13 @@ impl<A: Arrayish + Default> FromIterator<A::Item> for ArrayishVec<A> {
   }
 }
 
-/// Iterator for consuming an `ArrayishVec` and returning owned elements.
-pub struct ArrayishVecIterator<A: Arrayish> {
+/// Iterator for consuming an `ArrayVec` and returning owned elements.
+pub struct ArrayVecIterator<A: Array> {
   base: usize,
   len: usize,
   data: A,
 }
-impl<A: Arrayish> Iterator for ArrayishVecIterator<A> {
+impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
@@ -741,17 +741,17 @@ impl<A: Arrayish> Iterator for ArrayishVecIterator<A> {
   }
 }
 
-impl<A: Arrayish> IntoIterator for ArrayishVec<A> {
+impl<A: Array> IntoIterator for ArrayVec<A> {
   type Item = A::Item;
-  type IntoIter = ArrayishVecIterator<A>;
+  type IntoIter = ArrayVecIterator<A>;
   #[inline(always)]
   #[must_use]
   fn into_iter(self) -> Self::IntoIter {
-    ArrayishVecIterator { base: 0, len: self.len, data: self.data }
+    ArrayVecIterator { base: 0, len: self.len, data: self.data }
   }
 }
 
-impl<A: Arrayish> PartialEq for ArrayishVec<A>
+impl<A: Array> PartialEq for ArrayVec<A>
 where
   A::Item: PartialEq,
 {
@@ -761,9 +761,9 @@ where
     self.deref().eq(other.deref())
   }
 }
-impl<A: Arrayish> Eq for ArrayishVec<A> where A::Item: Eq {}
+impl<A: Array> Eq for ArrayVec<A> where A::Item: Eq {}
 
-impl<A: Arrayish> PartialOrd for ArrayishVec<A>
+impl<A: Array> PartialOrd for ArrayVec<A>
 where
   A::Item: PartialOrd,
 {
@@ -773,7 +773,7 @@ where
     self.deref().partial_cmp(other.deref())
   }
 }
-impl<A: Arrayish> Ord for ArrayishVec<A>
+impl<A: Array> Ord for ArrayVec<A>
 where
   A::Item: Ord,
 {
@@ -784,7 +784,7 @@ where
   }
 }
 
-impl<A: Arrayish> PartialEq<&A> for ArrayishVec<A>
+impl<A: Array> PartialEq<&A> for ArrayVec<A>
 where
   A::Item: PartialEq,
 {
@@ -795,7 +795,7 @@ where
   }
 }
 
-impl<A: Arrayish> PartialEq<&[A::Item]> for ArrayishVec<A>
+impl<A: Array> PartialEq<&[A::Item]> for ArrayVec<A>
 where
   A::Item: PartialEq,
 {
@@ -813,7 +813,7 @@ I think, in retrospect, this is useless?
 The `&mut [A::Item]` should coerce to `&[A::Item]` and use the above impl.
 I'll leave it here for now though since we already had it written out..
 
-impl<A: Arrayish> PartialEq<&mut [A::Item]> for ArrayishVec<A>
+impl<A: Array> PartialEq<&mut [A::Item]> for ArrayVec<A>
 where
   A::Item: PartialEq,
 {
@@ -829,7 +829,7 @@ where
 // Formatting impls
 // //
 
-impl<A: Arrayish> Binary for ArrayishVec<A>
+impl<A: Array> Binary for ArrayVec<A>
 where
   A::Item: Binary,
 {
@@ -846,7 +846,7 @@ where
   }
 }
 
-impl<A: Arrayish> Debug for ArrayishVec<A>
+impl<A: Array> Debug for ArrayVec<A>
 where
   A::Item: Debug,
 {
@@ -863,7 +863,7 @@ where
   }
 }
 
-impl<A: Arrayish> Display for ArrayishVec<A>
+impl<A: Array> Display for ArrayVec<A>
 where
   A::Item: Display,
 {
@@ -880,7 +880,7 @@ where
   }
 }
 
-impl<A: Arrayish> LowerExp for ArrayishVec<A>
+impl<A: Array> LowerExp for ArrayVec<A>
 where
   A::Item: LowerExp,
 {
@@ -897,7 +897,7 @@ where
   }
 }
 
-impl<A: Arrayish> LowerHex for ArrayishVec<A>
+impl<A: Array> LowerHex for ArrayVec<A>
 where
   A::Item: LowerHex,
 {
@@ -914,7 +914,7 @@ where
   }
 }
 
-impl<A: Arrayish> Octal for ArrayishVec<A>
+impl<A: Array> Octal for ArrayVec<A>
 where
   A::Item: Octal,
 {
@@ -931,7 +931,7 @@ where
   }
 }
 
-impl<A: Arrayish> Pointer for ArrayishVec<A>
+impl<A: Array> Pointer for ArrayVec<A>
 where
   A::Item: Pointer,
 {
@@ -948,7 +948,7 @@ where
   }
 }
 
-impl<A: Arrayish> UpperExp for ArrayishVec<A>
+impl<A: Array> UpperExp for ArrayVec<A>
 where
   A::Item: UpperExp,
 {
@@ -965,7 +965,7 @@ where
   }
 }
 
-impl<A: Arrayish> UpperHex for ArrayishVec<A>
+impl<A: Array> UpperHex for ArrayVec<A>
 where
   A::Item: UpperHex,
 {

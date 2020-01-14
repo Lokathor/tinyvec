@@ -1,16 +1,21 @@
 /// A trait for types that can be the backing store of an
-/// [`ArrayishVec`](ArrayishVec::<A>).
+/// [`ArrayVec`](ArrayVec::<A>).
 ///
-/// You are not generally expected to need to implement this yourself. You can
-/// if you want I guess. Impls are provided for arrays of length `0..=32`, 33,
-/// and powers of 2 up to 4096. Additional lengths can probably be added upon
-/// request.
+/// An "array", for our purposes, has the following basic properties:
+/// * Owns some number of elements.
+/// * The element type can be generic, but must implement [`Default`].
+/// * The capacity is fixed based on the array type.
+/// * You can get a shared or mutable slice to the elements.
+///
+/// You are generally note expected to need to implement this yourself. It is
+/// already implemented for all the major array lengths. Additional lengths can
+/// probably be added upon request.
 ///
 /// ## Safety Reminder
 ///
-/// As a reminder, the `Arrayish` trait is 100% safe so unsafe code **must not**
-/// rely on an instance of the trait being correct.
-pub trait Arrayish {
+/// As a reminder, this trait is 100% safe, which means that `unsafe` code
+/// **must not** rely on an instance of the trait being correct to avoid UB.
+pub trait Array {
   /// The type of the items in the thing.
   type Item: Default;
 
@@ -30,9 +35,9 @@ pub trait Arrayish {
   fn slice_mut(&mut self) -> &mut [Self::Item];
 }
 
-macro_rules! impl_arrayish_for_len {
+macro_rules! impl_array_for_len {
   ($($len:expr),+ $(,)?) => {
-    $(impl<T: Default> Arrayish for [T; $len] {
+    $(impl<T: Default> Array for [T; $len] {
       type Item = T;
       const CAPACITY: usize = $len;
       #[inline(always)]
@@ -47,7 +52,7 @@ macro_rules! impl_arrayish_for_len {
   }
 }
 
-impl_arrayish_for_len! {
+impl_array_for_len! {
   0, /* The oft-forgotten 0-length array! */
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,

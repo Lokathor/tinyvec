@@ -21,17 +21,20 @@ macro_rules! tiny_vec {
   };
 }
 
+/// A vector that starts inline, but can automatically move to the heap.
+/// 
+/// * Requires the `alloc` feature
 #[derive(Clone)]
-pub enum TinyVec<A: Arrayish> {
-  Inline(ArrayishVec<A>),
+pub enum TinyVec<A: Array> {
+  Inline(ArrayVec<A>),
   Heap(Vec<A::Item>)
 }
-impl<A: Arrayish + Default> Default for TinyVec<A> {
+impl<A: Array + Default> Default for TinyVec<A> {
   fn default() -> Self {
-    TinyVec::Inline(ArrayishVec::default())
+    TinyVec::Inline(ArrayVec::default())
   }
 }
-impl<A: Arrayish> TinyVec<A> {
+impl<A: Array> TinyVec<A> {
   /// Moves the content of the TinyVec to the heap, if it's inline.
   pub fn move_to_the_heap(&mut self) {
     match self {
@@ -47,7 +50,7 @@ impl<A: Arrayish> TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> Deref for TinyVec<A> {
+impl<A: Array> Deref for TinyVec<A> {
   type Target = [A::Item];
   #[inline(always)]
   #[must_use]
@@ -59,7 +62,7 @@ impl<A: Arrayish> Deref for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> DerefMut for TinyVec<A> {
+impl<A: Array> DerefMut for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref_mut(&mut self) -> &mut Self::Target {
@@ -70,7 +73,7 @@ impl<A: Arrayish> DerefMut for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish, I: SliceIndex<[A::Item]>> Index<I> for TinyVec<A> {
+impl<A: Array, I: SliceIndex<[A::Item]>> Index<I> for TinyVec<A> {
   type Output = <I as SliceIndex<[A::Item]>>::Output;
   #[inline(always)]
   #[must_use]
@@ -79,7 +82,7 @@ impl<A: Arrayish, I: SliceIndex<[A::Item]>> Index<I> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
+impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
@@ -87,7 +90,7 @@ impl<A: Arrayish, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> TinyVec<A> {
+impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
@@ -339,7 +342,7 @@ impl<A: Arrayish> TinyVec<A> {
 
   /// Place an element onto the end of the vec.
   /// 
-  /// See also, [`try_push`](TinyVec::try_push)
+  /// See also, [`try_push`](TinyVec::<A>::try_push)
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
@@ -544,7 +547,7 @@ impl<A: Arrayish> TinyVec<A> {
   /// error, and you'll get the array back in the `Err`.
   #[inline]
   pub fn try_from_array_len(data: A, len: usize) -> Result<Self, A> {
-    let arr = ArrayishVec::try_from_array_len(data, len)?;
+    let arr = ArrayVec::try_from_array_len(data, len)?;
     Ok(TinyVec::Inline(arr))
   }
 
@@ -558,14 +561,14 @@ impl<A: Arrayish> TinyVec<A> {
 /// Draining iterator for `TinyVecDrain`
 /// 
 /// See [`TinyVecDrain::drain`](TinyVecDrain::<A>::drain)
-pub struct TinyVecDrain<'p, A: Arrayish> {
+pub struct TinyVecDrain<'p, A: Array> {
   parent: &'p mut TinyVec<A>,
   target_index: usize,
   target_count: usize,
 }
 // GoodFirstIssue: this entire type is correct but slow.
 // NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
-impl<'p, A: Arrayish> Iterator for TinyVecDrain<'p, A> {
+impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
@@ -578,14 +581,14 @@ impl<'p, A: Arrayish> Iterator for TinyVecDrain<'p, A> {
     }
   }
 }
-impl<'p, A: Arrayish> Drop for TinyVecDrain<'p, A> {
+impl<'p, A: Array> Drop for TinyVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
     for _ in self {}
   }
 }
 
-impl<A: Arrayish> AsMut<[A::Item]> for TinyVec<A> {
+impl<A: Array> AsMut<[A::Item]> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn as_mut(&mut self) -> &mut [A::Item] {
@@ -593,7 +596,7 @@ impl<A: Arrayish> AsMut<[A::Item]> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> AsRef<[A::Item]> for TinyVec<A> {
+impl<A: Array> AsRef<[A::Item]> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn as_ref(&self) -> &[A::Item] {
@@ -601,7 +604,7 @@ impl<A: Arrayish> AsRef<[A::Item]> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> Borrow<[A::Item]> for TinyVec<A> {
+impl<A: Array> Borrow<[A::Item]> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn borrow(&self) -> &[A::Item] {
@@ -609,7 +612,7 @@ impl<A: Arrayish> Borrow<[A::Item]> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> BorrowMut<[A::Item]> for TinyVec<A> {
+impl<A: Array> BorrowMut<[A::Item]> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
   fn borrow_mut(&mut self) -> &mut [A::Item] {
@@ -617,7 +620,7 @@ impl<A: Arrayish> BorrowMut<[A::Item]> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> Extend<A::Item> for TinyVec<A> {
+impl<A: Array> Extend<A::Item> for TinyVec<A> {
   #[inline]
   fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
     for t in iter {
@@ -626,15 +629,15 @@ impl<A: Arrayish> Extend<A::Item> for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> From<ArrayishVec<A>> for TinyVec<A> {
+impl<A: Array> From<ArrayVec<A>> for TinyVec<A> {
   #[inline(always)]
   #[must_use]
-  fn from(arr: ArrayishVec<A>) -> Self {
+  fn from(arr: ArrayVec<A>) -> Self {
     TinyVec::Inline(arr)
   }
 }
 
-impl<A: Arrayish + Default> FromIterator<A::Item> for TinyVec<A> {
+impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
   #[inline]
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
@@ -647,11 +650,11 @@ impl<A: Arrayish + Default> FromIterator<A::Item> for TinyVec<A> {
 }
 
 /// Iterator for consuming an `TinyVec` and returning owned elements.
-pub enum TinyVecIterator<A: Arrayish> {
-  Inline(ArrayishVecIterator<A>),
+pub enum TinyVecIterator<A: Array> {
+  Inline(ArrayVecIterator<A>),
   Heap(alloc::vec::IntoIter<A::Item>)
 }
-impl<A: Arrayish> Iterator for TinyVecIterator<A> {
+impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
@@ -676,7 +679,7 @@ impl<A: Arrayish> Iterator for TinyVecIterator<A> {
     }
   }
   #[inline]
-  fn last(mut self) -> Option<Self::Item> {
+  fn last(self) -> Option<Self::Item> {
     match self {
       TinyVecIterator::Inline(a) => a.last(),
       TinyVecIterator::Heap(v) => v.last(),
@@ -691,7 +694,7 @@ impl<A: Arrayish> Iterator for TinyVecIterator<A> {
   }
 }
 
-impl<A: Arrayish> IntoIterator for TinyVec<A> {
+impl<A: Array> IntoIterator for TinyVec<A> {
   type Item = A::Item;
   type IntoIter = TinyVecIterator<A>;
   #[inline(always)]
@@ -704,7 +707,7 @@ impl<A: Arrayish> IntoIterator for TinyVec<A> {
   }
 }
 
-impl<A: Arrayish> PartialEq for TinyVec<A>
+impl<A: Array> PartialEq for TinyVec<A>
 where
   A::Item: PartialEq,
 {
@@ -714,9 +717,9 @@ where
     self.deref().eq(other.deref())
   }
 }
-impl<A: Arrayish> Eq for TinyVec<A> where A::Item: Eq {}
+impl<A: Array> Eq for TinyVec<A> where A::Item: Eq {}
 
-impl<A: Arrayish> PartialOrd for TinyVec<A>
+impl<A: Array> PartialOrd for TinyVec<A>
 where
   A::Item: PartialOrd,
 {
@@ -726,7 +729,7 @@ where
     self.deref().partial_cmp(other.deref())
   }
 }
-impl<A: Arrayish> Ord for TinyVec<A>
+impl<A: Array> Ord for TinyVec<A>
 where
   A::Item: Ord,
 {
@@ -737,7 +740,7 @@ where
   }
 }
 
-impl<A: Arrayish> PartialEq<&A> for TinyVec<A>
+impl<A: Array> PartialEq<&A> for TinyVec<A>
 where
   A::Item: PartialEq,
 {
@@ -748,7 +751,7 @@ where
   }
 }
 
-impl<A: Arrayish> PartialEq<&[A::Item]> for TinyVec<A>
+impl<A: Array> PartialEq<&[A::Item]> for TinyVec<A>
 where
   A::Item: PartialEq,
 {
@@ -766,7 +769,7 @@ I think, in retrospect, this is useless?
 The `&mut [A::Item]` should coerce to `&[A::Item]` and use the above impl.
 I'll leave it here for now though since we already had it written out..
 
-impl<A: Arrayish> PartialEq<&mut [A::Item]> for TinyVec<A>
+impl<A: Array> PartialEq<&mut [A::Item]> for TinyVec<A>
 where
   A::Item: PartialEq,
 {
@@ -782,7 +785,7 @@ where
 // Formatting impls
 // //
 
-impl<A: Arrayish> Binary for TinyVec<A>
+impl<A: Array> Binary for TinyVec<A>
 where
   A::Item: Binary,
 {
@@ -799,7 +802,7 @@ where
   }
 }
 
-impl<A: Arrayish> Debug for TinyVec<A>
+impl<A: Array> Debug for TinyVec<A>
 where
   A::Item: Debug,
 {
@@ -816,7 +819,7 @@ where
   }
 }
 
-impl<A: Arrayish> Display for TinyVec<A>
+impl<A: Array> Display for TinyVec<A>
 where
   A::Item: Display,
 {
@@ -833,7 +836,7 @@ where
   }
 }
 
-impl<A: Arrayish> LowerExp for TinyVec<A>
+impl<A: Array> LowerExp for TinyVec<A>
 where
   A::Item: LowerExp,
 {
@@ -850,7 +853,7 @@ where
   }
 }
 
-impl<A: Arrayish> LowerHex for TinyVec<A>
+impl<A: Array> LowerHex for TinyVec<A>
 where
   A::Item: LowerHex,
 {
@@ -867,7 +870,7 @@ where
   }
 }
 
-impl<A: Arrayish> Octal for TinyVec<A>
+impl<A: Array> Octal for TinyVec<A>
 where
   A::Item: Octal,
 {
@@ -884,7 +887,7 @@ where
   }
 }
 
-impl<A: Arrayish> Pointer for TinyVec<A>
+impl<A: Array> Pointer for TinyVec<A>
 where
   A::Item: Pointer,
 {
@@ -901,7 +904,7 @@ where
   }
 }
 
-impl<A: Arrayish> UpperExp for TinyVec<A>
+impl<A: Array> UpperExp for TinyVec<A>
 where
   A::Item: UpperExp,
 {
@@ -918,7 +921,7 @@ where
   }
 }
 
-impl<A: Arrayish> UpperHex for TinyVec<A>
+impl<A: Array> UpperHex for TinyVec<A>
 where
   A::Item: UpperHex,
 {

@@ -23,15 +23,20 @@
 //!   However, [quite a
 //!   few](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
 //!   types have a `Default` impl, so I think that for a lot of common cases you
-//!   can use these vectors.
+//!   can use these vecs.
 //! * [`ArrayVec`] is an array-backed vec-like where all slots are "live" in the
 //!   Rust sense, but the structure tracks what the intended length is as you
 //!   push and pop elements and so forth. If you try to grow the length past the
 //!   array's capacity it'll error or panic (depending on the method used).
+//!   * (Note: I am _very sorry_ that this type has the same name as the
+//!     `ArrayVec` type in the `arrayvec` crate. We really couldn't think of
+//!     another name for this sort of data structure. Please [contact
+//!     us](https://github.com/Lokathor/tinyvec/issues) with a better name
+//!     before this crate is 1.0 if you can think of one.)
 //! * [`TinyVec`] is an enum that's either an "inline" `ArrayVec` or a "heap"
 //!   `Vec`. If it's in array mode and you try to grow the vec beyond it's
 //!   capacity it'll quietly transition into heap mode for you and then continue
-//!   operation.
+//!   operation. This type is naturally behind the `alloc` feature gate.
 //!
 //! ## Stability Goal
 //!
@@ -59,6 +64,9 @@
 //!      are usually fairly long and perhaps even a little silly. It is the hope
 //!      that this "convention" will prevent any potential name clash between
 //!      our vec types and the standard `Vec` type.
+//!    * That said, I'm not one of those "never 2.0" people, so if `Vec` lands
+//!      some method with the same name as something we have, we'll just bite
+//!      the bullet and fix it with a breaking change.
 
 use core::{
   borrow::{Borrow, BorrowMut},
@@ -78,11 +86,11 @@ use core::{
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-mod arrayish;
-pub use arrayish::*;
+mod array;
+pub use array::*;
 
-mod arrayish_vec;
-pub use arrayish_vec::*;
+mod arrayvec;
+pub use arrayvec::*;
 
 #[cfg(feature = "alloc")]
 mod tiny_vec;
