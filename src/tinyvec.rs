@@ -4,6 +4,21 @@ use super::*;
 
 use alloc::vec::Vec;
 
+/// Helper to make a `TinyVec`.
+///
+/// You specify the backing array type, and optionally give all the elements you
+/// want to initially place into the array.
+///
+/// As an unfortunate restriction, the backing array type must support `Default`
+/// for it to work with this macro.
+///
+/// ```rust
+/// use tinyvec::*;
+/// 
+/// let empty_av = tiny_vec!([u8; 16]);
+/// 
+/// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+/// ```
 #[macro_export]
 macro_rules! tiny_vec {
   ($array_type:ty) => {
@@ -22,20 +37,32 @@ macro_rules! tiny_vec {
 }
 
 /// A vector that starts inline, but can automatically move to the heap.
-/// 
+///
 /// * Requires the `alloc` feature
+///
+/// Note: This is currently an enum but you can mostly ignore that detail if you
+/// like. In future versions this **may** become an opaque struct, but for now
+/// we're being a little more liberal about allowing you to "access the
+/// internals" since no safety invariants are on the line. It's kinda wild how
+/// much you can just let people poke at stuff without worry when it's 100% safe
+/// code.
 #[derive(Clone)]
 pub enum TinyVec<A: Array> {
+  #[allow(missing_docs)]
   Inline(ArrayVec<A>),
+  #[allow(missing_docs)]
   Heap(Vec<A::Item>)
 }
 impl<A: Array + Default> Default for TinyVec<A> {
+  #[inline]
+  #[must_use]
   fn default() -> Self {
     TinyVec::Inline(ArrayVec::default())
   }
 }
 impl<A: Array> TinyVec<A> {
   /// Moves the content of the TinyVec to the heap, if it's inline.
+  #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
     match self {
       TinyVec::Inline(ref mut arr) => {
@@ -651,7 +678,9 @@ impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
 
 /// Iterator for consuming an `TinyVec` and returning owned elements.
 pub enum TinyVecIterator<A: Array> {
+  #[allow(missing_docs)]
   Inline(ArrayVecIterator<A>),
+  #[allow(missing_docs)]
   Heap(alloc::vec::IntoIter<A::Item>)
 }
 impl<A: Array> Iterator for TinyVecIterator<A> {

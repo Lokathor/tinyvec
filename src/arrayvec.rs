@@ -11,12 +11,12 @@ use super::*;
 /// ```rust
 /// use tinyvec::*;
 /// 
-/// let empty_av = arr_vec!([u8; 16]);
+/// let empty_av = array_vec!([u8; 16]);
 /// 
-/// let some_ints = arr_vec!([i32; 4], 1, 2, 3);
+/// let some_ints = array_vec!([i32; 4], 1, 2, 3);
 /// ```
 #[macro_export]
-macro_rules! arr_vec {
+macro_rules! array_vec {
   ($array_type:ty) => {
     {
       let mut av: ArrayVec<$array_type> = Default::default();
@@ -180,7 +180,7 @@ impl<A: Array> ArrayVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// let mut av = array_vec!([i32; 4], 1, 2, 3);
   /// let av2: ArrayVec<[i32; 4]> = av.drain(1..).collect();
   /// assert_eq!(av.as_slice(), &[1][..]);
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
@@ -264,7 +264,7 @@ impl<A: Array> ArrayVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
+  /// let mut av = array_vec!([i32; 10], 1, 2, 3);
   /// av.insert(1, 4);
   /// assert_eq!(av.as_slice(), &[1, 4, 2, 3]);
   /// av.insert(4, 5);
@@ -358,7 +358,7 @@ impl<A: Array> ArrayVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// let mut av = array_vec!([i32; 4], 1, 2, 3);
   /// assert_eq!(av.remove(1), 2);
   /// assert_eq!(av.as_slice(), &[1, 3][..]);
   /// ```
@@ -385,11 +385,11 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([&str; 10], "hello");
+  /// let mut av = array_vec!([&str; 10], "hello");
   /// av.resize(3, "world");
   /// assert_eq!(av.as_slice(), &["hello", "world", "world"][..]);
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
+  /// let mut av = array_vec!([i32; 10], 1, 2, 3, 4);
   /// av.resize(2, 0);
   /// assert_eq!(av.as_slice(), &[1, 2][..]);
   /// ```
@@ -420,11 +420,11 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3);
+  /// let mut av = array_vec!([i32; 10], 1, 2, 3);
   /// av.resize_with(5, Default::default);
   /// assert_eq!(av.as_slice(), &[1, 2, 3, 0, 0][..]);
   ///
-  /// let mut av = arr_vec!([i32; 10]);
+  /// let mut av = array_vec!([i32; 10]);
   /// let mut p = 1;
   /// av.resize_with(4, || {
   ///   p *= 2;
@@ -457,7 +457,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = arr_vec!([i32; 10], 1, 2, 3, 4);
+  /// let mut av = array_vec!([i32; 10], 1, 2, 3, 4);
   /// av.retain(|&x| x % 2 == 0);
   /// assert_eq!(av.as_slice(), &[2, 4][..]);
   /// ```
@@ -486,7 +486,7 @@ impl<A: Array> ArrayVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([i32; 4], 1, 2, 3);
+  /// let mut av = array_vec!([i32; 4], 1, 2, 3);
   /// let av2 = av.split_off(1);
   /// assert_eq!(av.as_slice(), &[1][..]);
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
@@ -522,7 +522,7 @@ impl<A: Array> ArrayVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut av = arr_vec!([&str; 4], "foo", "bar", "quack", "zap");
+  /// let mut av = array_vec!([&str; 4], "foo", "bar", "quack", "zap");
   ///
   /// assert_eq!(av.swap_remove(1), "bar");
   /// assert_eq!(av.as_slice(), &["foo", "zap", "quack"][..]);

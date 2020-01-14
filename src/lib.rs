@@ -93,6 +93,6 @@ mod arrayvec;
 pub use arrayvec::*;
 
 #[cfg(feature = "alloc")]
-mod tiny_vec;
+mod tinyvec;
 #[cfg(feature = "alloc")]
-pub use tiny_vec::*;
+pub use tinyvec::*;
