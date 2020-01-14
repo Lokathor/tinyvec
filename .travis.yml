@@ -23,3 +23,9 @@ script:
   - cargo test
   - cargo build --features="alloc"
   - cargo test --features="alloc"
+  - |
+    if [[ $TRAVIS_RUST_VERSION == "nightly" ]]
+    then
+      cargo build --all-features
+      cargo test --all-features
+    fi
