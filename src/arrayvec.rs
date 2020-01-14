@@ -138,6 +138,7 @@ impl<A: Array> ArrayVec<A> {
     self.truncate(0)
   }
 
+  /// De-duplicates the vec.
   #[cfg(feature = "nightly_slice_partition_dedup")]
   #[inline(always)]
   pub fn dedup(&mut self)
@@ -147,6 +148,7 @@ impl<A: Array> ArrayVec<A> {
     self.dedup_by(|a, b| a == b)
   }
 
+  /// De-duplicates the vec according to the predicate given.
   #[cfg(feature = "nightly_slice_partition_dedup")]
   #[inline(always)]
   pub fn dedup_by<F>(&mut self, same_bucket: F)
@@ -160,6 +162,7 @@ impl<A: Array> ArrayVec<A> {
     self.truncate(len);
   }
 
+  /// De-duplicates the vec according to the key selector given.
   #[cfg(feature = "nightly_slice_partition_dedup")]
   #[inline(always)]
   pub fn dedup_by_key<F, K>(&mut self, mut key: F)
