@@ -405,7 +405,12 @@ impl<A: Arrayish> TinyVec<A> {
     A::Item: Clone,
   {
     match self {
-      TinyVec::Inline(a) => a.resize(new_len, new_val),
+      TinyVec::Inline(a) => if new_len > A::CAPACITY {
+        self.move_to_the_heap();
+        self.resize(new_len, new_val);
+      } else {
+        a.resize(new_len, new_val);
+      },
       TinyVec::Heap(v) => v.resize(new_len, new_val),
     }
   }

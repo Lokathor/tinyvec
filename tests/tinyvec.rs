@@ -48,3 +48,10 @@ fn TinyVec_drain() {
   assert_eq!(Vec::from_iter(tv.clone().drain(1..=1)), vec![2]);
   assert_eq!(Vec::from_iter(tv.clone().drain(1..=2)), vec![2, 3]);
 }
+
+#[test]
+fn TinyVec_resize() {
+  let mut tv: TinyVec<[i32; 10]> = Default::default();
+  tv.resize(20, 5);
+  assert_eq!(&tv[..], &[5; 20]);
+}
