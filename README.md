@@ -5,19 +5,10 @@
 [![crates.io](https://img.shields.io/crates/v/tinyvec.svg)](https://crates.io/crates/tinyvec)
 [![docs.rs](https://docs.rs/tinyvec/badge.svg)](https://docs.rs/tinyvec/)
 
-![Unsafe-Zero-Percent](https://img.shields.io/badge/Unsafety-0%25-green.svg)
+![Unsafe-Zero-Percent](https://img.shields.io/badge/Unsafety-0%25-brightgreen.svg)
 
 # tinyvec
 
-Just, really the littlest Vec you could need. So smol.
+A 100% safe crate of vec-like types.
 
-This is one of those crates where an initial small number of elements will be
-kept on the stack, and then if you overflow that it will quietly transition
-everything into being a totally normal `alloc::vec::Vec`.
-
-What sets this crate apart from others like it is that it has
-`#![forbid(unsafe_code)]` right at the top, and then requires that the element
-type have a `Default` impl. This is a slight restriction compared to a normal
-`Vec`, but that's still [a very large number of
-types](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
-that you can use.
+For details, please see [the docs.rs documentation](https://docs.rs/tinyvec/)
