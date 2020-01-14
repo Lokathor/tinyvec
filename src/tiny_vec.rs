@@ -1,4 +1,4 @@
-#![cfg(feature = "extern_crate_alloc")]
+#![cfg(feature = "alloc")]
 
 use super::*;
 

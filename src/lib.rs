@@ -12,36 +12,53 @@
 //!
 //! ## What This Is
 //!
-//! This crate has two main types
+//! This crate is a 100% safe code alternative to both
+//! [arrayvec](https://docs.rs/arrayvec) and
+//! [smallvec](https://docs.rs/smallvec).
 //!
-//! * `ArrayishVec`: Like the `ArrayVec` from the
-//!   [arrayvec](https://docs.rs/arrayvec) crate. It's an array backed linear
-//!   data store. If you push too much data it will panic.
-//! * `TinyVec`: This is like the `SmallVec` from
-//!   [smallvec](https://docs.rs/smallvec). It starts as an `ArrayishVec`, and
-//!   when that _would have_ overflowed it will instead automatically transition
-//!   everything into a normal `Vec` on the heap and continue operations.
+//! * Being 100% safe means that you have to have some sort of compromise
+//!   compared to the versions using `unsafe`. In this case, the compromise is
+//!   that the element type must implement `Default` to be usable in these vecs.
+//!   For some people that's an absolute deal-breaker, and if so I understand.
+//!   However, [quite a
+//!   few](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
+//!   types have a `Default` impl, so I think that for a lot of common cases you
+//!   can use these vectors.
+//! * [`ArrayVec`] is an array-backed vec-like where all slots are "live" in the
+//!   Rust sense, but the structure tracks what the intended length is as you
+//!   push and pop elements and so forth. If you try to grow the length past the
+//!   array's capacity it'll error or panic (depending on the method used).
+//! * [`TinyVec`] is an enum that's either an "inline" `ArrayVec` or a "heap"
+//!   `Vec`. If it's in array mode and you try to grow the vec beyond it's
+//!   capacity it'll quietly transition into heap mode for you and then continue
+//!   operation.
 //!
-//! ## How Is This Different From Those Other Crates?
+//! ## Stability Goal
 //!
-//! It's 100% safe code. Not just "we think this unsafe code is sound so we'll
-//! give you a safe abstraction". This crate doesn't have a single `unsafe`
-//! block in it. If you trust the standard library to not trigger UB, then you
-//! can trust this crate to do the same.
+//! The crate is still in development, but we have some very clear goals:
 //!
-//! The trade off is that the item type has to implement `Default`, and then the
-//! "spare space" of the vec is kept as Default instances of the type in
-//! question, rather than being uninitialized memory.
-//!
-//! I haven't benchmarked it, but I _suspect_ that there is a performance loss
-//! compared to just using `unsafe` and `MaybeUninit` and all that. I mean the
-//! code probably isn't the best it could possibly by, but _also_ even if it
-//! were perfectly optimal I suspect that there will still be a performance hit
-//! compared to not using `MaybeUninit`. That's why we got it into the language
-//! after all.
-//!
-//! Still, if you really want to be sure that there's no UB going on in your
-//! collection, here you are.
+//! 1) The crate is 100% safe code. By this I don't mean a totally safe API, I
+//!    mean no `unsafe` internals either. `#![forbid(unsafe_code)]`.
+//!    * We do use `core` and `alloc` of course, which provide a safe API over
+//!      `unsafe` operations. However, if you don't at least trust those crates
+//!      then you've got bigger problems on your hands.
+//! 2) No required dependencies.
+//!    * We might of course provide optional dependencies for extra
+//!      functionality (eg: `serde` compatability), but none of them will be
+//!      required. I hate dependencies _even more_ than you do.
+//! 3) The _intended_ API is that, as much as possible, these types are
+//!    essentially a "drop-in" replacement for the standard
+//!    [`Vec`](alloc::vec::Vec) type.
+//!    * For `Vec` methods that are not yet Stable, they are sometimes provided
+//!      via a crate feature, in which case the feature requires Nightly of
+//!      course.
+//!    * If `Vec` methods that are stable but which rely on an unstable library
+//!      internal, that also requires a feature and a nightly compiler (sorry).
+//!    * Some of the methods provided are **not** part of the `Vec` API but are
+//!      none the less important methods to have. In this case, the method names
+//!      are usually fairly long and perhaps even a little silly. It is the hope
+//!      that this "convention" will prevent any potential name clash between
+//!      our vec types and the standard `Vec` type.
 
 use core::{
   borrow::{Borrow, BorrowMut},
@@ -58,7 +75,7 @@ use core::{
   slice::SliceIndex,
 };
 
-#[cfg(feature = "extern_crate_alloc")]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 mod arrayish;
@@ -67,7 +84,7 @@ pub use arrayish::*;
 mod arrayish_vec;
 pub use arrayish_vec::*;
 
-#[cfg(feature = "extern_crate_alloc")]
+#[cfg(feature = "alloc")]
 mod tiny_vec;
-#[cfg(feature = "extern_crate_alloc")]
+#[cfg(feature = "alloc")]
 pub use tiny_vec::*;

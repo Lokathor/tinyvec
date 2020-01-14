@@ -1,4 +1,5 @@
 #![allow(bad_style)]
+#![allow(clippy::redundant_clone)]
 
 use tinyvec::*;
 use std::iter::FromIterator;

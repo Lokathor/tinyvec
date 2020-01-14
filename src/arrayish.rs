@@ -6,7 +6,7 @@
 /// and powers of 2 up to 4096. Additional lengths can probably be added upon
 /// request.
 ///
-/// ## Safety
+/// ## Safety Reminder
 ///
 /// As a reminder, the `Arrayish` trait is 100% safe so unsafe code **must not**
 /// rely on an instance of the trait being correct.
@@ -18,9 +18,15 @@ pub trait Arrayish {
   const CAPACITY: usize;
 
   /// Gives a shared slice over the whole thing.
+  ///
+  /// A correct implementation will return a slice with a length equal to the
+  /// `CAPACITY` value.
   fn slice(&self) -> &[Self::Item];
 
   /// Gives a unique slice over the whole thing.
+  /// 
+  /// A correct implementation will return a slice with a length equal to the
+  /// `CAPACITY` value.
   fn slice_mut(&mut self) -> &mut [Self::Item];
 }
 
