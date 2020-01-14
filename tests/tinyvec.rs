@@ -4,6 +4,23 @@ use tinyvec::*;
 use std::iter::FromIterator;
 
 #[test]
+fn TinyVec_swap_remove() {
+  let mut tv: TinyVec<[i32; 10]> = Default::default();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+  assert_eq!(tv.swap_remove(3), 4);
+  assert_eq!(&tv[..], &[1, 2, 3][..]);
+  assert_eq!(tv.swap_remove(0), 1);
+  assert_eq!(&tv[..], &[3, 2][..]);
+  assert_eq!(tv.swap_remove(0), 3);
+  assert_eq!(&tv[..], &[2][..]);
+  assert_eq!(tv.swap_remove(0), 2);
+  assert_eq!(&tv[..], &[][..]);
+}
+
+#[test]
 fn TinyVec_drain() {
   let mut tv: TinyVec<[i32; 10]> = Default::default();
   tv.push(1);
