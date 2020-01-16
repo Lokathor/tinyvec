@@ -19,7 +19,7 @@ use super::*;
 macro_rules! array_vec {
   ($array_type:ty) => {
     {
-      let mut av: ArrayVec<$array_type> = Default::default();
+      let av: ArrayVec<$array_type> = Default::default();
       av
     }
   };
