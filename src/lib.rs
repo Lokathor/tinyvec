@@ -8,7 +8,7 @@
 #![warn(clippy::must_use_candidate)]
 #![warn(missing_docs)]
 
-//! Programmers can have a little vec, as a treat.
+//! Programmers can have little a vec, as a treat.
 //!
 //! ## What This Is
 //!
