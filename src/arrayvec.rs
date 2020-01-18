@@ -276,7 +276,8 @@ impl<A: Array> ArrayVec<A> {
   /// index.
   ///
   /// ## Panics
-  /// * If `index` > `len`
+  /// * If `index` > `len` or
+  /// * If the capacity is exhausted
   ///
   /// ## Example
   /// ```rust
@@ -289,26 +290,17 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
-    use core::cmp::Ordering;
-    match index.cmp(&self.len) {
-      Ordering::Less => {
-        let targets: &mut [A::Item] = &mut self.as_mut_slice()[index..];
-        let mut temp = item;
-        for target in targets.iter_mut() {
-          temp = replace(target, temp);
-        }
-        self.push(temp);
-      }
-      Ordering::Equal => {
-        self.push(item);
-      }
-      Ordering::Greater => {
-        panic!(
-          "ArrayVec::insert> index {} is out of bounds {}",
-          index, self.len
+    if index > self.len {
+      panic!(
+        "ArrayVec::insert> index {} is out of bounds {}",
+        index, self.len
         );
-      }
     }
+
+    // Try to push the element.
+    self.push(item);
+    // And move it into its place.
+    self.as_mut_slice()[index..].rotate_right(1);
   }
 
   /// If the vec is empty.
