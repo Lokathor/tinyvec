@@ -3,14 +3,14 @@ use arbitrary_model_tests::arbitrary_stateful_operations;
 use honggfuzz::fuzz;
 use std::{fmt::Debug, iter::FromIterator, ops::{RangeBounds, Bound}};
 
-use tinyvec::ArrayishVec;
+use tinyvec::ArrayVec;
 use tinyvec_fuzz::ArbRange;
 
 const CAPACITY: usize = 32;
 
 arbitrary_stateful_operations! {
     model = Vec<T>,
-    tested = ArrayishVec<[T; CAPACITY]>,
+    tested = ArrayVec<[T; CAPACITY]>,
 
     type_parameters = <
         T: Default + Clone + Debug + Eq + Ord,
@@ -88,7 +88,7 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
     let mut ring = FiniteBuffer::new(&data, MAX_RING_SIZE).map_err(|_| ())?;
 
     let mut model = Vec::<u16>::default();
-    let mut tested: ArrayishVec<[u16; 32]> = ArrayishVec::new();
+    let mut tested: ArrayVec<[u16; 32]> = ArrayVec::new();
 
     let mut _op_trace = String::new();
     while let Ok(op) = <op::Op<u16, ArbRange<usize>> as Arbitrary>::arbitrary(&mut ring) {
