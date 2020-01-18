@@ -27,6 +27,9 @@ grab_spare_slice = []
 # https://github.com/rust-lang/rust/issues/54279
 nightly_slice_partition_dedup = []
 
+# use const generics for arrays
+nightly_const_generics = []
+
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
 travis-ci = { repository = "Lokathor/tinyvec" }
