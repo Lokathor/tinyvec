@@ -1,20 +1,20 @@
 /// A trait for types that can be the backing store of an
 /// [`ArrayVec`](ArrayVec::<A>).
 ///
-/// An "array", for our purposes, has the following basic properties:
+/// An "array", for our purposes, has the following properties:
 /// * Owns some number of elements.
 /// * The element type can be generic, but must implement [`Default`].
-/// * The capacity is fixed based on the array type.
+/// * The capacity is fixed at compile time, based on the implementing type.
 /// * You can get a shared or mutable slice to the elements.
 ///
-/// You are generally note expected to need to implement this yourself. It is
-/// already implemented for all the major array lengths. Additional lengths can
-/// probably be added upon request.
+/// You are generally **not** expected to need to implement this yourself. It is
+/// already implemented for all the major array lengths (`0..=32` and the powers
+/// of 2 up to 4,096). Additional lengths can easily be added upon request.
 ///
 /// ## Safety Reminder
 ///
-/// As a reminder, this trait is 100% safe, which means that `unsafe` code
-/// **must not** rely on an instance of the trait being correct to avoid UB.
+/// Just a reminder: this trait is 100% safe, which means that `unsafe` code
+/// **must not** rely on an instance of this trait being correct.
 pub trait Array {
   /// The type of the items in the thing.
   type Item: Default;
@@ -26,13 +26,13 @@ pub trait Array {
   ///
   /// A correct implementation will return a slice with a length equal to the
   /// `CAPACITY` value.
-  fn slice(&self) -> &[Self::Item];
+  fn as_slice(&self) -> &[Self::Item];
 
   /// Gives a unique slice over the whole thing.
   /// 
   /// A correct implementation will return a slice with a length equal to the
   /// `CAPACITY` value.
-  fn slice_mut(&mut self) -> &mut [Self::Item];
+  fn as_slice_mut(&mut self) -> &mut [Self::Item];
 }
 
 macro_rules! impl_array_for_len {
@@ -41,11 +41,11 @@ macro_rules! impl_array_for_len {
       type Item = T;
       const CAPACITY: usize = $len;
       #[inline(always)]
-      fn slice(&self) -> &[T] {
+      fn as_slice(&self) -> &[T] {
         &*self
       }
       #[inline(always)]
-      fn slice_mut(&mut self) -> &mut [T] {
+      fn as_slice_mut(&mut self) -> &mut [T] {
         &mut *self
       }
     })+

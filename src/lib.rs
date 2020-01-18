@@ -16,52 +16,50 @@
 //! [arrayvec](https://docs.rs/arrayvec) and
 //! [smallvec](https://docs.rs/smallvec).
 //!
-//! * Being 100% safe means that you have to have some sort of compromise
-//!   compared to the versions using `unsafe`. In this case, the compromise is
-//!   that the element type must implement `Default` to be usable in these vecs.
-//!   This makes TinyVec structures not applicable for truly arbitrary data types.
-//!   However, [quite a
-//!   few](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
-//!   types have a `Default` impl, including the common cases such as `u8`, `char`
-//!   and even `&str`.
-//! * [`ArrayVec`] is an array-backed vec-like structure with a fixed capacity.
-//!   If you try to grow the length past the
-//!   array's capacity it will error or panic (depending on the method used).
-//!   * (Note: I am _very sorry_ that this type has the same name as the
-//!     `ArrayVec` type in the `arrayvec` crate. We really couldn't think of
-//!     another name for this sort of data structure. Please [contact
-//!     us](https://github.com/Lokathor/tinyvec/issues) with a better name
-//!     before this crate is 1.0 if you can think of one.)
-//! * [`TinyVec`] is an enum that's either an "inline" `ArrayVec` or a "heap"
-//!   `Vec`. If it's in array mode and you try to grow the vec beyond its
-//!   capacity it'll quietly transition into heap mode for you and then continue
-//!   operation. This type is naturally behind the `alloc` feature gate.
+//! Being 100% safe means that you have to have some sort of compromise compared
+//! to the versions using `unsafe`. In this case, the compromise is that the
+//! element type must implement `Default` to be usable in these vecs. This makes
+//! TinyVec structures not applicable for truly arbitrary data types. However,
+//! [quite a
+//! few](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
+//! types have a `Default` impl, including the common cases such as `u8`, `char`
+//! and even `&str`.
+//!
+//! * [`ArrayVec`](ArrayVec::<A>) is an array-backed vec-like structure with a
+//!   fixed capacity. If you try to grow the length past the array's capacity it
+//!   will error or panic (depending on the method used).
+//! * [`TinyVec`](TinyVec::<A>) is an enum that's either an "inline" `ArrayVec`
+//!   or a "heap" `Vec`. If it's in array mode and you try to grow the vec
+//!   beyond its capacity it'll quietly transition into heap mode for you and
+//!   then continue operation. This type is naturally behind the `alloc` feature
+//!   gate.
 //!
 //! ## Stability Goal
 //!
 //! The crate is still in development, but we have some very clear goals:
 //!
-//! 1) The crate is 100% safe code. Not just a safe API - no `unsafe` internals
-//!    either. `#![forbid(unsafe_code)]`.
+//! 1) The crate is 100% safe code. Not just a safe API, there are also no
+//!    `unsafe` internals. `#![forbid(unsafe_code)]`.
 //! 2) No required dependencies.
-//!    * We might provide optional dependencies for extra
-//!      functionality (eg: `serde` compatability), but none of them will be
-//!      required.
-//! 3) The _intended_ API is that, as much as possible, these types are
-//!    essentially a "drop-in" replacement for the standard
-//!    [`Vec`](alloc::vec::Vec) type.
-//!    * For `Vec` methods that are not yet Stable, they are sometimes provided
-//!      via a crate feature, in which case the feature requires Nightly.
-//!    * If `Vec` methods that are stable but which rely on an unstable library
-//!      internals, that also requires a feature and a nightly compiler (sorry).
-//!    * Some of the methods provided are **not** part of the `Vec` API but are
-//!      none the less important methods to have. In this case, the method names
-//!      are usually fairly long and perhaps even a little silly. It is the hope
-//!      that this "convention" will prevent any potential name clash between
-//!      our vec types and the standard `Vec` type.
-//!    * That said, if `Vec` lands
-//!      some method with the same name as something we have, we'll just bite
-//!      the bullet and fix it with a breaking change.
+//!    * We might provide optional dependencies for extra functionality (eg:
+//!      `serde` compatability), but none of them will be required.
+//! 3) The intended API is that, _as much as possible_, these types are
+//!    essentially a "drop-in" replacement for the standard [`Vec`](Vec::<T>)
+//!    type.
+//!    * Stable `Vec` methods that the vecs here also have should have the exact
+//!      same signature.
+//!    * Unstable `Vec` methods are sometimes provided via a crate feature, but
+//!      if so they also require Nightly.
+//!    * Some methods are provided that _are not_ part of the `Vec` type, such
+//!      as additional constructor methods. In this case, the names are rather
+//!      long and whimsical in the hopes that they don't class with any possible
+//!      future methods of `Vec`
+//!    * If, in the future, `Vec` stabilizes a method that clashes with an
+//!      existing extra method here then we'll simply be forced to release a
+//!      2.y.z version. Not the end of the world.
+//!    * Some methods of `Vec` are simply inappropriate and will not be
+//!      implemented here. For example, `ArrayVec` cannot possibly implement
+//!      [`from_raw_parts`](Vec::<T>::from_raw_parts).
 
 use core::{
   borrow::{Borrow, BorrowMut},

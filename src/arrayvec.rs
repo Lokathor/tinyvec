@@ -49,7 +49,7 @@ impl<A: Array> Deref for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref(&self) -> &Self::Target {
-    &self.data.slice()[..self.len]
+    &self.data.as_slice()[..self.len]
   }
 }
 
@@ -57,7 +57,7 @@ impl<A: Array> DerefMut for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref_mut(&mut self) -> &mut Self::Target {
-    &mut self.data.slice_mut()[..self.len]
+    &mut self.data.as_slice_mut()[..self.len]
   }
 }
 
@@ -95,7 +95,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   pub fn as_mut_ptr(&mut self) -> *mut A::Item {
-    self.data.slice_mut().as_mut_ptr()
+    self.data.as_slice_mut().as_mut_ptr()
   }
 
   /// Helper for getting the mut slice.
@@ -113,7 +113,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   pub fn as_ptr(&self) -> *const A::Item {
-    self.data.slice().as_ptr()
+    self.data.as_slice().as_ptr()
   }
 
   /// Helper for getting the shared slice.
@@ -330,7 +330,7 @@ impl<A: Array> ArrayVec<A> {
     if self.len > 0 {
       self.len -= 1;
       let out =
-        replace(&mut self.data.slice_mut()[self.len], A::Item::default());
+        replace(&mut self.data.as_slice_mut()[self.len], A::Item::default());
       Some(out)
     } else {
       None
@@ -508,7 +508,7 @@ impl<A: Array> ArrayVec<A> {
     }
     let mut new = Self::default();
     let moves = &mut self.as_mut_slice()[at..];
-    let targets = new.data.slice_mut();
+    let targets = new.data.as_slice_mut();
     for (m, t) in moves.iter_mut().zip(targets) {
       replace(t, replace(m, A::Item::default()));
     }
@@ -590,7 +590,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn try_push(&mut self, val: A::Item) -> Result<(), A::Item> {
     if self.len < A::CAPACITY {
-      replace(&mut self.data.slice_mut()[self.len], val);
+      replace(&mut self.data.as_slice_mut()[self.len], val);
       self.len += 1;
       Ok(())
     } else {
@@ -682,7 +682,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
   /// If you want to select a length, use
   /// [`from_array_len`](ArrayVec::from_array_len)
   fn from(data: A) -> Self {
-    Self { len: data.slice().len(), data }
+    Self { len: data.as_slice().len(), data }
   }
 }
 
@@ -710,7 +710,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   fn next(&mut self) -> Option<Self::Item> {
     if self.base < self.len {
       let out =
-        replace(&mut self.data.slice_mut()[self.base], A::Item::default());
+        replace(&mut self.data.as_slice_mut()[self.base], A::Item::default());
       self.base += 1;
       Some(out)
     } else {
@@ -729,13 +729,13 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(replace(&mut self.data.slice_mut()[self.len], A::Item::default()))
+    Some(replace(&mut self.data.as_slice_mut()[self.len], A::Item::default()))
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
     let i = self.base + (n - 1);
     if i < self.len {
-      let out = replace(&mut self.data.slice_mut()[i], A::Item::default());
+      let out = replace(&mut self.data.as_slice_mut()[i], A::Item::default());
       self.base = i + 1;
       Some(out)
     } else {
@@ -794,7 +794,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
-    self.deref() == other.slice()
+    self.deref() == other.as_slice()
   }
 }
 

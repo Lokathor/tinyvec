@@ -779,7 +779,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
-    self.deref() == other.slice()
+    self.as_slice() == other.as_slice()
   }
 }
 
