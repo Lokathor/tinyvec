@@ -343,8 +343,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
       self.len -= 1;
-      let out =
-        replace(&mut self.data.as_slice_mut()[self.len], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[self.len]);
       Some(out)
     } else {
       None
@@ -759,8 +758,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.base < self.len {
-      let out =
-        replace(&mut self.data.as_slice_mut()[self.base], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[self.base]);
       self.base += 1;
       Some(out)
     } else {
@@ -779,13 +777,13 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(replace(&mut self.data.as_slice_mut()[self.len], A::Item::default()))
+    Some(take(&mut self.data.as_slice_mut()[self.len]))
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
     let i = self.base + (n - 1);
     if i < self.len {
-      let out = replace(&mut self.data.as_slice_mut()[i], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[i]);
       self.base = i + 1;
       Some(out)
     } else {
