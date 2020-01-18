@@ -1,7 +1,7 @@
 [package]
 name = "tinyvec"
 description = "Just, really the littlest Vec you could need. So smol."
-version = "0.3.0-alpha.0"
+version = "1.0.0-alpha.0"
 authors = ["Lokathor <zefria@gmail.com>"]
 edition = "2018"
 license = "Zlib"
@@ -17,6 +17,10 @@ default = []
 
 # Provide things that utilize the `alloc` crate.
 alloc = []
+
+# (not part of Vec!) Extra methods to let you grab the slice of memory after the
+# "active" portion of an `ArrayVec`.
+grab_spare_slice = []
 
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:

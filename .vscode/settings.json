@@ -1,6 +1,7 @@
 {
   "rust.features": [
     "alloc",
-    "nightly_slice_partition_dedup"
+    "nightly_slice_partition_dedup",
+    "grab_spare_slice",
   ]
 }

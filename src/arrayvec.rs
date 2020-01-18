@@ -34,9 +34,10 @@ macro_rules! array_vec {
 
 /// An array-backed vector-like data structure.
 ///
-/// * Fixed capacity (based on array size)
-/// * Variable length
-/// * All of the array memory is always initialized.
+/// * Fixed capacity (based on array size).
+/// * Variable length.
+/// * All of the array memory is always "initialized" in the init/uninit memory
+///   sense.
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct ArrayVec<A: Array> {
@@ -475,7 +476,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut av = array_vec!([i32; 10], 1, 2, 3, 4);
+  /// let mut av = array_vec!([i32; 10], 1, 1, 2, 3, 3, 4);
   /// av.retain(|&x| x % 2 == 0);
   /// assert_eq!(av.as_slice(), &[2, 4][..]);
   /// ```
@@ -485,12 +486,34 @@ impl<A: Array> ArrayVec<A> {
     while i < self.len {
       if !acceptable(&self[i]) {
         self.remove(i);
+      } else {
+        i += 1;
       }
-      i += 1;
     }
   }
 
-  // LATER(Vec): splice
+  /// Forces the length of the vector to `new_len`.
+  ///
+  /// ## Panics
+  /// If `new_len` is greater than the vec's capacity.
+  ///
+  /// ## Safety
+  /// * This is a fully safe operation! The inactive memory already counts as
+  ///   "initialized" by Rust's rules.
+  /// * Other than "the memory is initialized" there are no other guarantees
+  ///   regarding what you find in the inactive portion of the vec.
+  #[inline(always)]
+  pub fn set_len(&mut self, new_len: usize) {
+    if new_len > A::CAPACITY {
+      // Note(Lokathor): Technically we don't have to panic here, and we could
+      // just let some other call later on trigger a panic on accident when the
+      // length is wrong. However, it's a lot easier to catch bugs when things
+      // are more "fail-fast".
+      panic!("ArrayVec: set_len overflow!")
+    } else {
+      self.len = new_len;
+    }
+  }
 
   /// Splits the collection at the point given.
   ///
@@ -594,6 +617,42 @@ impl<A: Array> ArrayVec<A> {
     } else {
       Err(data)
     }
+  }
+
+  /// Obtain the shared slice of the array _after_ the active memory.
+  /// 
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([i32; 4]);
+  /// assert_eq!(av.grab_spare_slice().len(), 4);
+  /// av.push(10);
+  /// av.push(11);
+  /// av.push(12);
+  /// av.push(13);
+  /// assert_eq!(av.grab_spare_slice().len(), 0);
+  /// ```
+  #[inline(always)]
+  #[cfg(feature = "grab_spare_slice")]
+  pub fn grab_spare_slice(&self) -> &[A::Item] {
+    &self.data.as_slice()[self.len..]
+  }
+  
+  /// Obtain the mutable slice of the array _after_ the active memory.
+  /// 
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([i32; 4]);
+  /// assert_eq!(av.grab_spare_slice_mut().len(), 4);
+  /// av.push(10);
+  /// av.push(11);
+  /// assert_eq!(av.grab_spare_slice_mut().len(), 2);
+  /// ```
+  #[inline(always)]
+  #[cfg(feature = "grab_spare_slice")]
+  pub fn grab_spare_slice_mut(&mut self) -> &mut [A::Item] {
+    &mut self.data.as_slice_mut()[self.len..]
   }
 }
 
