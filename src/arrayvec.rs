@@ -544,11 +544,10 @@ impl<A: Array> ArrayVec<A> {
     }
     let mut new = Self::default();
     let moves = &mut self.as_mut_slice()[at..];
-    let targets = new.data.as_slice_mut();
-    for (m, t) in moves.iter_mut().zip(targets) {
-      replace(t, replace(m, A::Item::default()));
-    }
-    new.len = self.len - at;
+    let split_len = moves.len();
+    let targets = &mut new.data.as_slice_mut()[..split_len];
+    moves.swap_with_slice(targets);
+    new.len = split_len;
     self.len = at;
     new
   }
