@@ -88,3 +88,8 @@ pub use arrayvec::*;
 mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use tinyvec::*;
+
+// Replace with mem::take as soon as MSRV allows it
+fn take<T: Default>(from: &mut T) -> T {
+    replace(from, T::default())
+}

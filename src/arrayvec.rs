@@ -343,8 +343,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
       self.len -= 1;
-      let out =
-        replace(&mut self.data.as_slice_mut()[self.len], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[self.len]);
       Some(out)
     } else {
       None
@@ -415,14 +414,14 @@ impl<A: Array> ArrayVec<A> {
   where
     A::Item: Clone,
   {
-    use core::cmp::Ordering;
-    match new_len.cmp(&self.len) {
-      Ordering::Less => self.truncate(new_len),
-      Ordering::Equal => (),
-      Ordering::Greater => {
-        while self.len < new_len {
+    match new_len.checked_sub(self.len) {
+      None => self.truncate(new_len),
+      Some(0) => (),
+      Some(new_elements) => {
+        for _ in 1..new_elements {
           self.push(new_val.clone());
         }
+        self.push(new_val);
       }
     }
   }
@@ -455,12 +454,10 @@ impl<A: Array> ArrayVec<A> {
     new_len: usize,
     mut f: F,
   ) {
-    use core::cmp::Ordering;
-    match new_len.cmp(&self.len) {
-      Ordering::Less => self.truncate(new_len),
-      Ordering::Equal => (),
-      Ordering::Greater => {
-        while self.len < new_len {
+    match new_len.checked_sub(self.len) {
+      None => self.truncate(new_len),
+      Some(new_elements) => {
+        for _ in 0..new_elements {
           self.push(f());
         }
       }
@@ -544,11 +541,10 @@ impl<A: Array> ArrayVec<A> {
     }
     let mut new = Self::default();
     let moves = &mut self.as_mut_slice()[at..];
-    let targets = new.data.as_slice_mut();
-    for (m, t) in moves.iter_mut().zip(targets) {
-      replace(t, replace(m, A::Item::default()));
-    }
-    new.len = self.len - at;
+    let split_len = moves.len();
+    let targets = &mut new.data.as_slice_mut()[..split_len];
+    moves.swap_with_slice(targets);
+    new.len = split_len;
     self.len = at;
     new
   }
@@ -760,8 +756,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.base < self.len {
-      let out =
-        replace(&mut self.data.as_slice_mut()[self.base], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[self.base]);
       self.base += 1;
       Some(out)
     } else {
@@ -780,13 +775,13 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(replace(&mut self.data.as_slice_mut()[self.len], A::Item::default()))
+    Some(take(&mut self.data.as_slice_mut()[self.len]))
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
     let i = self.base + (n - 1);
     if i < self.len {
-      let out = replace(&mut self.data.as_slice_mut()[i], A::Item::default());
+      let out = take(&mut self.data.as_slice_mut()[i]);
       self.base = i + 1;
       Some(out)
     } else {
