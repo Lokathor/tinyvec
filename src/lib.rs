@@ -18,12 +18,10 @@
 //!
 //! Being 100% safe means that you have to have some sort of compromise compared
 //! to the versions using `unsafe`. In this case, the compromise is that the
-//! element type must implement `Default` to be usable in these vecs. This makes
-//! TinyVec structures not applicable for truly arbitrary data types. However,
-//! [quite a
-//! few](https://doc.rust-lang.org/std/default/trait.Default.html#implementors)
-//! types have a `Default` impl, including the common cases such as `u8`, `char`
-//! and even `&str`.
+//! element type must implement `Default` to be usable in these vecs. However,
+//! that still allows you to use [quite a few
+//! types](https://doc.rust-lang.org/std/default/trait.Default.html#implementors),
+//! so I think that you'll find these vecs useful in many cases.
 //!
 //! * [`ArrayVec`](ArrayVec::<A>) is an array-backed vec-like structure with a
 //!   fixed capacity. If you try to grow the length past the array's capacity it
@@ -42,7 +40,7 @@
 //!    `unsafe` internals. `#![forbid(unsafe_code)]`.
 //! 2) No required dependencies.
 //!    * We might provide optional dependencies for extra functionality (eg:
-//!      `serde` compatability), but none of them will be required.
+//!      `serde` compatability).
 //! 3) The intended API is that, _as much as possible_, these types are
 //!    essentially a "drop-in" replacement for the standard [`Vec`](Vec::<T>)
 //!    type.
@@ -59,7 +57,7 @@
 //!      2.y.z version. Not the end of the world.
 //!    * Some methods of `Vec` are simply inappropriate and will not be
 //!      implemented here. For example, `ArrayVec` cannot possibly implement
-//!      [`from_raw_parts`](Vec::<T>::from_raw_parts).
+//!      [`from_raw_parts`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts).
 
 use core::{
   borrow::{Borrow, BorrowMut},
