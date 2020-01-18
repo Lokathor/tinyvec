@@ -414,14 +414,14 @@ impl<A: Array> ArrayVec<A> {
   where
     A::Item: Clone,
   {
-    use core::cmp::Ordering;
-    match new_len.cmp(&self.len) {
-      Ordering::Less => self.truncate(new_len),
-      Ordering::Equal => (),
-      Ordering::Greater => {
-        while self.len < new_len {
+    match new_len.checked_sub(self.len) {
+      None => self.truncate(new_len),
+      Some(0) => (),
+      Some(new_elements) => {
+        for _ in 1..new_elements {
           self.push(new_val.clone());
         }
+        self.push(new_val);
       }
     }
   }
@@ -454,12 +454,10 @@ impl<A: Array> ArrayVec<A> {
     new_len: usize,
     mut f: F,
   ) {
-    use core::cmp::Ordering;
-    match new_len.cmp(&self.len) {
-      Ordering::Less => self.truncate(new_len),
-      Ordering::Equal => (),
-      Ordering::Greater => {
-        while self.len < new_len {
+    match new_len.checked_sub(self.len) {
+      None => self.truncate(new_len),
+      Some(new_elements) => {
+        for _ in 0..new_elements {
           self.push(f());
         }
       }
