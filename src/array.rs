@@ -34,6 +34,21 @@ pub trait Array {
   fn as_slice_mut(&mut self) -> &mut [Self::Item];
 }
 
+#[cfg(feature = "nightly_const_generics")]
+impl<T: Default, const N: usize> Array for [T; N] {
+  type Item = T;
+  const CAPACITY: usize = N;
+  #[inline(always)]
+  fn as_slice(&self) -> &[T] {
+    &*self
+  }
+  #[inline(always)]
+  fn as_slice_mut(&mut self) -> &mut [T] {
+    &mut *self
+  }
+}
+
+#[cfg(not(feature = "nightly_const_generics"))]
 macro_rules! impl_array_for_len {
   ($($len:expr),+ $(,)?) => {
     $(impl<T: Default> Array for [T; $len] {
@@ -51,6 +66,7 @@ macro_rules! impl_array_for_len {
   }
 }
 
+#[cfg(not(feature = "nightly_const_generics"))]
 impl_array_for_len! {
   0, /* The oft-forgotten 0-length array! */
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
