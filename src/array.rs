@@ -1,5 +1,4 @@
-/// A trait for types that can be the backing store of an
-/// [`ArrayVec`](ArrayVec::<A>).
+/// A trait for types that are an array.
 ///
 /// An "array", for our purposes, has the following properties:
 /// * Owns some number of elements.
