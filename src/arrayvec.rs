@@ -510,6 +510,38 @@ impl<A: Array> ArrayVec<A> {
     }
   }
 
+  /// Fill the vector until its capacity has been reached.
+  ///
+  /// Successively fills unused space in the spare slice of the vector with elements from the
+  /// iterator. It then returns the remaining iterator without exhausting it. This also allows
+  /// appending the head of an infinite iterator.
+  ///
+  /// This is an alternative to `Extend::extend` method for cases where the length of the iterator
+  /// can not be checked. Since this vector can not reallocate to increase its capacity, it is
+  /// unclear what to do with remaining elements in the iterator and the iterator itself. The
+  /// interface also provides no way to communicate this to the caller.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([i32; 4]);
+  /// let mut to_inf = av.fill(0..);
+  /// assert_eq!(av.as_slice(), &[0, 1, 2, 3][..]);
+  /// assert_eq!(to_inf.next(), Some(4));
+  /// ```
+  ///
+  /// ## Panics
+  /// Only panics if the `next` method of the provided iterator panics.
+  #[inline]
+  pub fn fill<I: IntoIterator<Item=A::Item>>(&mut self, iter: I) -> I::IntoIter {
+      let mut iter = iter.into_iter();
+      for element in iter.by_ref().take(self.capacity() - self.len()) {
+          self.push(element);
+      }
+      iter
+  }
+
   /// Splits the collection at the point given.
   ///
   /// * `[0, at)` stays in this vec
