@@ -80,6 +80,19 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayVec<A> {
 
 impl<A: Array> ArrayVec<A> {
   /// Move all values from `other` into this vec.
+  /// 
+  /// ## Panics
+  /// * If the vec overflows its capacity
+  /// 
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([i32; 10], 1, 2, 3);
+  /// let mut av2 = array_vec!([i32; 10], 4, 5, 6);
+  /// av.append(&mut av2);
+  /// assert_eq!(av, &[1, 2, 3, 4, 5, 6][..]);
+  /// assert_eq!(av2, &[][..]);
+  /// ```
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     for item in other.drain(..) {
@@ -339,12 +352,14 @@ impl<A: Array> ArrayVec<A> {
 
   /// Place an element onto the end of the vec.
   /// 
-  /// See also, [`try_push`](ArrayVec::try_push)
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
-    if self.try_push(val).is_err() {
+    if self.len < A::CAPACITY {
+      replace(&mut self.data.as_slice_mut()[self.len], val);
+      self.len += 1;
+    } else {
       panic!("ArrayVec: overflow!")
     }
   }
@@ -580,27 +595,6 @@ impl<A: Array> ArrayVec<A> {
       Err(data)
     }
   }
-
-  /// Pushes an item if there's room.
-  ///
-  /// ## Failure
-  ///
-  /// If there's no more capacity the vec is unchanged, and you get the item
-  /// back in the `Err`.
-  #[inline]
-  pub fn try_push(&mut self, val: A::Item) -> Result<(), A::Item> {
-    if self.len < A::CAPACITY {
-      replace(&mut self.data.as_slice_mut()[self.len], val);
-      self.len += 1;
-      Ok(())
-    } else {
-      Err(val)
-    }
-  }
-
-  // LATER: try_insert ?
-
-  // LATER: try_remove ?
 }
 
 /// Draining iterator for `ArrayVecDrain`

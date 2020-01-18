@@ -371,8 +371,6 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Place an element onto the end of the vec.
-  /// 
-  /// See also, [`try_push`](TinyVec::<A>::try_push)
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
@@ -580,12 +578,6 @@ impl<A: Array> TinyVec<A> {
     let arr = ArrayVec::try_from_array_len(data, len)?;
     Ok(TinyVec::Inline(arr))
   }
-
-  // LATER: try_push ?
-
-  // LATER: try_insert ?
-
-  // LATER: try_remove ?
 }
 
 /// Draining iterator for `TinyVecDrain`
