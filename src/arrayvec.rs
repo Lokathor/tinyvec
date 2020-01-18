@@ -384,12 +384,10 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
-    let mut spare = A::Item::default();
-    for target in targets.iter_mut().rev() {
-      spare = replace(target, spare);
-    }
+    let item = replace(&mut targets[0], A::Item::default());
+    targets.rotate_left(1);
     self.len -= 1;
-    spare
+    item
   }
 
   // NIGHTLY: remove_item, https://github.com/rust-lang/rust/issues/40062
