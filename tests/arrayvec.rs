@@ -124,6 +124,14 @@ fn ArrayVec_remove() {
 }
 
 #[test]
+#[should_panic]
+fn ArrayVec_remove_invalid() {
+  let mut av: ArrayVec<[i32; 1]> = Default::default();
+  av.push(1);
+  av.remove(1);
+}
+
+#[test]
 fn ArrayVec_swap_remove() {
   let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);
