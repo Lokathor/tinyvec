@@ -352,7 +352,7 @@ impl<A: Array> ArrayVec<A> {
       replace(&mut self.data.as_slice_mut()[self.len], val);
       self.len += 1;
     } else {
-      panic!("ArrayVec: overflow!")
+      panic!("ArrayVec::push> capacity overflow!")
     }
   }
 
