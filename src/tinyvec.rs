@@ -170,11 +170,15 @@ impl<A: Array> TinyVec<A> {
 
   /// The capacity of the `TinyVec`.
   /// 
-  /// This is fixed based on the array type.
+  /// When not heap allocated this is fixed based on the array type.
+  /// Otherwise its the result of the underlying Vec::capacity.
   #[inline(always)]
   #[must_use]
   pub fn capacity(&self) -> usize {
-    A::CAPACITY
+    match self {
+      TinyVec::Inline(_) => A::CAPACITY,
+      TinyVec::Heap(v) => v.capacity(),
+    }
   }
 
   /// Removes all elements from the vec.
