@@ -469,12 +469,35 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, mut acceptable: F) {
-    let mut i = 0;
-    while i < self.len {
-      if !acceptable(&self[i]) {
-        self.remove(i);
+    // Drop guard to contain exactly the remaining elements when the test panics.
+    struct JoinOnDrop<'vec, Item> {
+      items: &'vec mut [Item],
+      done_end: usize,
+      // Start of tail relative to `done_end`.
+      tail_start: usize,
+    }
+
+    impl<Item> Drop for JoinOnDrop<'_, Item> {
+      fn drop(&mut self) {
+        self.items[self.done_end..].rotate_left(self.tail_start);
+      }
+    }
+
+    let mut rest = JoinOnDrop {
+      items: &mut self.data.as_slice_mut()[..self.len],
+      done_end: 0,
+      tail_start: 0,
+    };
+
+    for idx in 0..self.len {
+      // Loop start invariant: idx = rest.done_end + rest.tail_start
+      if !acceptable(&rest.items[idx]) {
+        let _ = take(&mut rest.items[idx]);
+        self.len -= 1;
+        rest.tail_start += 1;
       } else {
-        i += 1;
+        rest.items.swap(rest.done_end, idx);
+        rest.done_end += 1;
       }
     }
   }
