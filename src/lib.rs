@@ -86,7 +86,7 @@ mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use crate::tinyvec::*;
 
-// Replace with mem::take as soon as MSRV allows it
+// TODO MSRV(1.40.0): Just call the normal `core::mem::take`
 fn take<T: Default>(from: &mut T) -> T {
   replace(from, T::default())
 }
