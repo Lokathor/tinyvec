@@ -84,7 +84,7 @@ pub use arrayvec::*;
 #[cfg(feature = "alloc")]
 mod tinyvec;
 #[cfg(feature = "alloc")]
-pub use tinyvec::*;
+pub use crate::tinyvec::*;
 
 // Replace with mem::take as soon as MSRV allows it
 fn take<T: Default>(from: &mut T) -> T {
