@@ -10,9 +10,9 @@ use super::*;
 ///
 /// ```rust
 /// use tinyvec::*;
-/// 
+///
 /// let empty_av = array_vec!([u8; 16]);
-/// 
+///
 /// let some_ints = array_vec!([i32; 4], 1, 2, 3);
 /// ```
 #[macro_export]
@@ -81,10 +81,10 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for ArrayVec<A> {
 
 impl<A: Array> ArrayVec<A> {
   /// Move all values from `other` into this vec.
-  /// 
+  ///
   /// ## Panics
   /// * If the vec overflows its capacity
-  /// 
+  ///
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
@@ -102,9 +102,9 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// A mutable pointer to the backing array.
-  /// 
+  ///
   /// ## Safety
-  /// 
+  ///
   /// This pointer has provenance over the _entire_ backing array.
   #[inline(always)]
   #[must_use]
@@ -120,9 +120,9 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// A const pointer to the backing array.
-  /// 
+  ///
   /// ## Safety
-  /// 
+  ///
   /// This pointer has provenance over the _entire_ backing array.
   #[inline(always)]
   #[must_use]
@@ -138,7 +138,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// The capacity of the `ArrayVec`.
-  /// 
+  ///
   /// This is fixed based on the array type.
   #[inline(always)]
   #[must_use]
@@ -248,9 +248,22 @@ impl<A: Array> ArrayVec<A> {
   where
     A::Item: Clone,
   {
-    for i in sli {
-      self.push(i.clone())
+    if sli.is_empty() {
+      return;
     }
+
+    let new_len = self.len + sli.len();
+    if new_len > A::CAPACITY {
+      panic!(
+        "ArrayVec::extend_from_slice: total length {} exceeds capacity {}!",
+        new_len,
+        A::CAPACITY
+      )
+    }
+
+    let target = &mut self.data.as_slice_mut()[self.len..new_len];
+    target.clone_from_slice(sli);
+    self.set_len(new_len);
   }
 
   /// Wraps up an array and uses the given length as the initial length.
@@ -291,10 +304,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
     if index > self.len {
-      panic!(
-        "ArrayVec::insert> index {} is out of bounds {}",
-        index, self.len
-        );
+      panic!("ArrayVec::insert> index {} is out of bounds {}", index, self.len);
     }
 
     // Try to push the element.
@@ -328,7 +338,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// Remove and return the last element of the vec, if there is one.
-  /// 
+  ///
   /// ## Failure
   /// * If the vec is empty you get `None`.
   #[inline]
@@ -343,7 +353,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// Place an element onto the end of the vec.
-  /// 
+  ///
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
   #[inline(always)]
@@ -469,7 +479,8 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, mut acceptable: F) {
-    // Drop guard to contain exactly the remaining elements when the test panics.
+    // Drop guard to contain exactly the remaining elements when the test
+    // panics.
     struct JoinOnDrop<'vec, Item> {
       items: &'vec mut [Item],
       done_end: usize,
@@ -527,13 +538,15 @@ impl<A: Array> ArrayVec<A> {
 
   /// Fill the vector until its capacity has been reached.
   ///
-  /// Successively fills unused space in the spare slice of the vector with elements from the
-  /// iterator. It then returns the remaining iterator without exhausting it. This also allows
-  /// appending the head of an infinite iterator.
+  /// Successively fills unused space in the spare slice of the vector with
+  /// elements from the iterator. It then returns the remaining iterator
+  /// without exhausting it. This also allows appending the head of an
+  /// infinite iterator.
   ///
-  /// This is an alternative to `Extend::extend` method for cases where the length of the iterator
-  /// can not be checked. Since this vector can not reallocate to increase its capacity, it is
-  /// unclear what to do with remaining elements in the iterator and the iterator itself. The
+  /// This is an alternative to `Extend::extend` method for cases where the
+  /// length of the iterator can not be checked. Since this vector can not
+  /// reallocate to increase its capacity, it is unclear what to do with
+  /// remaining elements in the iterator and the iterator itself. The
   /// interface also provides no way to communicate this to the caller.
   ///
   /// ## Example
@@ -549,12 +562,15 @@ impl<A: Array> ArrayVec<A> {
   /// ## Panics
   /// Only panics if the `next` method of the provided iterator panics.
   #[inline]
-  pub fn fill<I: IntoIterator<Item=A::Item>>(&mut self, iter: I) -> I::IntoIter {
-      let mut iter = iter.into_iter();
-      for element in iter.by_ref().take(self.capacity() - self.len()) {
-          self.push(element);
-      }
-      iter
+  pub fn fill<I: IntoIterator<Item = A::Item>>(
+    &mut self,
+    iter: I,
+  ) -> I::IntoIter {
+    let mut iter = iter.into_iter();
+    for element in iter.by_ref().take(self.capacity() - self.len()) {
+      self.push(element);
+    }
+    iter
   }
 
   /// Splits the collection at the point given.
@@ -621,15 +637,15 @@ impl<A: Array> ArrayVec<A> {
       self.len
     );
     if index == self.len - 1 {
-        self.pop().unwrap()
+      self.pop().unwrap()
     } else {
-        let i = self.pop().unwrap();
-        replace(&mut self[index], i)
+      let i = self.pop().unwrap();
+      replace(&mut self[index], i)
     }
   }
 
   /// Reduces the vec's length to the given value.
-  /// 
+  ///
   /// If the vec is already shorter than the input, nothing happens.
   #[inline]
   pub fn truncate(&mut self, new_len: usize) {
@@ -661,7 +677,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// Obtain the shared slice of the array _after_ the active memory.
-  /// 
+  ///
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
@@ -678,9 +694,9 @@ impl<A: Array> ArrayVec<A> {
   pub fn grab_spare_slice(&self) -> &[A::Item] {
     &self.data.as_slice()[self.len..]
   }
-  
+
   /// Obtain the mutable slice of the array _after_ the active memory.
-  /// 
+  ///
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
@@ -698,7 +714,7 @@ impl<A: Array> ArrayVec<A> {
 }
 
 /// Draining iterator for `ArrayVecDrain`
-/// 
+///
 /// See [`ArrayVecDrain::drain`](ArrayVecDrain::<A>::drain)
 pub struct ArrayVecDrain<'p, A: Array> {
   parent: &'p mut ArrayVec<A>,
