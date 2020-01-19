@@ -22,6 +22,12 @@ fn TinyVec_swap_remove() {
 }
 
 #[test]
+fn TinyVec_capacity() {
+  let tv: TinyVec<[i32; 10]> = Default::default();
+  assert_eq!(tv.capacity(), 10);
+}
+
+#[test]
 fn TinyVec_drain() {
   let mut tv: TinyVec<[i32; 10]> = Default::default();
   tv.push(1);
