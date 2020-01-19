@@ -1,7 +1,7 @@
 #![allow(bad_style)]
 
-use tinyvec::*;
 use std::iter::FromIterator;
+use tinyvec::*;
 
 #[test]
 fn test_a_vec() {

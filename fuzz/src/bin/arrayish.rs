@@ -1,7 +1,11 @@
-use derive_arbitrary::Arbitrary;
 use arbitrary_model_tests::arbitrary_stateful_operations;
+use derive_arbitrary::Arbitrary;
 use honggfuzz::fuzz;
-use std::{fmt::Debug, iter::FromIterator, ops::{RangeBounds, Bound}};
+use std::{
+  fmt::Debug,
+  iter::FromIterator,
+  ops::{Bound, RangeBounds},
+};
 
 use tinyvec::ArrayVec;
 use tinyvec_fuzz::ArbRange;
@@ -83,29 +87,31 @@ arbitrary_stateful_operations! {
 const MAX_RING_SIZE: usize = 16_384;
 
 fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
-    use arbitrary::{Arbitrary, FiniteBuffer};
+  use arbitrary::{Arbitrary, FiniteBuffer};
 
-    let mut ring = FiniteBuffer::new(&data, MAX_RING_SIZE).map_err(|_| ())?;
+  let mut ring = FiniteBuffer::new(&data, MAX_RING_SIZE).map_err(|_| ())?;
 
-    let mut model = Vec::<u16>::default();
-    let mut tested: ArrayVec<[u16; 32]> = ArrayVec::new();
+  let mut model = Vec::<u16>::default();
+  let mut tested: ArrayVec<[u16; 32]> = ArrayVec::new();
 
-    let mut _op_trace = String::new();
-    while let Ok(op) = <op::Op<u16, ArbRange<usize>> as Arbitrary>::arbitrary(&mut ring) {
-        #[cfg(fuzzing_debug)]
-        _op_trace.push_str(&format!("{}\n", op.to_string()));
-        op.execute_and_compare(&mut model, &mut tested);
-    }
+  let mut _op_trace = String::new();
+  while let Ok(op) =
+    <op::Op<u16, ArbRange<usize>> as Arbitrary>::arbitrary(&mut ring)
+  {
+    #[cfg(fuzzing_debug)]
+    _op_trace.push_str(&format!("{}\n", op.to_string()));
+    op.execute_and_compare(&mut model, &mut tested);
+  }
 
-    Ok(())
+  Ok(())
 }
 
 fn main() -> Result<(), ()> {
-    better_panic::install();
+  better_panic::install();
 
-    loop {
-        fuzz!(|data: &[u8]| {
-            let _ = fuzz_cycle(data);
-        });
-    }
+  loop {
+    fuzz!(|data: &[u8]| {
+      let _ = fuzz_cycle(data);
+    });
+  }
 }

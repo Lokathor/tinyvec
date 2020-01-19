@@ -28,7 +28,7 @@ pub trait Array {
   fn as_slice(&self) -> &[Self::Item];
 
   /// Gives a unique slice over the whole thing.
-  /// 
+  ///
   /// A correct implementation will return a slice with a length equal to the
   /// `CAPACITY` value.
   fn as_slice_mut(&mut self) -> &mut [Self::Item];

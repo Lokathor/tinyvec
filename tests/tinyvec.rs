@@ -1,8 +1,8 @@
 #![allow(bad_style)]
 #![allow(clippy::redundant_clone)]
 
-use tinyvec::*;
 use std::iter::FromIterator;
+use tinyvec::*;
 
 #[test]
 fn TinyVec_swap_remove() {

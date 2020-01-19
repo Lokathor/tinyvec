@@ -14,9 +14,9 @@ use alloc::vec::Vec;
 ///
 /// ```rust
 /// use tinyvec::*;
-/// 
+///
 /// let empty_av = tiny_vec!([u8; 16]);
-/// 
+///
 /// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
 /// ```
 #[macro_export]
@@ -51,7 +51,7 @@ pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVec<A>),
   #[allow(missing_docs)]
-  Heap(Vec<A::Item>)
+  Heap(Vec<A::Item>),
 }
 impl<A: Array + Default> Default for TinyVec<A> {
   #[inline]
@@ -127,9 +127,9 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// A mutable pointer to the backing array.
-  /// 
+  ///
   /// ## Safety
-  /// 
+  ///
   /// This pointer has provenance over the _entire_ backing array/buffer.
   #[inline(always)]
   #[must_use]
@@ -148,9 +148,9 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// A const pointer to the backing array.
-  /// 
+  ///
   /// ## Safety
-  /// 
+  ///
   /// This pointer has provenance over the _entire_ backing array/buffer.
   #[inline(always)]
   #[must_use]
@@ -169,7 +169,7 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// The capacity of the `TinyVec`.
-  /// 
+  ///
   /// When not heap allocated this is fixed based on the array type.
   /// Otherwise its the result of the underlying Vec::capacity.
   #[inline(always)]
@@ -186,7 +186,7 @@ impl<A: Array> TinyVec<A> {
   pub fn clear(&mut self) {
     self.truncate(0)
   }
-  
+
   /// De-duplicates the vec.
   #[cfg(feature = "nightly_slice_partition_dedup")]
   #[inline(always)]
@@ -325,12 +325,14 @@ impl<A: Array> TinyVec<A> {
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
     match self {
-      TinyVec::Inline(a) => if a.len() == A::CAPACITY {
-        self.move_to_the_heap();
-        self.insert(index, item)
-      } else {
-        a.insert(index, item);
-      },
+      TinyVec::Inline(a) => {
+        if a.len() == A::CAPACITY {
+          self.move_to_the_heap();
+          self.insert(index, item)
+        } else {
+          a.insert(index, item);
+        }
+      }
       TinyVec::Heap(v) => v.insert(index, item),
     }
   }
@@ -363,7 +365,7 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Remove and return the last element of the vec, if there is one.
-  /// 
+  ///
   /// ## Failure
   /// * If the vec is empty you get `None`.
   #[inline]
@@ -380,12 +382,14 @@ impl<A: Array> TinyVec<A> {
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
     match self {
-      TinyVec::Inline(a) => if a.len() == A::CAPACITY {
-        self.move_to_the_heap();
-        self.push(val)
-      } else {
-        a.push(val);
-      },
+      TinyVec::Inline(a) => {
+        if a.len() == A::CAPACITY {
+          self.move_to_the_heap();
+          self.push(val)
+        } else {
+          a.push(val);
+        }
+      }
       TinyVec::Heap(v) => v.push(val),
     }
   }
@@ -440,12 +444,14 @@ impl<A: Array> TinyVec<A> {
     A::Item: Clone,
   {
     match self {
-      TinyVec::Inline(a) => if new_len > A::CAPACITY {
-        self.move_to_the_heap();
-        self.resize(new_len, new_val);
-      } else {
-        a.resize(new_len, new_val);
-      },
+      TinyVec::Inline(a) => {
+        if new_len > A::CAPACITY {
+          self.move_to_the_heap();
+          self.resize(new_len, new_val);
+        } else {
+          a.resize(new_len, new_val);
+        }
+      }
       TinyVec::Heap(v) => v.resize(new_len, new_val),
     }
   }
@@ -473,11 +479,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv.as_slice(), &[2, 4, 8, 16][..]);
   /// ```
   #[inline]
-  pub fn resize_with<F: FnMut() -> A::Item>(
-    &mut self,
-    new_len: usize,
-    f: F,
-  ) {
+  pub fn resize_with<F: FnMut() -> A::Item>(&mut self, new_len: usize, f: F) {
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
       TinyVec::Heap(v) => v.resize_with(new_len, f),
@@ -558,7 +560,7 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Reduces the vec's length to the given value.
-  /// 
+  ///
   /// If the vec is already shorter than the input, nothing happens.
   #[inline]
   pub fn truncate(&mut self, new_len: usize) {
@@ -585,7 +587,7 @@ impl<A: Array> TinyVec<A> {
 }
 
 /// Draining iterator for `TinyVecDrain`
-/// 
+///
 /// See [`TinyVecDrain::drain`](TinyVecDrain::<A>::drain)
 pub struct TinyVecDrain<'p, A: Array> {
   parent: &'p mut TinyVec<A>,
@@ -680,7 +682,7 @@ pub enum TinyVecIterator<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecIterator<A>),
   #[allow(missing_docs)]
-  Heap(alloc::vec::IntoIter<A::Item>)
+  Heap(alloc::vec::IntoIter<A::Item>),
 }
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
