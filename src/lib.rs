@@ -66,6 +66,7 @@ use core::{
     Binary, Debug, Display, Formatter, LowerExp, LowerHex, Octal, Pointer,
     UpperExp, UpperHex,
   },
+  hash::{Hash, Hasher},
   iter::{Extend, FromIterator, IntoIterator, Iterator},
   mem::{needs_drop, replace},
   ops::{Deref, DerefMut, Index, IndexMut, RangeBounds},

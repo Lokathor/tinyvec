@@ -918,24 +918,15 @@ where
   }
 }
 
-/*
-
-I think, in retrospect, this is useless?
-
-The `&mut [A::Item]` should coerce to `&[A::Item]` and use the above impl.
-I'll leave it here for now though since we already had it written out..
-
-impl<A: Array> PartialEq<&mut [A::Item]> for ArrayVec<A>
+impl<A: Array> Hash for ArrayVec<A>
 where
-  A::Item: PartialEq,
+  A::Item: Hash,
 {
   #[inline]
-  #[must_use]
-  fn eq(&self, other: &&mut [A::Item]) -> bool {
-    self.deref() == *other
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    self.as_slice().hash(state)
   }
 }
-*/
 
 // //
 // Formatting impls
