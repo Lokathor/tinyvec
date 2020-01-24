@@ -4,6 +4,7 @@
   feature = "nightly_slice_partition_dedup",
   feature(slice_partition_dedup)
 )]
+#![cfg_attr(feature = "nightly_const_generics", allow(incomplete_features))]
 #![cfg_attr(feature = "nightly_const_generics", feature(const_generics))]
 #![warn(clippy::missing_inline_in_public_items)]
 #![warn(clippy::must_use_candidate)]
