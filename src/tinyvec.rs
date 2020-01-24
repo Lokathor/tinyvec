@@ -275,8 +275,6 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
-  // LATER(Vec): drain_filter #nightly https://github.com/rust-lang/rust/issues/43244
-
   /// Clone each element of the slice into this vec.
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[A::Item])
@@ -418,8 +416,6 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
-  // NIGHTLY: remove_item, https://github.com/rust-lang/rust/issues/40062
-
   /// Resize the vec to the new length.
   ///
   /// If it needs to be longer, it's filled with clones of the provided value.
@@ -504,8 +500,6 @@ impl<A: Array> TinyVec<A> {
       TinyVec::Heap(v) => v.retain(acceptable),
     }
   }
-
-  // LATER(Vec): splice
 
   /// Splits the collection at the point given.
   ///
@@ -594,8 +588,6 @@ pub struct TinyVecDrain<'p, A: Array> {
   target_index: usize,
   target_count: usize,
 }
-// GoodFirstIssue: this entire type is correct but slow.
-// NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]

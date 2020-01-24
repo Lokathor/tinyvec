@@ -422,8 +422,6 @@ impl<A: Array> ArrayVec<A> {
     item
   }
 
-  // NIGHTLY: remove_item, https://github.com/rust-lang/rust/issues/40062
-
   /// Resize the vec to the new length.
   ///
   /// If it needs to be longer, it's filled with clones of the provided value.
