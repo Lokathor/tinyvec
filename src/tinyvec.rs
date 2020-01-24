@@ -723,6 +723,7 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
     }
   }
 }
+// TODO: fused iterator
 
 impl<A: Array> IntoIterator for TinyVec<A> {
   type Item = A::Item;
