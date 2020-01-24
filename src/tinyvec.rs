@@ -723,8 +723,6 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
     }
   }
 }
-// TODO: fused iterator
-
 impl<A: Array> IntoIterator for TinyVec<A> {
   type Item = A::Item;
   type IntoIter = TinyVecIterator<A>;
@@ -745,7 +743,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &Self) -> bool {
-    self.deref().eq(other.deref())
+    self.as_slice().eq(other.as_slice())
   }
 }
 impl<A: Array> Eq for TinyVec<A> where A::Item: Eq {}
@@ -757,7 +755,7 @@ where
   #[inline]
   #[must_use]
   fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-    self.deref().partial_cmp(other.deref())
+    self.as_slice().partial_cmp(other.as_slice())
   }
 }
 impl<A: Array> Ord for TinyVec<A>
@@ -767,7 +765,7 @@ where
   #[inline]
   #[must_use]
   fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-    self.deref().cmp(other.deref())
+    self.as_slice().cmp(other.as_slice())
   }
 }
 
@@ -778,7 +776,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
-    self.as_slice() == other.as_slice()
+    self.as_slice().eq(other.as_slice())
   }
 }
 
@@ -789,7 +787,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&[A::Item]) -> bool {
-    self.deref() == *other
+    self.as_slice().eq(*other)
   }
 }
 
@@ -803,9 +801,9 @@ where
   }
 }
 
-// //
+// // // // // // // //
 // Formatting impls
-// //
+// // // // // // // //
 
 impl<A: Array> Binary for TinyVec<A>
 where
