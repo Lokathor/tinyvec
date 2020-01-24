@@ -684,6 +684,17 @@ pub enum TinyVecIterator<A: Array> {
   #[allow(missing_docs)]
   Heap(alloc::vec::IntoIter<A::Item>),
 }
+
+impl<A: Array> TinyVecIterator<A> {
+  /// Returns the remaining items of this iterator as a slice.
+  pub fn as_slice(&self) -> &[A::Item] {
+    match self {
+      TinyVecIterator::Inline(a) => a.as_slice(),
+      TinyVecIterator::Heap(v) => v.as_slice(),
+    }
+  }
+}
+
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -721,6 +732,12 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
       TinyVecIterator::Inline(a) => a.nth(n),
       TinyVecIterator::Heap(v) => v.nth(n),
     }
+  }
+}
+
+impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()
   }
 }
 
