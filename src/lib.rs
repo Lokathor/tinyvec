@@ -88,6 +88,7 @@ mod tinyvec;
 pub use crate::tinyvec::*;
 
 // TODO MSRV(1.40.0): Just call the normal `core::mem::take`
+#[inline(always)]
 fn take<T: Default>(from: &mut T) -> T {
   replace(from, T::default())
 }
