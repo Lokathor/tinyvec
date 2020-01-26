@@ -31,9 +31,23 @@ macro_rules! tiny_vec {
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      let mut tv: TinyVec<$array_type> = Default::default();
-      $( tv.push($elem); )*
-      tv
+      // Note(Lokathor): This goofy looking thing will count the number of
+      // `$elem` entries we were given. We can't spit out the "+1"s on their
+      // own, we need to use `$elem` in the repetition-expansion somehow.
+      // However, we also can't assume it's `Copy` data, so we must use `$elem`
+      // only once "for real" in the expansion as a whole. To achieve this, we
+      // can `stringify!` each element in an inner block, then have the block
+      // return a 1. The stringification is a compile time thing, it won't
+      // actually move any values.
+      const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
+      // If we have more `$elem` than the `CAPACITY` we will simply go directly
+      // to constructing on the heap.
+      let av: TinyVec<$array_type> = if INVOKED_ELEM_COUNT <= <$array_type as Array>::CAPACITY {
+        TinyVec::<$array_type>::Inline(array_vec!($array_type, $($elem),*))
+      } else {
+        TinyVec::<$array_type>::Heap(vec!($($elem),*))
+      };
+      av
     }
   };
 }
