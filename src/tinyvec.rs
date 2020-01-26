@@ -727,6 +727,8 @@ pub enum TinyVecIterator<A: Array> {
 
 impl<A: Array> TinyVecIterator<A> {
   /// Returns the remaining items of this iterator as a slice.
+  #[inline]
+  #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
     match self {
       TinyVecIterator::Inline(a) => a.as_slice(),
@@ -776,6 +778,7 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
 }
 
 impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()
   }

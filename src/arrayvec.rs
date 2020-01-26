@@ -885,6 +885,8 @@ pub struct ArrayVecIterator<A: Array> {
 
 impl<A: Array> ArrayVecIterator<A> {
   /// Returns the remaining items of this iterator as a slice.
+  #[inline]
+  #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
     &self.data.as_slice()[self.base..self.len]
   }
@@ -930,6 +932,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
 }
 
 impl<A: Array> Debug for ArrayVecIterator<A> where A::Item: Debug {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("ArrayVecIterator").field(&self.as_slice()).finish()
   }
