@@ -31,12 +31,9 @@ macro_rules! tiny_vec {
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      const INVOKED_ELEMENT_COUNT: usize = 0 $( +1 )*;
-      if INVOKED_ELEMENT_COUNT <= $array_type::CAPACITY {
-        TinyVec::<$array_type>::Inline(array_vec!($array_type, $($elem),*))
-      } else {
-        TinyVec::<$array_type>::Heap(vec!($($elem:expr),*))
-      }
+      let mut tv: TinyVec<$array_type> = Default::default();
+      $( tv.push($elem); )*
+      tv
     }
   };
 }

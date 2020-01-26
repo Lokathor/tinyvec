@@ -6,13 +6,13 @@ matrix:
 
 environment:
   matrix:
-    - channel: 1.39.0
+    - channel: 1.36.0
       target: i686-pc-windows-msvc
-    - channel: 1.39.0
+    - channel: 1.36.0
       target: x86_64-pc-windows-msvc
-    - channel: 1.39.0
+    - channel: 1.36.0
       target: i686-pc-windows-gnu
-    - channel: 1.39.0
+    - channel: 1.36.0
       target: x86_64-pc-windows-gnu
 
 install:

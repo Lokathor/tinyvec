@@ -8,13 +8,13 @@ cache:
   cargo
 
 rust:
-  - 1.38.0
+  - 1.36.0
   - stable
 
 matrix:
   include:
-    - { os: osx, rust: 1.38.0 }
-    - { os: linux, rust: 1.38.0 }
+    - { os: osx, rust: 1.36.0 }
+    - { os: linux, rust: 1.36.0 }
     - { os: linux, rust: stable }
     - { os: linux, rust: nightly }
 
