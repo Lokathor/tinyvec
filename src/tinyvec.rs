@@ -15,9 +15,11 @@ use alloc::vec::Vec;
 /// ```rust
 /// use tinyvec::*;
 ///
-/// let empty_av = tiny_vec!([u8; 16]);
+/// let empty_tv = tiny_vec!([u8; 16]);
 ///
 /// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+///
+/// let many_ints = tiny_vec!([i32; 4], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 /// ```
 #[macro_export]
 macro_rules! tiny_vec {
@@ -29,9 +31,12 @@ macro_rules! tiny_vec {
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      let mut tv: TinyVec<$array_type> = Default::default();
-      $( tv.push($elem); )*
-      tv
+      const INVOKED_ELEMENT_COUNT: usize = 0 $( +1 )*;
+      if INVOKED_ELEMENT_COUNT <= $array_type::CAPACITY {
+        TinyVec::<$array_type>::Inline(array_vec!($array_type, $($elem),*))
+      } else {
+        TinyVec::<$array_type>::Heap(vec!($($elem:expr),*))
+      }
     }
   };
 }
@@ -40,12 +45,23 @@ macro_rules! tiny_vec {
 ///
 /// * Requires the `alloc` feature
 ///
-/// Note: This is currently an enum but you can mostly ignore that detail if you
-/// like. In future versions this **may** become an opaque struct, but for now
-/// we're being a little more liberal about allowing you to "access the
-/// internals" since no safety invariants are on the line. It's kinda wild how
-/// much you can just let people poke at stuff without worry when it's 100% safe
-/// code.
+/// A `TinyVec` is either an Inline([`ArrayVec`](crate::ArrayVec::<A>)) or
+/// Heap([`Vec`](https://doc.rust-lang.org/alloc/vec/struct.Vec.html)). The
+/// interface for the type as a whole is a bunch of methods that just match on
+/// the enum variant and then call the same method on the inner vec.
+///
+/// ## Construction
+///
+/// Because it's an enum, you can construct a `TinyVec` simply by making an
+/// `ArrayVec` or `Vec` and then putting it into the enum.
+/// 
+/// There is also a macro
+/// 
+/// ```rust
+/// # use tinyvec::*;
+/// let empty_tv = tiny_vec!([u8; 16]);
+/// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+/// ```
 #[derive(Clone)]
 pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
@@ -58,22 +74,6 @@ impl<A: Array + Default> Default for TinyVec<A> {
   #[must_use]
   fn default() -> Self {
     TinyVec::Inline(ArrayVec::default())
-  }
-}
-impl<A: Array> TinyVec<A> {
-  /// Moves the content of the TinyVec to the heap, if it's inline.
-  #[allow(clippy::missing_inline_in_public_items)]
-  pub fn move_to_the_heap(&mut self) {
-    match self {
-      TinyVec::Inline(ref mut arr) => {
-        let mut v = Vec::with_capacity(A::CAPACITY * 2);
-        for item in arr.drain(..) {
-          v.push(item);
-        }
-        replace(self, TinyVec::Heap(v));
-      }
-      TinyVec::Heap(_) => (),
-    }
   }
 }
 
@@ -114,6 +114,23 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
     &mut self.deref_mut()[index]
+  }
+}
+
+impl<A: Array> TinyVec<A> {
+  /// Moves the content of the TinyVec to the heap, if it's inline.
+  #[allow(clippy::missing_inline_in_public_items)]
+  pub fn move_to_the_heap(&mut self) {
+    match self {
+      TinyVec::Inline(ref mut arr) => {
+        let mut v = Vec::with_capacity(A::CAPACITY * 2);
+        for item in arr.drain(..) {
+          v.push(item);
+        }
+        replace(self, TinyVec::Heap(v));
+      }
+      TinyVec::Heap(_) => (),
+    }
   }
 }
 
