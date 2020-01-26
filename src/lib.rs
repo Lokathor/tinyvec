@@ -4,6 +4,7 @@
   feature = "nightly_slice_partition_dedup",
   feature(slice_partition_dedup)
 )]
+#![cfg_attr(feature = "nightly_const_generics", allow(incomplete_features))]
 #![cfg_attr(feature = "nightly_const_generics", feature(const_generics))]
 #![warn(clippy::missing_inline_in_public_items)]
 #![warn(clippy::must_use_candidate)]
@@ -88,6 +89,7 @@ mod tinyvec;
 pub use crate::tinyvec::*;
 
 // TODO MSRV(1.40.0): Just call the normal `core::mem::take`
+#[inline(always)]
 fn take<T: Default>(from: &mut T) -> T {
   replace(from, T::default())
 }

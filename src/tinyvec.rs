@@ -15,9 +15,11 @@ use alloc::vec::Vec;
 /// ```rust
 /// use tinyvec::*;
 ///
-/// let empty_av = tiny_vec!([u8; 16]);
+/// let empty_tv = tiny_vec!([u8; 16]);
 ///
 /// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+///
+/// let many_ints = tiny_vec!([i32; 4], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 /// ```
 #[macro_export]
 macro_rules! tiny_vec {
@@ -40,12 +42,23 @@ macro_rules! tiny_vec {
 ///
 /// * Requires the `alloc` feature
 ///
-/// Note: This is currently an enum but you can mostly ignore that detail if you
-/// like. In future versions this **may** become an opaque struct, but for now
-/// we're being a little more liberal about allowing you to "access the
-/// internals" since no safety invariants are on the line. It's kinda wild how
-/// much you can just let people poke at stuff without worry when it's 100% safe
-/// code.
+/// A `TinyVec` is either an Inline([`ArrayVec`](crate::ArrayVec::<A>)) or
+/// Heap([`Vec`](https://doc.rust-lang.org/alloc/vec/struct.Vec.html)). The
+/// interface for the type as a whole is a bunch of methods that just match on
+/// the enum variant and then call the same method on the inner vec.
+///
+/// ## Construction
+///
+/// Because it's an enum, you can construct a `TinyVec` simply by making an
+/// `ArrayVec` or `Vec` and then putting it into the enum.
+/// 
+/// There is also a macro
+/// 
+/// ```rust
+/// # use tinyvec::*;
+/// let empty_tv = tiny_vec!([u8; 16]);
+/// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+/// ```
 #[derive(Clone)]
 pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
@@ -58,22 +71,6 @@ impl<A: Array + Default> Default for TinyVec<A> {
   #[must_use]
   fn default() -> Self {
     TinyVec::Inline(ArrayVec::default())
-  }
-}
-impl<A: Array> TinyVec<A> {
-  /// Moves the content of the TinyVec to the heap, if it's inline.
-  #[allow(clippy::missing_inline_in_public_items)]
-  pub fn move_to_the_heap(&mut self) {
-    match self {
-      TinyVec::Inline(ref mut arr) => {
-        let mut v = Vec::with_capacity(A::CAPACITY * 2);
-        for item in arr.drain(..) {
-          v.push(item);
-        }
-        replace(self, TinyVec::Heap(v));
-      }
-      TinyVec::Heap(_) => (),
-    }
   }
 }
 
@@ -114,6 +111,23 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
     &mut self.deref_mut()[index]
+  }
+}
+
+impl<A: Array> TinyVec<A> {
+  /// Moves the content of the TinyVec to the heap, if it's inline.
+  #[allow(clippy::missing_inline_in_public_items)]
+  pub fn move_to_the_heap(&mut self) {
+    match self {
+      TinyVec::Inline(ref mut arr) => {
+        let mut v = Vec::with_capacity(A::CAPACITY * 2);
+        for item in arr.drain(..) {
+          v.push(item);
+        }
+        replace(self, TinyVec::Heap(v));
+      }
+      TinyVec::Heap(_) => (),
+    }
   }
 }
 
@@ -275,8 +289,6 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
-  // LATER(Vec): drain_filter #nightly https://github.com/rust-lang/rust/issues/43244
-
   /// Clone each element of the slice into this vec.
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[A::Item])
@@ -418,8 +430,6 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
-  // NIGHTLY: remove_item, https://github.com/rust-lang/rust/issues/40062
-
   /// Resize the vec to the new length.
   ///
   /// If it needs to be longer, it's filled with clones of the provided value.
@@ -504,8 +514,6 @@ impl<A: Array> TinyVec<A> {
       TinyVec::Heap(v) => v.retain(acceptable),
     }
   }
-
-  // LATER(Vec): splice
 
   /// Splits the collection at the point given.
   ///
@@ -594,8 +602,6 @@ pub struct TinyVecDrain<'p, A: Array> {
   target_index: usize,
   target_count: usize,
 }
-// GoodFirstIssue: this entire type is correct but slow.
-// NIGHTLY: vec_drain_as_slice, https://github.com/rust-lang/rust/issues/58957
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
@@ -718,6 +724,8 @@ pub enum TinyVecIterator<A: Array> {
 
 impl<A: Array> TinyVecIterator<A> {
   /// Returns the remaining items of this iterator as a slice.
+  #[inline]
+  #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
     match self {
       TinyVecIterator::Inline(a) => a.as_slice(),
@@ -767,6 +775,7 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
 }
 
 impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()
   }
@@ -812,7 +821,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &Self) -> bool {
-    self.deref().eq(other.deref())
+    self.as_slice().eq(other.as_slice())
   }
 }
 impl<A: Array> Eq for TinyVec<A> where A::Item: Eq {}
@@ -824,7 +833,7 @@ where
   #[inline]
   #[must_use]
   fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-    self.deref().partial_cmp(other.deref())
+    self.as_slice().partial_cmp(other.as_slice())
   }
 }
 impl<A: Array> Ord for TinyVec<A>
@@ -834,7 +843,7 @@ where
   #[inline]
   #[must_use]
   fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-    self.deref().cmp(other.deref())
+    self.as_slice().cmp(other.as_slice())
   }
 }
 
@@ -845,7 +854,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
-    self.as_slice() == other.as_slice()
+    self.as_slice().eq(other.as_slice())
   }
 }
 
@@ -856,7 +865,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&[A::Item]) -> bool {
-    self.deref() == *other
+    self.as_slice().eq(*other)
   }
 }
 
@@ -870,9 +879,9 @@ where
   }
 }
 
-// //
+// // // // // // // //
 // Formatting impls
-// //
+// // // // // // // //
 
 impl<A: Array> Binary for TinyVec<A>
 where
