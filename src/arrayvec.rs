@@ -57,8 +57,8 @@ macro_rules! array_vec {
 /// assert_eq!(some_ints.len(), 3);
 /// ```
 ///
-/// The [`default`](ArrayVec::<A>::new) for an `ArrayVec` is to have a default
-/// array with length 0. The [`new`](ArrayVec::<A>::new) method is the same as
+/// The [`default`](ArrayVec::new) for an `ArrayVec` is to have a default
+/// array with length 0. The [`new`](ArrayVec::new) method is the same as
 /// calling `default`
 /// ```rust
 /// # use tinyvec::*;
@@ -72,7 +72,7 @@ macro_rules! array_vec {
 /// If you have an array and want the _whole thing_ so count as being "in" the
 /// new `ArrayVec` you can use one of the `from` implementations. If you want
 /// _part of_ the array then you can use
-/// [`from_array_len`](ArrayVec::<A>::from_array_len):
+/// [`from_array_len`](ArrayVec::from_array_len):
 /// ```rust
 /// # use tinyvec::*;
 /// let some_ints = ArrayVec::from([5, 6, 7, 8]);
@@ -778,7 +778,7 @@ impl<A: Array> ArrayVec<A> {
 
 /// Draining iterator for `ArrayVecDrain`
 ///
-/// See [`ArrayVecDrain::drain`](ArrayVecDrain::<A>::drain)
+/// See [`ArrayVec::drain`](ArrayVec::drain)
 pub struct ArrayVecDrain<'p, A: Array> {
   parent: &'p mut ArrayVec<A>,
   target_start: usize,
