@@ -665,6 +665,37 @@ impl<A: Array> From<ArrayVec<A>> for TinyVec<A> {
   }
 }
 
+impl<T, A> From<&'_ [T]> for TinyVec<A>
+where
+  T: Clone + Default,
+  A: Array<Item = T> + Default,
+{
+  #[inline]
+  #[must_use]
+  fn from(slice: &[T]) -> Self {
+    if slice.len() > A::CAPACITY {
+      TinyVec::Heap(slice.into())
+    } else {
+      let mut arr = ArrayVec::new();
+      arr.extend_from_slice(slice);
+
+      TinyVec::Inline(arr)
+    }
+  }
+}
+
+impl<T, A> From<&'_ mut [T]> for TinyVec<A>
+where
+  T: Clone + Default,
+  A: Array<Item = T> + Default,
+{
+  #[inline]
+  #[must_use]
+  fn from(slice: &mut [T]) -> Self {
+    Self::from(&*slice)
+  }
+}
+
 impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
   #[inline]
   #[must_use]
