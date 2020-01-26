@@ -724,6 +724,17 @@ pub enum TinyVecIterator<A: Array> {
   #[allow(missing_docs)]
   Heap(alloc::vec::IntoIter<A::Item>),
 }
+
+impl<A: Array> TinyVecIterator<A> {
+  /// Returns the remaining items of this iterator as a slice.
+  pub fn as_slice(&self) -> &[A::Item] {
+    match self {
+      TinyVecIterator::Inline(a) => a.as_slice(),
+      TinyVecIterator::Heap(v) => v.as_slice(),
+    }
+  }
+}
+
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -763,6 +774,13 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
     }
   }
 }
+
+impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()
+  }
+}
+
 impl<A: Array> IntoIterator for TinyVec<A> {
   type Item = A::Item;
   type IntoIter = TinyVecIterator<A>;
@@ -773,6 +791,26 @@ impl<A: Array> IntoIterator for TinyVec<A> {
       TinyVec::Inline(a) => TinyVecIterator::Inline(a.into_iter()),
       TinyVec::Heap(v) => TinyVecIterator::Heap(v.into_iter()),
     }
+  }
+}
+
+impl<'a, A: Array> IntoIterator for &'a mut TinyVec<A> {
+  type Item = &'a mut A::Item;
+  type IntoIter = alloc::slice::IterMut<'a, A::Item>;
+  #[inline(always)]
+  #[must_use]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter_mut()
+  }
+}
+
+impl<'a, A: Array> IntoIterator for &'a TinyVec<A> {
+  type Item = &'a A::Item;
+  type IntoIter = alloc::slice::Iter<'a, A::Item>;
+  #[inline(always)]
+  #[must_use]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter()
   }
 }
 

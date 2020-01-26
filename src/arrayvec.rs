@@ -244,8 +244,9 @@ impl<A: Array> ArrayVec<A> {
     );
     ArrayVecDrain {
       parent: self,
+      target_start: start,
       target_index: start,
-      target_count: end - start,
+      target_end: end,
     }
   }
 
@@ -780,16 +781,17 @@ impl<A: Array> ArrayVec<A> {
 /// See [`ArrayVecDrain::drain`](ArrayVecDrain::<A>::drain)
 pub struct ArrayVecDrain<'p, A: Array> {
   parent: &'p mut ArrayVec<A>,
+  target_start: usize,
   target_index: usize,
-  target_count: usize,
+  target_end: usize,
 }
 impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    if self.target_count > 0 {
-      let out = self.parent.remove(self.target_index);
-      self.target_count -= 1;
+    if self.target_index != self.target_end {
+      let out = take(&mut self.parent[self.target_index]);
+      self.target_index += 1;
       Some(out)
     } else {
       None
@@ -799,7 +801,13 @@ impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
 impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
-    for _ in self {}
+    // Changed because it was moving `self`, it's also more clear and the std does the same
+    self.for_each(drop);
+    // Implementation very similar to [`ArrayVec::remove`](ArrayVec::remove)
+    let count = self.target_end - self.target_start;
+    let targets: &mut [A::Item] = &mut self.parent.deref_mut()[self.target_start..];
+    targets.rotate_left(count);
+    self.parent.len -= count;
   }
 }
 
@@ -874,6 +882,14 @@ pub struct ArrayVecIterator<A: Array> {
   len: usize,
   data: A,
 }
+
+impl<A: Array> ArrayVecIterator<A> {
+  /// Returns the remaining items of this iterator as a slice.
+  pub fn as_slice(&self) -> &[A::Item] {
+    &self.data.as_slice()[self.base..self.len]
+  }
+}
+
 impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -910,6 +926,12 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
     } else {
       None
     }
+  }
+}
+
+impl<A: Array> Debug for ArrayVecIterator<A> where A::Item: Debug {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.debug_tuple("ArrayVecIterator").field(&self.as_slice()).finish()
   }
 }
 
