@@ -814,6 +814,14 @@ pub struct ArrayVecIterator<A: Array> {
   len: usize,
   data: A,
 }
+
+impl<A: Array> ArrayVecIterator<A> {
+  /// Returns the remaining items of this iterator as a slice.
+  pub fn as_slice(&self) -> &[A::Item] {
+    &self.data.as_slice()[self.base..self.len]
+  }
+}
+
 impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -850,6 +858,12 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
     } else {
       None
     }
+  }
+}
+
+impl<A: Array> Debug for ArrayVecIterator<A> where A::Item: Debug {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.debug_tuple("ArrayVecIterator").field(&self.as_slice()).finish()
   }
 }
 
