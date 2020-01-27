@@ -15,11 +15,15 @@ use alloc::vec::Vec;
 /// ```rust
 /// use tinyvec::*;
 ///
+/// // The backing array type can be specified in the macro call
 /// let empty_tv = tiny_vec!([u8; 16]);
-///
 /// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
-///
 /// let many_ints = tiny_vec!([i32; 4], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+///
+/// // Or left to inference
+/// let empty_tv: TinyVec<[u8; 16]> = tiny_vec!();
+/// let some_ints: TinyVec<[i32; 4]> = tiny_vec!(1, 2, 3);
+/// let many_ints: TinyVec<[i32; 4]> = tiny_vec!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 /// ```
 #[macro_export]
 macro_rules! tiny_vec {
@@ -42,13 +46,18 @@ macro_rules! tiny_vec {
       const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
-      let av: $crate::TinyVec<$array_type> = if INVOKED_ELEM_COUNT <= <$array_type as $crate::Array>::CAPACITY {
-        $crate::TinyVec::<$array_type>::Inline($crate::array_vec!($array_type, $($elem),*))
-      } else {
-        $crate::TinyVec::<$array_type>::Heap($crate::alloc::vec!($($elem),*))
-      };
+      let av: $crate::TinyVec<$array_type> = $crate::TinyVec::from_either_with_capacity(
+        INVOKED_ELEM_COUNT,
+        #[inline(always)] || $crate::array_vec!($array_type, $($elem),*),
+        #[inline(always)] || vec!($($elem),*));
       av
     }
+  };
+  () => {
+    tiny_vec!(_)
+  };
+  ($($elem:expr),*) => {
+    tiny_vec!(_, $($elem),*)
   };
 }
 
@@ -330,6 +339,20 @@ impl<A: Array> TinyVec<A> {
       Err(_) => {
         panic!("TinyVec: length {} exceeds capacity {}!", len, A::CAPACITY)
       }
+    }
+  }
+
+  #[inline(always)]
+  #[doc(hidden)] // Internal implementation details of `tiny_vec!`
+  pub fn from_either_with_capacity(
+    cap: usize,
+    make_array: impl FnOnce() -> ArrayVec<A>,
+    make_vec: impl FnOnce() -> Vec<A::Item>,
+  ) -> Self {
+    if cap <= A::CAPACITY {
+      TinyVec::Inline(make_array())
+    } else {
+      TinyVec::Heap(make_vec())
     }
   }
 

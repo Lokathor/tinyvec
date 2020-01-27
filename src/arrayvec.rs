@@ -11,9 +11,13 @@ use super::*;
 /// ```rust
 /// use tinyvec::*;
 ///
+/// // The backing array type can be specified in the macro call
 /// let empty_av = array_vec!([u8; 16]);
-///
 /// let some_ints = array_vec!([i32; 4], 1, 2, 3);
+///
+/// // Or left to inference
+/// let empty_av: ArrayVec<[u8; 10]> = array_vec!();
+/// let some_ints: ArrayVec<[u8; 10]> = array_vec!(5, 6, 7, 8);
 /// ```
 #[macro_export]
 macro_rules! array_vec {
@@ -29,6 +33,12 @@ macro_rules! array_vec {
       $( av.push($elem); )*
       av
     }
+  };
+  () => {
+    array_vec!(_)
+  };
+  ($($elem:expr),*) => {
+    array_vec!(_, $($elem),*)
   };
 }
 
