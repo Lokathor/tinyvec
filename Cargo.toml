@@ -40,6 +40,14 @@ all-features = true
 [workspace]
 members = ["fuzz"]
 
+[dev-dependencies]
+criterion = "0.3.0"
+
 [[test]]
 name = "tinyvec"
+required-features = ["alloc"]
+
+[[bench]]
+name = "macros"
+harness = false
 required-features = ["alloc"]
