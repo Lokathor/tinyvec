@@ -25,7 +25,7 @@ use alloc::vec::Vec;
 macro_rules! tiny_vec {
   ($array_type:ty) => {
     {
-      let mut tv: TinyVec<$array_type> = Default::default();
+      let mut tv: $crate::TinyVec<$array_type> = Default::default();
       tv
     }
   };
@@ -42,10 +42,10 @@ macro_rules! tiny_vec {
       const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
-      let av: TinyVec<$array_type> = if INVOKED_ELEM_COUNT <= <$array_type as Array>::CAPACITY {
-        TinyVec::<$array_type>::Inline(array_vec!($array_type, $($elem),*))
+      let av: $crate::TinyVec<$array_type> = if INVOKED_ELEM_COUNT <= <$array_type as $crate::Array>::CAPACITY {
+        $crate::TinyVec::<$array_type>::Inline($crate::array_vec!($array_type, $($elem),*))
       } else {
-        TinyVec::<$array_type>::Heap(vec!($($elem),*))
+        $crate::TinyVec::<$array_type>::Heap($crate::alloc::vec!($($elem),*))
       };
       av
     }

@@ -75,7 +75,8 @@ use core::{
 };
 
 #[cfg(feature = "alloc")]
-extern crate alloc;
+#[doc(hidden)] // re-export for macros
+pub extern crate alloc;
 
 mod array;
 pub use array::*;

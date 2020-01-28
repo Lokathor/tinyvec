@@ -19,13 +19,13 @@ use super::*;
 macro_rules! array_vec {
   ($array_type:ty) => {
     {
-      let av: ArrayVec<$array_type> = Default::default();
+      let av: $crate::ArrayVec<$array_type> = Default::default();
       av
     }
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      let mut av: ArrayVec<$array_type> = Default::default();
+      let mut av: $crate::ArrayVec<$array_type> = Default::default();
       $( av.push($elem); )*
       av
     }
@@ -251,7 +251,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// Clone each element of the slice into this `ArrayVec`.
-  /// 
+  ///
   /// ## Panics
   /// * If the `ArrayVec` would overflow, this will panic.
   #[inline]
