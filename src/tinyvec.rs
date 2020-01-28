@@ -29,7 +29,7 @@ macro_rules! tiny_vec {
       tv
     }
   };
-  ($array_type:ty, $($elem:expr),*) => {
+  ($array_type:ty, $($elem:expr),* $(,)?) => {
     {
       // Note(Lokathor): This goofy looking thing will count the number of
       // `$elem` entries we were given. We can't spit out the "+1"s on their
@@ -65,9 +65,9 @@ macro_rules! tiny_vec {
 ///
 /// Because it's an enum, you can construct a `TinyVec` simply by making an
 /// `ArrayVec` or `Vec` and then putting it into the enum.
-/// 
+///
 /// There is also a macro
-/// 
+///
 /// ```rust
 /// # use tinyvec::*;
 /// let empty_tv = tiny_vec!([u8; 16]);
