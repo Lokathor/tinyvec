@@ -11,24 +11,34 @@ use super::*;
 /// ```rust
 /// use tinyvec::*;
 ///
+/// // The backing array type can be specified in the macro call
 /// let empty_av = array_vec!([u8; 16]);
-///
 /// let some_ints = array_vec!([i32; 4], 1, 2, 3);
+///
+/// // Or left to inference
+/// let empty_av: ArrayVec<[u8; 10]> = array_vec!();
+/// let some_ints: ArrayVec<[u8; 10]> = array_vec!(5, 6, 7, 8);
 /// ```
 #[macro_export]
 macro_rules! array_vec {
   ($array_type:ty) => {
     {
-      let av: ArrayVec<$array_type> = Default::default();
+      let av: $crate::ArrayVec<$array_type> = Default::default();
       av
     }
   };
   ($array_type:ty, $($elem:expr),*) => {
     {
-      let mut av: ArrayVec<$array_type> = Default::default();
+      let mut av: $crate::ArrayVec<$array_type> = Default::default();
       $( av.push($elem); )*
       av
     }
+  };
+  () => {
+    array_vec!(_)
+  };
+  ($($elem:expr),*) => {
+    array_vec!(_, $($elem),*)
   };
 }
 
@@ -251,7 +261,7 @@ impl<A: Array> ArrayVec<A> {
   }
 
   /// Clone each element of the slice into this `ArrayVec`.
-  /// 
+  ///
   /// ## Panics
   /// * If the `ArrayVec` would overflow, this will panic.
   #[inline]
