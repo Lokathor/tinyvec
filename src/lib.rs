@@ -39,7 +39,7 @@
 //!    `unsafe` internals. `#![forbid(unsafe_code)]`.
 //! 2) No required dependencies.
 //!    * We might provide optional dependencies for extra functionality (eg:
-//!      `serde` compatability).
+//!      `serde` compatibility).
 //! 3) The intended API is that, _as much as possible_, these types are
 //!    essentially a "drop-in" replacement for the standard [`Vec`](Vec::<T>)
 //!    type.
@@ -49,8 +49,8 @@
 //!      if so they also require a Nightly compiler.
 //!    * Some methods are provided that _are not_ part of the `Vec` type, such
 //!      as additional constructor methods. In this case, the names are rather
-//!      long and whimsical in the hopes that they don't class with any possible
-//!      future methods of `Vec`
+//!      long and whimsical in the hopes that they don't clash with any
+//!      possible future methods of `Vec`.
 //!    * If, in the future, `Vec` stabilizes a method that clashes with an
 //!      existing extra method here then we'll simply be forced to release a
 //!      2.y.z version. Not the end of the world.
