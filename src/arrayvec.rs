@@ -1024,6 +1024,26 @@ where
   }
 }
 
+#[cfg(feature = "experimental_write_impl")]
+impl<A> core::fmt::Write for ArrayVec<A>
+where
+  A: Array,
+  A::Item: From<u8>,
+{
+  fn write_str(&mut self, s: &str) -> core::fmt::Result {
+    if self.len() + s.as_bytes().len() > A::CAPACITY {
+      return Err(core::fmt::Error)
+    }
+    let mut buf = [0; 4];
+    for c in s.chars() {
+      for b in c.encode_utf8(&mut buf) {
+        self.push(*b);
+      }
+    }
+    Ok(())
+  }
+}
+
 // // // // // // // //
 // Formatting impls
 // // // // // // // //

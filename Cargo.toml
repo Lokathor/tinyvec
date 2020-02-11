@@ -30,6 +30,10 @@ nightly_slice_partition_dedup = []
 # use const generics for arrays
 nightly_const_generics = []
 
+# NOT considered part of the crate's SemVer!!!
+# This experimental feature adds `core::fmt::Write` to ArrayVec.
+experimental_write_impl = []
+
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
 travis-ci = { repository = "Lokathor/tinyvec" }
