@@ -1031,16 +1031,14 @@ where
   A::Item: From<u8>,
 {
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
-    if self.len() + s.as_bytes().len() > A::CAPACITY {
-      return Err(core::fmt::Error)
-    }
-    let mut buf = [0; 4];
-    for c in s.chars() {
-      for b in c.encode_utf8(&mut buf) {
-        self.push(*b);
+    if self.len() + s.as_bytes().len() <= A::CAPACITY {
+      for byte in s.bytes() {
+        self.push(A::Item::from(byte))
       }
+      Ok(())
+    } else {
+      Err(core::fmt::Error)
     }
-    Ok(())
   }
 }
 
