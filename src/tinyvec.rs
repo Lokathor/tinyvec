@@ -771,7 +771,7 @@ impl<A: Array> TinyVecIterator<A> {
     }
   }
 }
-impl<'p, A: Array> FusedIterator for TinyVecIterator<'p, A> { }
+impl<A: Array> FusedIterator for TinyVecIterator<A> { }
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
