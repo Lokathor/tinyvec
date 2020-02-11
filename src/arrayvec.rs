@@ -1031,7 +1031,7 @@ impl<A: Array<Item=u8>> core::fmt::Write for ArrayVec<A>
     let my_len = self.len();
     let str_len = s.as_bytes().len();
     if my_len + str_len <= A::CAPACITY {
-      let remainder = &mut self.data.as_slice()[my_len..];
+      let remainder = &mut self.data.as_slice_mut()[my_len..];
       let target = &mut remainder[..str_len];
       target.copy_from_slice(s.as_bytes());
       Ok(())
