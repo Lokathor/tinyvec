@@ -639,6 +639,7 @@ pub struct TinyVecDrain<'p, A: Array> {
   target_index: usize,
   target_count: usize,
 }
+impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> { }
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
@@ -770,7 +771,7 @@ impl<A: Array> TinyVecIterator<A> {
     }
   }
 }
-
+impl<'p, A: Array> FusedIterator for TinyVecIterator<'p, A> { }
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]

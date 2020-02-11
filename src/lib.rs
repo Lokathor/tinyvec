@@ -68,7 +68,7 @@ use core::{
     UpperExp, UpperHex,
   },
   hash::{Hash, Hasher},
-  iter::{Extend, FromIterator, IntoIterator, Iterator},
+  iter::{Extend, FromIterator, FusedIterator, IntoIterator, Iterator},
   mem::{needs_drop, replace},
   ops::{Deref, DerefMut, Index, IndexMut, RangeBounds},
   slice::SliceIndex,

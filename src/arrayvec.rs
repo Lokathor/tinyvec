@@ -808,6 +808,7 @@ impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
     }
   }
 }
+impl<'p, A: Array> FusedIterator for ArrayVecDrain<'p, A> { }
 impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
@@ -901,7 +902,7 @@ impl<A: Array> ArrayVecIterator<A> {
     &self.data.as_slice()[self.base..self.len]
   }
 }
-
+impl<A: Array> FusedIterator for ArrayVecIterator<A> { }
 impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
