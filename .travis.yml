@@ -26,6 +26,10 @@ script:
   - |
     if [[ $TRAVIS_RUST_VERSION == "nightly" ]]
     then
-      cargo build --all-features
-      cargo test --all-features
+      cargo build --features="nightly_slice_partition_dedup"
+      cargo test --features="nightly_slice_partition_dedup"
+      cargo build --features="nightly_const_generics"
+      cargo test --features="nightly_const_generics"
+      cargo build --features="experimental_write_impl"
+      cargo test --features="experimental_write_impl"
     fi
