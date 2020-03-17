@@ -709,6 +709,12 @@ impl<A: Array> From<ArrayVec<A>> for TinyVec<A> {
   }
 }
 
+impl<A: Array> From<A> for TinyVec<A> {
+  fn from(array: A) -> Self {
+    TinyVec::Inline(ArrayVec::from(array))
+  }
+}
+
 impl<T, A> From<&'_ [T]> for TinyVec<A>
 where
   T: Clone + Default,
