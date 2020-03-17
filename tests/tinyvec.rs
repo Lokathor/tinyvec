@@ -84,3 +84,10 @@ fn TinyVec_from_slice_impl() {
     TinyVec::Inline(ArrayVec::from_array_len(same_size, 4));
   assert_eq!(TinyVec::from(&same_size[..]), tinyvec);
 }
+
+#[test]
+fn TinyVec_from_array() {
+  let array = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+  let tv = TinyVec::from(array);
+  assert_eq!(&array, &tv[..]);
+}
