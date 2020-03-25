@@ -62,7 +62,7 @@ impl<'s, T, I> IndexMut<I> for SliceVec<'s, T> where I: SliceIndex<[T]> {
 impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    todo!()
+    unimplemented!()
   }
 
   /// A `*mut` pointer to the backing slice.
@@ -112,11 +112,17 @@ impl<'s, T> SliceVec<'s, T> {
 
   /// Truncates the `SliceVec` down to length 0.
   #[inline(always)]
-  pub fn clear(&mut self) {
-    todo!()
+  pub fn clear(&mut self) where T: Default {
+    self.truncate(0)
   }
   
-  // TODO: drain
+  #[inline]
+  pub fn drain<R: RangeBounds<usize>>(
+    &mut self,
+    range: R,
+  ) -> () {
+    unimplemented!()
+  }
   
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[T])
