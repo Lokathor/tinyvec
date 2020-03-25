@@ -28,6 +28,8 @@
 //! * [`ArrayVec`](ArrayVec) is an array-backed vec-like structure with a fixed
 //!   capacity. If you try to grow the length past the array's capacity it will
 //!   error or panic (depending on the method used).
+//! * [`SliceVec`](SliceVec) is similar, but instead of the vec having an owned
+//!   array, it holds onto a unique borrow of a slice.
 //! * (`alloc` feature) [`TinyVec`](TinyVec) is an enum that's either an
 //!   "Inline" `ArrayVec` or a "Heap" `Vec`. If it's Inline and you try to grow
 //!   the `ArrayVec` beyond its array capacity it will quietly transition into
@@ -42,7 +44,7 @@
 //!      `serde` compatibility).
 //! 3) The intended API is that, _as much as possible_, these types are
 //!    essentially a "drop-in" replacement for the standard [`Vec`](Vec::<T>)
-//!    type.
+//!    type. Because of the "no `unsafe`" rule this can't be done perfectly.
 //!    * Stable `Vec` methods that the vecs here also have should be the same
 //!      general signature.
 //!    * Unstable `Vec` methods are sometimes provided via a crate feature, but
@@ -55,9 +57,11 @@
 //!      existing extra method here then we'll simply be forced to release a
 //!      2.y.z version. Not the end of the world.
 //!    * Some methods of `Vec` are simply inappropriate and will not be
-//!      implemented here. For example, `ArrayVec` cannot possibly implement
-//!      [`from_raw_parts`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts).
+//!      implemented here. For example, this crate cannot possibly implement
+//!      [`from_raw_parts`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts)
+//!      because it cannot call `unsafe` methods.
 
+#[allow(unused_imports)]
 use core::{
   borrow::{Borrow, BorrowMut},
   cmp::PartialEq,
@@ -83,6 +87,9 @@ pub use array::*;
 
 mod arrayvec;
 pub use arrayvec::*;
+
+mod slicevec;
+pub use slicevec::*;
 
 #[cfg(feature = "alloc")]
 mod tinyvec;

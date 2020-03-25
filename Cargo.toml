@@ -13,13 +13,13 @@ repository = "https://github.com/Lokathor/tinyvec"
 # not even std!
 
 [features]
-default = []
+default = ["grab_spare_slice"]
 
-# Provide things that utilize the `alloc` crate.
+# Provide things that utilize the `alloc` crate, namely `TinyVec`.
 alloc = []
 
 # (not part of Vec!) Extra methods to let you grab the slice of memory after the
-# "active" portion of an `ArrayVec`.
+# "active" portion of an `ArrayVec` or `SliceVec`.
 grab_spare_slice = []
 
 # allow use of nightly feature `slice_partition_dedup`,
@@ -30,8 +30,10 @@ nightly_slice_partition_dedup = []
 # use const generics for arrays
 nightly_const_generics = []
 
-# NOT considered part of the crate's SemVer!!!
-# This experimental feature adds `core::fmt::Write` to ArrayVec.
+# EXPERIMENTAL: Not part of SemVer. It adds `core::fmt::Write` to `ArrayVec`
+# and `SliceVec`. It works on Stable Rust, but Vec normally supports the
+# `std::io::Write` trait instead of `core::fmt::Write`, so we're keeping it as
+# an experimental impl only for now.
 experimental_write_impl = []
 
 [badges]
@@ -41,17 +43,20 @@ travis-ci = { repository = "Lokathor/tinyvec" }
 [package.metadata.docs.rs]
 all-features = true
 
-[workspace]
-members = ["fuzz"]
+[profile.test]
+opt-level = 3
 
-[dev-dependencies]
-criterion = "0.3.0"
+#[workspace]
+#members = ["fuzz"]
 
-[[test]]
-name = "tinyvec"
-required-features = ["alloc"]
+#[dev-dependencies]
+#criterion = "0.3.0"
 
-[[bench]]
-name = "macros"
-harness = false
-required-features = ["alloc"]
+#[[test]]
+#name = "tinyvec"
+#required-features = ["alloc"]
+
+#[[bench]]
+#name = "macros"
+#harness = false
+#required-features = ["alloc"]

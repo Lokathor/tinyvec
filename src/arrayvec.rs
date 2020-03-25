@@ -287,6 +287,43 @@ impl<A: Array> ArrayVec<A> {
     self.set_len(new_len);
   }
 
+  /// Fill the vector until its capacity has been reached.
+  ///
+  /// Successively fills unused space in the spare slice of the vector with
+  /// elements from the iterator. It then returns the remaining iterator
+  /// without exhausting it. This also allows appending the head of an
+  /// infinite iterator.
+  ///
+  /// This is an alternative to `Extend::extend` method for cases where the
+  /// length of the iterator can not be checked. Since this vector can not
+  /// reallocate to increase its capacity, it is unclear what to do with
+  /// remaining elements in the iterator and the iterator itself. The
+  /// interface also provides no way to communicate this to the caller.
+  ///
+  /// ## Panics
+  /// * If the `next` method of the provided iterator panics.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 4]);
+  /// let mut to_inf = av.fill(0..);
+  /// assert_eq!(&av[..], [0, 1, 2, 3]);
+  /// assert_eq!(to_inf.next(), Some(4));
+  /// ```
+  #[inline]
+  pub fn fill<I: IntoIterator<Item = A::Item>>(
+    &mut self,
+    iter: I,
+  ) -> I::IntoIter {
+    let mut iter = iter.into_iter();
+    for element in iter.by_ref().take(self.capacity() - self.len()) {
+      self.push(element);
+    }
+    iter
+  }
+
   /// Wraps up an array and uses the given length as the initial length.
   ///
   /// If you want to simply use the full array, use `from` instead.
@@ -310,7 +347,7 @@ impl<A: Array> ArrayVec<A> {
   /// index.
   ///
   /// ## Panics
-  /// * If `index` > `len` or
+  /// * If `index` > `len`
   /// * If the capacity is exhausted
   ///
   /// ## Example
@@ -427,16 +464,14 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
-    let item = replace(&mut targets[0], A::Item::default());
+    let item = take(&mut targets[0]);
     targets.rotate_left(1);
     self.len -= 1;
     item
   }
 
-  /// Resize the vec to the new length.
-  ///
-  /// If it needs to be longer, it's filled with clones of the provided value.
-  /// If it needs to be shorter, it's truncated.
+  /// As [`resize_with`](ArrayVec::resize_with)
+  /// and it clones the value as the closure.
   ///
   /// ## Example
   ///
@@ -456,16 +491,7 @@ impl<A: Array> ArrayVec<A> {
   where
     A::Item: Clone,
   {
-    match new_len.checked_sub(self.len) {
-      None => self.truncate(new_len),
-      Some(0) => (),
-      Some(new_elements) => {
-        for _ in 1..new_elements {
-          self.push(new_val.clone());
-        }
-        self.push(new_val);
-      }
-    }
+    self.resize_with(new_len, || { new_val.clone() })
   }
 
   /// Resize the vec to the new length.
@@ -567,47 +593,10 @@ impl<A: Array> ArrayVec<A> {
       // just let some other call later on trigger a panic on accident when the
       // length is wrong. However, it's a lot easier to catch bugs when things
       // are more "fail-fast".
-      panic!("ArrayVec: set_len overflow!")
+      panic!("ArrayVec::set_len> new length {} exceeds capacity {}", new_len, A::CAPACITY)
     } else {
       self.len = new_len;
     }
-  }
-
-  /// Fill the vector until its capacity has been reached.
-  ///
-  /// Successively fills unused space in the spare slice of the vector with
-  /// elements from the iterator. It then returns the remaining iterator
-  /// without exhausting it. This also allows appending the head of an
-  /// infinite iterator.
-  ///
-  /// This is an alternative to `Extend::extend` method for cases where the
-  /// length of the iterator can not be checked. Since this vector can not
-  /// reallocate to increase its capacity, it is unclear what to do with
-  /// remaining elements in the iterator and the iterator itself. The
-  /// interface also provides no way to communicate this to the caller.
-  ///
-  /// ## Panics
-  /// * If the `next` method of the provided iterator panics.
-  ///
-  /// ## Example
-  ///
-  /// ```rust
-  /// # use tinyvec::*;
-  /// let mut av = array_vec!([i32; 4]);
-  /// let mut to_inf = av.fill(0..);
-  /// assert_eq!(&av[..], [0, 1, 2, 3]);
-  /// assert_eq!(to_inf.next(), Some(4));
-  /// ```
-  #[inline]
-  pub fn fill<I: IntoIterator<Item = A::Item>>(
-    &mut self,
-    iter: I,
-  ) -> I::IntoIter {
-    let mut iter = iter.into_iter();
-    for element in iter.by_ref().take(self.capacity() - self.len()) {
-      self.push(element);
-    }
-    iter
   }
 
   /// Splits the collection at the point given.
