@@ -330,16 +330,19 @@ impl<A: Array> ArrayVec<A> {
   ///
   /// ## Panics
   ///
-  /// * The length specified must be less than or equal to the capacity of the array.
+  /// * The length specified must be less than or equal to the capacity of the
+  ///   array.
   #[inline]
   #[must_use]
   #[allow(clippy::match_wild_err_arm)]
   pub fn from_array_len(data: A, len: usize) -> Self {
     match Self::try_from_array_len(data, len) {
       Ok(out) => out,
-      Err(_) => {
-        panic!("ArrayVec::from_array_len> length {} exceeds capacity {}!", len, A::CAPACITY)
-      }
+      Err(_) => panic!(
+        "ArrayVec::from_array_len> length {} exceeds capacity {}!",
+        len,
+        A::CAPACITY
+      ),
     }
   }
 
@@ -491,7 +494,7 @@ impl<A: Array> ArrayVec<A> {
   where
     A::Item: Clone,
   {
-    self.resize_with(new_len, || { new_val.clone() })
+    self.resize_with(new_len, || new_val.clone())
   }
 
   /// Resize the vec to the new length.
@@ -510,7 +513,10 @@ impl<A: Array> ArrayVec<A> {
   ///
   /// let mut av = array_vec!([i32; 10]);
   /// let mut p = 1;
-  /// av.resize_with(4, || { p *= 2; p });
+  /// av.resize_with(4, || {
+  ///   p *= 2;
+  ///   p
+  /// });
   /// assert_eq!(&av[..], [2, 4, 8, 16]);
   /// ```
   #[inline]
@@ -593,7 +599,11 @@ impl<A: Array> ArrayVec<A> {
       // just let some other call later on trigger a panic on accident when the
       // length is wrong. However, it's a lot easier to catch bugs when things
       // are more "fail-fast".
-      panic!("ArrayVec::set_len> new length {} exceeds capacity {}", new_len, A::CAPACITY)
+      panic!(
+        "ArrayVec::set_len> new length {} exceeds capacity {}",
+        new_len,
+        A::CAPACITY
+      )
     } else {
       self.len = new_len;
     }
@@ -775,7 +785,7 @@ impl<A: Array> ArrayVec<A> {
   }
 }
 
-/// Draining iterator for `ArrayVecDrain`
+/// Draining iterator for [`ArrayVec`]
 ///
 /// See [`ArrayVec::drain`](ArrayVec::drain)
 pub struct ArrayVecDrain<'p, A: Array> {
@@ -797,15 +807,17 @@ impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
     }
   }
 }
-impl<'p, A: Array> FusedIterator for ArrayVecDrain<'p, A> { }
+impl<'p, A: Array> FusedIterator for ArrayVecDrain<'p, A> {}
 impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
-    // Changed because it was moving `self`, it's also more clear and the std does the same
+    // Changed because it was moving `self`, it's also more clear and the std
+    // does the same
     self.for_each(drop);
     // Implementation very similar to [`ArrayVec::remove`](ArrayVec::remove)
     let count = self.target_end - self.target_start;
-    let targets: &mut [A::Item] = &mut self.parent.deref_mut()[self.target_start..];
+    let targets: &mut [A::Item] =
+      &mut self.parent.deref_mut()[self.target_start..];
     targets.rotate_left(count);
     self.parent.len -= count;
   }
@@ -891,7 +903,7 @@ impl<A: Array> ArrayVecIterator<A> {
     &self.data.as_slice()[self.base..self.len]
   }
 }
-impl<A: Array> FusedIterator for ArrayVecIterator<A> { }
+impl<A: Array> FusedIterator for ArrayVecIterator<A> {}
 impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -931,7 +943,10 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
 }
 
-impl<A: Array> Debug for ArrayVecIterator<A> where A::Item: Debug {
+impl<A: Array> Debug for ArrayVecIterator<A>
+where
+  A::Item: Debug,
+{
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("ArrayVecIterator").field(&self.as_slice()).finish()
@@ -1014,8 +1029,7 @@ where
 }
 
 #[cfg(feature = "experimental_write_impl")]
-impl<A: Array<Item=u8>> core::fmt::Write for ArrayVec<A>
-{
+impl<A: Array<Item = u8>> core::fmt::Write for ArrayVec<A> {
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
     let my_len = self.len();
     let str_len = s.as_bytes().len();

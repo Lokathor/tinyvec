@@ -124,9 +124,62 @@ impl<'s, T> SliceVec<'s, T> {
     self.truncate(0)
   }
 
+  /// Creates a draining iterator that removes the specified range in the vector
+  /// and yields the removed items.
+  ///
+  /// ## Panics
+  /// * If the start is greater than the end
+  /// * If the end is past the edge of the vec.
+  ///
+  /// ## Example
+  /// ```rust
+  /// # use tinyvec::*;
+  /// let mut arr = [6, 7, 8];
+  /// let mut sv = SliceVec::from(&mut arr);
+  /// let drained_values: ArrayVec<[i32; 4]> = sv.drain(1..).collect();
+  /// assert_eq!(sv.as_slice(), &[6][..]);
+  /// assert_eq!(drained_values.as_slice(), &[7, 8][..]);
+  ///
+  /// sv.drain(..);
+  /// assert_eq!(sv.as_slice(), &[]);
+  /// ```
   #[inline]
-  pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> () {
-    unimplemented!()
+  pub fn drain<'p, R: RangeBounds<usize>>(
+    &'p mut self,
+    range: R,
+  ) -> SliceVecDrain<'p, 's, T>
+  where
+    T: Default,
+  {
+    use core::ops::Bound;
+    let start = match range.start_bound() {
+      Bound::Included(x) => *x,
+      Bound::Excluded(x) => x + 1,
+      Bound::Unbounded => 0,
+    };
+    let end = match range.end_bound() {
+      Bound::Included(x) => x + 1,
+      Bound::Excluded(x) => *x,
+      Bound::Unbounded => self.len,
+    };
+    assert!(
+      start <= end,
+      "SliceVec::drain> Illegal range, {} to {}",
+      start,
+      end
+    );
+    assert!(
+      end <= self.len,
+      "SliceVec::drain> Range ends at {} but length is only {}!",
+      end,
+      self.len
+    );
+    SliceVecDrain {
+      parent: self,
+      target_start: start,
+      target_index: start,
+      target_end: end,
+    }
   }
 
   #[inline]
@@ -648,6 +701,43 @@ where
     let data = a.as_mut();
     let len = data.len();
     Self { data, len }
+  }
+}
+
+/// Draining iterator for [`SliceVec`]
+///
+/// See [`SliceVec::drain`](SliceVec::drain)
+pub struct SliceVecDrain<'p, 's, T: Default> {
+  parent: &'p mut SliceVec<'s, T>,
+  target_start: usize,
+  target_index: usize,
+  target_end: usize,
+}
+impl<'p, 's, T: Default> Iterator for SliceVecDrain<'p, 's, T> {
+  type Item = T;
+  #[inline]
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.target_index != self.target_end {
+      let out = take(&mut self.parent[self.target_index]);
+      self.target_index += 1;
+      Some(out)
+    } else {
+      None
+    }
+  }
+}
+impl<'p, 's, T: Default> FusedIterator for SliceVecDrain<'p, 's, T> {}
+impl<'p, 's, T: Default> Drop for SliceVecDrain<'p, 's, T> {
+  #[inline]
+  fn drop(&mut self) {
+    // Changed because it was moving `self`, it's also more clear and the std
+    // does the same
+    self.for_each(drop);
+    // Implementation very similar to [`SliceVec::remove`](SliceVec::remove)
+    let count = self.target_end - self.target_start;
+    let targets: &mut [T] = &mut self.parent.deref_mut()[self.target_start..];
+    targets.rotate_left(count);
+    self.parent.len -= count;
   }
 }
 
