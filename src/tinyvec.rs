@@ -840,7 +840,7 @@ impl<A: Array> IntoIterator for TinyVec<A> {
 
 impl<'a, A: Array> IntoIterator for &'a mut TinyVec<A> {
   type Item = &'a mut A::Item;
-  type IntoIter = alloc::slice::IterMut<'a, A::Item>;
+  type IntoIter = core::slice::IterMut<'a, A::Item>;
   #[inline(always)]
   #[must_use]
   fn into_iter(self) -> Self::IntoIter {
@@ -850,7 +850,7 @@ impl<'a, A: Array> IntoIterator for &'a mut TinyVec<A> {
 
 impl<'a, A: Array> IntoIterator for &'a TinyVec<A> {
   type Item = &'a A::Item;
-  type IntoIter = alloc::slice::Iter<'a, A::Item>;
+  type IntoIter = core::slice::Iter<'a, A::Item>;
   #[inline(always)]
   #[must_use]
   fn into_iter(self) -> Self::IntoIter {

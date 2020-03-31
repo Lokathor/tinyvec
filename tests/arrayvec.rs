@@ -99,8 +99,16 @@ fn ArrayVec_iteration() {
 
   let av = array_vec!([i32; 4], 10, 11, 12, 13);
 
-  let av2: ArrayVec<[i32; 4]> = av.clone().into_iter().collect();
+  let mut av2: ArrayVec<[i32; 4]> = av.clone().into_iter().collect();
   assert_eq!(av, av2);
+
+  // IntoIterator for &mut ArrayVec
+  for x in &mut av2 {
+    *x = -*x;
+  }
+
+  // IntoIterator for &ArrayVec
+  assert!(av.iter().zip(&av2).all(|(&a, &b)| a == -b));
 }
 
 #[test]
