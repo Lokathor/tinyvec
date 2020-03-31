@@ -66,8 +66,13 @@ where
 
 impl<'s, T> SliceVec<'s, T> {
   #[inline]
-  pub fn append(&mut self, other: &mut Self) {
-    unimplemented!()
+  pub fn append(&mut self, other: &mut Self)
+  where
+    T: Default,
+  {
+    for item in other.drain(..) {
+      self.push(item)
+    }
   }
 
   /// A `*mut` pointer to the backing slice.
