@@ -13,7 +13,7 @@ repository = "https://github.com/Lokathor/tinyvec"
 # not even std!
 
 [features]
-default = ["grab_spare_slice"]
+default = []
 
 # Provide things that utilize the `alloc` crate, namely `TinyVec`.
 alloc = []
