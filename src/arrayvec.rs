@@ -963,6 +963,26 @@ impl<A: Array> IntoIterator for ArrayVec<A> {
   }
 }
 
+impl<'a, A: Array> IntoIterator for &'a mut ArrayVec<A> {
+  type Item = &'a mut A::Item;
+  type IntoIter = core::slice::IterMut<'a, A::Item>;
+  #[inline(always)]
+  #[must_use]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter_mut()
+  }
+}
+
+impl<'a, A: Array> IntoIterator for &'a ArrayVec<A> {
+  type Item = &'a A::Item;
+  type IntoIter = core::slice::Iter<'a, A::Item>;
+  #[inline(always)]
+  #[must_use]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter()
+  }
+}
+
 impl<A: Array> PartialEq for ArrayVec<A>
 where
   A::Item: PartialEq,
