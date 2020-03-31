@@ -527,7 +527,7 @@ impl<'s, T> SliceVec<'s, T> {
       // length is wrong. However, it's a lot easier to catch bugs when things
       // are more "fail-fast".
       panic!(
-        "SliceVec::set_len> new length {} exceeds capaity {}",
+        "SliceVec::set_len> new length {} exceeds capacity {}",
         new_len,
         self.capacity()
       )
