@@ -1,4 +1,3 @@
-
 #![allow(unused_variables)]
 #![allow(missing_docs)]
 
@@ -42,7 +41,10 @@ impl<'s, T> DerefMut for SliceVec<'s, T> {
   }
 }
 
-impl<'s, T, I> Index<I> for SliceVec<'s, T> where I: SliceIndex<[T]> {
+impl<'s, T, I> Index<I> for SliceVec<'s, T>
+where
+  I: SliceIndex<[T]>,
+{
   type Output = <I as SliceIndex<[T]>>::Output;
   #[inline(always)]
   #[must_use]
@@ -51,7 +53,10 @@ impl<'s, T, I> Index<I> for SliceVec<'s, T> where I: SliceIndex<[T]> {
   }
 }
 
-impl<'s, T, I> IndexMut<I> for SliceVec<'s, T> where I: SliceIndex<[T]> {
+impl<'s, T, I> IndexMut<I> for SliceVec<'s, T>
+where
+  I: SliceIndex<[T]>,
+{
   #[inline(always)]
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
@@ -112,18 +117,18 @@ impl<'s, T> SliceVec<'s, T> {
 
   /// Truncates the `SliceVec` down to length 0.
   #[inline(always)]
-  pub fn clear(&mut self) where T: Default {
+  pub fn clear(&mut self)
+  where
+    T: Default,
+  {
     self.truncate(0)
   }
-  
+
   #[inline]
-  pub fn drain<R: RangeBounds<usize>>(
-    &mut self,
-    range: R,
-  ) -> () {
+  pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> () {
     unimplemented!()
   }
-  
+
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[T])
   where
@@ -174,24 +179,22 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(to_inf.next(), Some(4));
   /// ```
   #[inline]
-  pub fn fill<I: IntoIterator<Item = T>>(
-    &mut self,
-    iter: I,
-  ) -> I::IntoIter {
+  pub fn fill<I: IntoIterator<Item = T>>(&mut self, iter: I) -> I::IntoIter {
     let mut iter = iter.into_iter();
     for element in iter.by_ref().take(self.capacity() - self.len()) {
       self.push(element);
     }
     iter
   }
-  
+
   /// Wraps up a slice and uses the given length as the initial length.
   ///
   /// If you want to simply use the full slice, use `from` instead.
   ///
   /// ## Panics
   ///
-  /// * The length specified must be less than or equal to the capacity of the slice.
+  /// * The length specified must be less than or equal to the capacity of the
+  ///   slice.
   #[inline]
   #[must_use]
   #[allow(clippy::match_wild_err_arm)]
@@ -258,7 +261,10 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(sv.pop(), None);
   /// ```
   #[inline]
-  pub fn pop(&mut self) -> Option<T> where T: Default {
+  pub fn pop(&mut self) -> Option<T>
+  where
+    T: Default,
+  {
     if self.len > 0 {
       self.len -= 1;
       let out = take(&mut self.data[self.len]);
@@ -294,7 +300,7 @@ impl<'s, T> SliceVec<'s, T> {
       panic!("SliceVec::push> capacity overflow")
     }
   }
-  
+
   /// Removes the item at `index`, shifting all others down by one index.
   ///
   /// Returns the removed element.
@@ -313,7 +319,10 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(&sv[..], [1, 3]);
   /// ```
   #[inline]
-  pub fn remove(&mut self, index: usize) -> T where T: Default {
+  pub fn remove(&mut self, index: usize) -> T
+  where
+    T: Default,
+  {
     let targets: &mut [T] = &mut self.deref_mut()[index..];
     let item = take(&mut targets[0]);
     targets.rotate_left(1);
@@ -345,16 +354,16 @@ impl<'s, T> SliceVec<'s, T> {
   where
     T: Clone,
   {
-    self.resize_with(new_len, || { new_val.clone() })
+    self.resize_with(new_len, || new_val.clone())
   }
 
   /// Resize the vec to the new length.
   ///
-  /// * If it needs to be longer, it's filled with repeated calls to the provided
-  ///   function.
+  /// * If it needs to be longer, it's filled with repeated calls to the
+  ///   provided function.
   /// * If it needs to be shorter, it's truncated.
-  ///   * If the type needs to drop the truncated slots are filled with calls
-  ///     to the provided function.
+  ///   * If the type needs to drop the truncated slots are filled with calls to
+  ///     the provided function.
   ///
   /// ## Example
   ///
@@ -368,24 +377,25 @@ impl<'s, T> SliceVec<'s, T> {
   /// let mut arr = [0, 0, 0, 0];
   /// let mut sv = SliceVec::from_slice_len(&mut arr, 0);
   /// let mut p = 1;
-  /// sv.resize_with(4, || { p *= 2; p });
+  /// sv.resize_with(4, || {
+  ///   p *= 2;
+  ///   p
+  /// });
   /// assert_eq!(&sv[..], [2, 4, 8, 16]);
   /// ```
   #[inline]
-  pub fn resize_with<F: FnMut() -> T>(
-    &mut self,
-    new_len: usize,
-    mut f: F,
-  ) {
+  pub fn resize_with<F: FnMut() -> T>(&mut self, new_len: usize, mut f: F) {
     match new_len.checked_sub(self.len) {
-      None => if needs_drop::<T>() {
-        while self.len() > new_len {
-          self.len -= 1;
-          replace(&mut self.data[self.len], f());
+      None => {
+        if needs_drop::<T>() {
+          while self.len() > new_len {
+            self.len -= 1;
+            replace(&mut self.data[self.len], f());
+          }
+        } else {
+          self.len = new_len;
         }
-      } else {
-        self.len = new_len;
-      },
+      }
       Some(new_elements) => {
         for _ in 0..new_elements {
           self.push(f());
@@ -407,7 +417,10 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(&sv[..], [2, 4]);
   /// ```
   #[inline]
-  pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut acceptable: F) where T:Default {
+  pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut acceptable: F)
+  where
+    T: Default,
+  {
     // Drop guard to contain exactly the remaining elements when the test
     // panics.
     struct JoinOnDrop<'vec, Item> {
@@ -423,11 +436,7 @@ impl<'s, T> SliceVec<'s, T> {
       }
     }
 
-    let mut rest = JoinOnDrop {
-      items: self.data,
-      done_end: 0,
-      tail_start: 0,
-    };
+    let mut rest = JoinOnDrop { items: self.data, done_end: 0, tail_start: 0 };
 
     for idx in 0..self.len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
@@ -459,7 +468,11 @@ impl<'s, T> SliceVec<'s, T> {
       // just let some other call later on trigger a panic on accident when the
       // length is wrong. However, it's a lot easier to catch bugs when things
       // are more "fail-fast".
-      panic!("SliceVec::set_len> new length {} exceeds capaity {}", new_len, self.capacity())
+      panic!(
+        "SliceVec::set_len> new length {} exceeds capaity {}",
+        new_len,
+        self.capacity()
+      )
     } else {
       self.len = new_len;
     }
@@ -484,8 +497,7 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(&sv2[..], [2, 3]);
   /// ```
   #[inline]
-  pub fn split_off<'a>(&'a mut self, at: usize) -> SliceVec<'s, T>
-  {
+  pub fn split_off<'a>(&'a mut self, at: usize) -> SliceVec<'s, T> {
     let mut new = Self::default();
     let backing: &'s mut [T] = replace(&mut self.data, &mut []);
     let (me, other) = backing.split_at_mut(at);
@@ -495,7 +507,7 @@ impl<'s, T> SliceVec<'s, T> {
     self.data = me;
     new
   }
-  
+
   /// Remove an element, swapping the end of the vec into its place.
   ///
   /// ## Panics
@@ -514,7 +526,10 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(&sv[..], ["quack", "zap"]);
   /// ```
   #[inline]
-  pub fn swap_remove(&mut self, index: usize) -> T where T: Default {
+  pub fn swap_remove(&mut self, index: usize) -> T
+  where
+    T: Default,
+  {
     assert!(
       index < self.len,
       "SliceVec::swap_remove> index {} is out of bounds {}",
@@ -533,7 +548,10 @@ impl<'s, T> SliceVec<'s, T> {
   ///
   /// If the vec is already shorter than the input, nothing happens.
   #[inline]
-  pub fn truncate(&mut self, new_len: usize) where T: Default {
+  pub fn truncate(&mut self, new_len: usize)
+  where
+    T: Default,
+  {
     if needs_drop::<T>() {
       while self.len > new_len {
         self.pop();
@@ -550,7 +568,8 @@ impl<'s, T> SliceVec<'s, T> {
   ///
   /// ## Failure
   ///
-  /// If the given length is greater than the length of the slice you get `None`.
+  /// If the given length is greater than the length of the slice you get
+  /// `None`.
   #[inline]
   pub fn try_from_slice_len(data: &'s mut [T], len: usize) -> Option<Self> {
     if len <= data.len() {
@@ -614,7 +633,10 @@ impl<'s, T> From<&'s mut [T]> for SliceVec<'s, T> {
   }
 }
 
-impl<'s, T, A> From<&'s mut A> for SliceVec<'s, T> where A: AsMut<[T]> {
+impl<'s, T, A> From<&'s mut A> for SliceVec<'s, T>
+where
+  A: AsMut<[T]>,
+{
   /// Calls `AsRef::as_mut` then uses the full slice as the initial length.
   /// ## Example
   /// ```rust
@@ -667,6 +689,16 @@ impl<'s, T> Extend<T> for SliceVec<'s, T> {
     for t in iter {
       self.push(t)
     }
+  }
+}
+
+impl<'s, T> IntoIterator for SliceVec<'s, T> {
+  type Item = &'s mut T;
+  type IntoIter = core::slice::IterMut<'s, T>;
+  #[inline(always)]
+  #[must_use]
+  fn into_iter(self) -> Self::IntoIter {
+    self.data.iter_mut()
   }
 }
 
@@ -725,8 +757,7 @@ where
 }
 
 #[cfg(feature = "experimental_write_impl")]
-impl<'s> core::fmt::Write for SliceVec<'s, u8>
-{
+impl<'s> core::fmt::Write for SliceVec<'s, u8> {
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
     let my_len = self.len();
     let str_len = s.as_bytes().len();
