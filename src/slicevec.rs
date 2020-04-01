@@ -5,7 +5,7 @@ use super::*;
 
 /// A slice-backed vector-like data structure.
 ///
-/// This is a very similar concept to `SliceVec`, but instead
+/// This is a very similar concept to `ArrayVec`, but instead
 /// of the backing memory being an owned array, the backing
 /// memory is a unique-borrowed slice. You can thus create
 /// one of these structures "around" some slice that you're
