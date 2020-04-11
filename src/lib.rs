@@ -29,7 +29,10 @@
 //!   capacity. If you try to grow the length past the array's capacity it will
 //!   error or panic (depending on the method used).
 //! * [`SliceVec`](SliceVec) is similar, but instead of the vec having an owned
-//!   array, it holds onto a unique borrow of a slice.
+//!   array, it holds onto a unique borrow of a slice. This means that it's far
+//!   cheaper to pass around (since you don't move the whole array), but it can
+//!   be trickier to thread a lifetime marker everywhere through all your
+//!   function signatures.
 //! * (`alloc` feature) [`TinyVec`](TinyVec) is an enum that's either an
 //!   "Inline" `ArrayVec` or a "Heap" `Vec`. If it's Inline and you try to grow
 //!   the `ArrayVec` beyond its array capacity it will quietly transition into
@@ -51,8 +54,8 @@
 //!      if so they also require a Nightly compiler.
 //!    * Some methods are provided that _are not_ part of the `Vec` type, such
 //!      as additional constructor methods. In this case, the names are rather
-//!      long and whimsical in the hopes that they don't clash with any
-//!      possible future methods of `Vec`.
+//!      long and whimsical in the hopes that they don't clash with any possible
+//!      future methods of `Vec`.
 //!    * If, in the future, `Vec` stabilizes a method that clashes with an
 //!      existing extra method here then we'll simply be forced to release a
 //!      2.y.z version. Not the end of the world.
