@@ -9,6 +9,16 @@
 
 # tinyvec
 
-A 100% safe crate of vec-like types.
+A crate for vec-like types using 100% safe code.
 
-For details, please see [the docs.rs documentation](https://docs.rs/tinyvec/)
+There's two main types provided: `ArrayVec` is backed by an array, and `TinyVec`
+is an enum that's either an "inline" `ArrayVec` or a "heap" `Vec`.
+
+Also provided is a `SliceVec` for when you just want to operate on a slice.
+
+These vecs only work with types that have the "Placeholder" trait, which is the
+value that's placed into the inactive portions of a vector. This is already
+implemented for all `Default` types, but if your type isn't default you'll have
+to provide an impl for your type to work with these vecs.
+
+For full details, please see [the docs.rs documentation](https://docs.rs/tinyvec/)

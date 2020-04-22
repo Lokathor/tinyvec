@@ -1,5 +1,4 @@
 #![cfg(feature = "alloc")]
-
 #![allow(bad_style)]
 #![allow(clippy::redundant_clone)]
 

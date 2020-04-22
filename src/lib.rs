@@ -10,7 +10,7 @@
 #![warn(clippy::must_use_candidate)]
 #![warn(missing_docs)]
 
-//! Programmers can have a little vec, as a treat.
+//! Programmers can have little a vec, as a treat.
 //!
 //! ## What This Is
 //!
@@ -18,51 +18,58 @@
 //! [arrayvec](https://docs.rs/arrayvec) and
 //! [smallvec](https://docs.rs/smallvec).
 //!
-//! Being 100% safe means that you have to have some sort of compromise compared
-//! to the versions using `unsafe`. In this case, the compromise is that the
-//! element type must implement `Default` to be usable in these vecs. However,
-//! that still allows you to use [quite a few
-//! types](https://doc.rust-lang.org/std/default/trait.Default.html#implementors),
-//! so I think that you'll find these vecs useful in many cases.
+//! For this particular task, being 100% safe means that you have to have some
+//! sort of compromise compared to the versions that using `unsafe`. Since we
+//! can't have the "off the end of the vec" memory be `MaybeUninit`, we have to
+//! put some sort of actually initialized placeholder value there instead.
+//!
+//! This crate has a [`Placeholder`] trait for just this purpose. There is a
+//! blanket impl for all [`Default`] types, so your type probably _already_
+//! works with these vecs. You can also impl `Placeholder` without implementing
+//! `Default`, if you feel that's best for you.
+//!
+//! Several types of vec are available, depending on your needs:
 //!
 //! * [`ArrayVec`](ArrayVec) is an array-backed vec-like structure with a fixed
 //!   capacity. If you try to grow the length past the array's capacity it will
 //!   error or panic (depending on the method used).
-//! * [`SliceVec`](SliceVec) is similar, but instead of the vec having an owned
-//!   array, it holds onto a unique borrow of a slice. This means that it's far
-//!   cheaper to pass around (since you don't move the whole array), but it can
-//!   be trickier to thread a lifetime marker everywhere through all your
-//!   function signatures.
+//! * [`SliceVec`](SliceVec) is similar, but instead of being backed by an array
+//!   it's backed by a `&mut [T]`. This means that it's far cheaper to move by
+//!   value, but it can be trickier to thread a lifetime marker everywhere
+//!   through all your function signatures.
 //! * (`alloc` feature) [`TinyVec`](TinyVec) is an enum that's either an
 //!   "Inline" `ArrayVec` or a "Heap" `Vec`. If it's Inline and you try to grow
-//!   the `ArrayVec` beyond its array capacity it will quietly transition into
-//!   Heap mode and then continue the operation.
+//!   beyond the `ArrayVec` capacity it will quietly transition into Heap mode
+//!   and then continue the operation.
 //!
 //! ## Crate Goals
 //!
 //! 1) The crate is 100% safe code. Not just a safe API, there are also no
 //!    `unsafe` internals. `#![forbid(unsafe_code)]`.
 //! 2) No required dependencies.
-//!    * We might provide optional dependencies for extra functionality (eg:
-//!      `serde` compatibility).
+//!    * We might provide optional dependencies for extra functionality in the
+//!      future (eg: `serde` compatibility), but currently there's also no
+//!      optional dependencies.
 //! 3) The intended API is that, _as much as possible_, these types are
 //!    essentially a "drop-in" replacement for the standard [`Vec`](Vec::<T>)
 //!    type. Because of the "no `unsafe`" rule this can't be done perfectly.
-//!    * Stable `Vec` methods that the vecs here also have should be the same
-//!      general signature.
+//!    * Stable `Vec` methods that the vectors here also have should be the same
+//!      general signature (sometimes the generic bounds will differ).
 //!    * Unstable `Vec` methods are sometimes provided via a crate feature, but
-//!      if so they also require a Nightly compiler.
+//!      if so they also require a Nightly compiler. If there's an unstable vec
+//!      method that you want added to the crate, our PRs are open!
 //!    * Some methods are provided that _are not_ part of the `Vec` type, such
 //!      as additional constructor methods. In this case, the names are rather
-//!      long and whimsical in the hopes that they don't clash with any possible
-//!      future methods of `Vec`.
-//!    * If, in the future, `Vec` stabilizes a method that clashes with an
-//!      existing extra method here then we'll simply be forced to release a
-//!      2.y.z version. Not the end of the world.
-//!    * Some methods of `Vec` are simply inappropriate and will not be
-//!      implemented here. For example, this crate cannot possibly implement
-//!      [`from_raw_parts`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts)
-//!      because it cannot call `unsafe` methods.
+//!      long and whimsical in the hopes that they don't ever clash with any
+//!      possible future methods of `Vec`.
+//!    * If, in the future, `Vec` stabilizes a method that does clash with an
+//!      existing extra method then we'll simply be forced to release a 2.y.z
+//!      version. Not the end of the world.
+//!    * Some methods of `Vec` are simply inappropriate to also have on the vecs
+//!      here, and will not be implemented by this crate. For example, this crate
+//!      cannot possibly implement [`from_raw_parts`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts)
+//!      the way that it works in `Vec` because the internal fields are
+//!      different and the crate cannot call `unsafe` code.
 
 #[allow(unused_imports)]
 use core::{
