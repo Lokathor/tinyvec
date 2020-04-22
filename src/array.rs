@@ -1,3 +1,5 @@
+use crate::Placeholder;
+
 /// A trait for types that are an array.
 ///
 /// An "array", for our purposes, has the following properties:
@@ -16,7 +18,7 @@
 /// **must not** rely on an instance of this trait being correct.
 pub trait Array {
   /// The type of the items in the thing.
-  type Item: Default;
+  type Item: Placeholder;
 
   /// The number of slots in the thing.
   const CAPACITY: usize;
@@ -35,7 +37,7 @@ pub trait Array {
 }
 
 #[cfg(feature = "nightly_const_generics")]
-impl<T: Default, const N: usize> Array for [T; N] {
+impl<T: Placeholder, const N: usize> Array for [T; N] {
   type Item = T;
   const CAPACITY: usize = N;
   #[inline(always)]
@@ -53,7 +55,7 @@ impl<T: Default, const N: usize> Array for [T; N] {
 #[cfg(not(feature = "nightly_const_generics"))]
 macro_rules! impl_array_for_len {
   ($($len:expr),+ $(,)?) => {
-    $(impl<T: Default> Array for [T; $len] {
+    $(impl<T: Placeholder> Array for [T; $len] {
       type Item = T;
       const CAPACITY: usize = $len;
       #[inline(always)]

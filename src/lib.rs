@@ -94,13 +94,10 @@ pub use arrayvec::*;
 mod slicevec;
 pub use slicevec::*;
 
+mod placeholder;
+pub use placeholder::*;
+
 #[cfg(feature = "alloc")]
 mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use crate::tinyvec::*;
-
-// TODO MSRV(1.40.0): Just call the normal `core::mem::take`
-#[inline(always)]
-fn take<T: Default>(from: &mut T) -> T {
-  replace(from, T::default())
-}

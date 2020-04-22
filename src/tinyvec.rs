@@ -408,9 +408,9 @@ impl<A: Array> TinyVec<A> {
   #[must_use]
   pub fn new() -> Self
   where
-    A: Default,
+    A: Placeholder,
   {
-    Self::default()
+    TinyVec::Inline(ArrayVec::new())
   }
 
   /// Remove and return the last element of the vec, if there is one.
@@ -572,7 +572,7 @@ impl<A: Array> TinyVec<A> {
   #[inline]
   pub fn split_off(&mut self, at: usize) -> Self
   where
-    A: Default,
+    A: Placeholder,
   {
     match self {
       TinyVec::Inline(a) => TinyVec::Inline(a.split_off(at)),
@@ -639,7 +639,7 @@ pub struct TinyVecDrain<'p, A: Array> {
   target_index: usize,
   target_count: usize,
 }
-impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> { }
+impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> {}
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
@@ -777,7 +777,7 @@ impl<A: Array> TinyVecIterator<A> {
     }
   }
 }
-impl<A: Array> FusedIterator for TinyVecIterator<A> { }
+impl<A: Array> FusedIterator for TinyVecIterator<A> {}
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -818,7 +818,10 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
   }
 }
 
-impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+impl<A: Array> Debug for TinyVecIterator<A>
+where
+  A::Item: Debug,
+{
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()

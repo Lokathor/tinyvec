@@ -393,9 +393,11 @@ impl<A: Array> ArrayVec<A> {
   #[must_use]
   pub fn new() -> Self
   where
-    A: Default,
+    A: Placeholder,
   {
-    Self::default()
+    let len = 0_usize;
+    let data: A = new_placeholder();
+    Self { len, data }
   }
 
   /// Remove and return the last element of the vec, if there is one.
@@ -415,7 +417,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
       self.len -= 1;
-      let out = take(&mut self.data.as_slice_mut()[self.len]);
+      let out = take_placeholder(&mut self.data.as_slice_mut()[self.len]);
       Some(out)
     } else {
       None
@@ -467,7 +469,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
-    let item = take(&mut targets[0]);
+    let item = take_placeholder(&mut targets[0]);
     targets.rotate_left(1);
     self.len -= 1;
     item
@@ -572,7 +574,7 @@ impl<A: Array> ArrayVec<A> {
     for idx in 0..self.len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
       if !acceptable(&rest.items[idx]) {
-        let _ = take(&mut rest.items[idx]);
+        let _ = take_placeholder(&mut rest.items[idx]);
         self.len -= 1;
         rest.tail_start += 1;
       } else {
@@ -629,7 +631,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn split_off(&mut self, at: usize) -> Self
   where
-    Self: Default,
+    A: Placeholder,
   {
     // FIXME: should this just use drain into the output?
     if at > self.len {
@@ -638,7 +640,7 @@ impl<A: Array> ArrayVec<A> {
         at, self.len
       );
     }
-    let mut new = Self::default();
+    let mut new: Self = Self { len: 0, data: new_placeholder() };
     let moves = &mut self.as_mut_slice()[at..];
     let split_len = moves.len();
     let targets = &mut new.data.as_slice_mut()[..split_len];
@@ -799,7 +801,7 @@ impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.target_index != self.target_end {
-      let out = take(&mut self.parent[self.target_index]);
+      let out = take_placeholder(&mut self.parent[self.target_index]);
       self.target_index += 1;
       Some(out)
     } else {
@@ -909,7 +911,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.base < self.len {
-      let out = take(&mut self.data.as_slice_mut()[self.base]);
+      let out = take_placeholder(&mut self.data.as_slice_mut()[self.base]);
       self.base += 1;
       Some(out)
     } else {
@@ -928,13 +930,13 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(take(&mut self.data.as_slice_mut()[self.len]))
+    Some(take_placeholder(&mut self.data.as_slice_mut()[self.len]))
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
     let i = self.base + (n - 1);
     if i < self.len {
-      let out = take(&mut self.data.as_slice_mut()[i]);
+      let out = take_placeholder(&mut self.data.as_slice_mut()[i]);
       self.base = i + 1;
       Some(out)
     } else {

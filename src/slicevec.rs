@@ -68,7 +68,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn append(&mut self, other: &mut Self)
   where
-    T: Default,
+    T: Placeholder,
   {
     for item in other.drain(..) {
       self.push(item)
@@ -124,7 +124,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline(always)]
   pub fn clear(&mut self)
   where
-    T: Default,
+    T: Placeholder,
   {
     self.truncate(0)
   }
@@ -154,7 +154,7 @@ impl<'s, T> SliceVec<'s, T> {
     range: R,
   ) -> SliceVecDrain<'p, 's, T>
   where
-    T: Default,
+    T: Placeholder,
   {
     use core::ops::Bound;
     let start = match range.start_bound() {
@@ -321,11 +321,11 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn pop(&mut self) -> Option<T>
   where
-    T: Default,
+    T: Placeholder,
   {
     if self.len > 0 {
       self.len -= 1;
-      let out = take(&mut self.data[self.len]);
+      let out = take_placeholder(&mut self.data[self.len]);
       Some(out)
     } else {
       None
@@ -379,10 +379,10 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn remove(&mut self, index: usize) -> T
   where
-    T: Default,
+    T: Placeholder,
   {
     let targets: &mut [T] = &mut self.deref_mut()[index..];
-    let item = take(&mut targets[0]);
+    let item = take_placeholder(&mut targets[0]);
     targets.rotate_left(1);
     self.len -= 1;
     item
@@ -477,7 +477,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn retain<F: FnMut(&T) -> bool>(&mut self, mut acceptable: F)
   where
-    T: Default,
+    T: Placeholder,
   {
     // Drop guard to contain exactly the remaining elements when the test
     // panics.
@@ -499,7 +499,7 @@ impl<'s, T> SliceVec<'s, T> {
     for idx in 0..self.len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
       if !acceptable(&rest.items[idx]) {
-        let _ = take(&mut rest.items[idx]);
+        let _ = take_placeholder(&mut rest.items[idx]);
         self.len -= 1;
         rest.tail_start += 1;
       } else {
@@ -586,7 +586,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn swap_remove(&mut self, index: usize) -> T
   where
-    T: Default,
+    T: Placeholder,
   {
     assert!(
       index < self.len,
@@ -608,7 +608,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn truncate(&mut self, new_len: usize)
   where
-    T: Default,
+    T: Placeholder,
   {
     if needs_drop::<T>() {
       while self.len > new_len {
@@ -712,18 +712,18 @@ where
 /// Draining iterator for [`SliceVec`]
 ///
 /// See [`SliceVec::drain`](SliceVec::drain)
-pub struct SliceVecDrain<'p, 's, T: Default> {
+pub struct SliceVecDrain<'p, 's, T: Placeholder> {
   parent: &'p mut SliceVec<'s, T>,
   target_start: usize,
   target_index: usize,
   target_end: usize,
 }
-impl<'p, 's, T: Default> Iterator for SliceVecDrain<'p, 's, T> {
+impl<'p, 's, T: Placeholder> Iterator for SliceVecDrain<'p, 's, T> {
   type Item = T;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.target_index != self.target_end {
-      let out = take(&mut self.parent[self.target_index]);
+      let out = take_placeholder(&mut self.parent[self.target_index]);
       self.target_index += 1;
       Some(out)
     } else {
@@ -731,8 +731,8 @@ impl<'p, 's, T: Default> Iterator for SliceVecDrain<'p, 's, T> {
     }
   }
 }
-impl<'p, 's, T: Default> FusedIterator for SliceVecDrain<'p, 's, T> {}
-impl<'p, 's, T: Default> Drop for SliceVecDrain<'p, 's, T> {
+impl<'p, 's, T: Placeholder> FusedIterator for SliceVecDrain<'p, 's, T> {}
+impl<'p, 's, T: Placeholder> Drop for SliceVecDrain<'p, 's, T> {
   #[inline]
   fn drop(&mut self) {
     // Changed because it was moving `self`, it's also more clear and the std
