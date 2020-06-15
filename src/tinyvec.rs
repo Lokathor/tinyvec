@@ -46,10 +46,9 @@ macro_rules! tiny_vec {
       const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
-      if INVOKED_ELEM_COUNT <= $crate::TinyVec::<$array_type>::array_capacity() {
-        $crate::TinyVec::Inline($crate::array_vec!($array_type, $($elem),*))
-      } else {
-        $crate::TinyVec::Heap(vec!($($elem),*))
+      match $crate::TinyVec::constructor_for_capacity(INVOKED_ELEM_COUNT) {
+        TinyVecConstructor::Inline(f) => f($crate::array_vec!($array_type, $($elem),*)),
+        TinyVecConstructor::Heap(f) => f(vec!($($elem),*)),
       }
     }
   };
@@ -59,6 +58,12 @@ macro_rules! tiny_vec {
   ($($elem:expr),*) => {
     tiny_vec!(_, $($elem),*)
   };
+}
+
+#[doc(hidden)] // Internal implementation details of `tiny_vec!`
+pub enum TinyVecConstructor<A: Array> {
+  Inline(fn(ArrayVec<A>) -> TinyVec<A>),
+  Heap(fn(Vec<A::Item>) -> TinyVec<A>),
 }
 
 /// A vector that starts inline, but can automatically move to the heap.
@@ -344,8 +349,12 @@ impl<A: Array> TinyVec<A> {
 
   #[inline(always)]
   #[doc(hidden)] // Internal implementation details of `tiny_vec!`
-  pub fn array_capacity() -> usize {
-    A::CAPACITY
+  pub fn constructor_for_capacity(cap: usize) -> TinyVecConstructor<A> {
+    if cap <= A::CAPACITY {
+      TinyVecConstructor::Inline(TinyVec::Inline)
+    } else {
+      TinyVecConstructor::Heap(TinyVec::Heap)
+    }
   }
 
   /// Inserts an item at the position given, moving all following elements +1
