@@ -47,8 +47,8 @@ macro_rules! tiny_vec {
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
       match $crate::TinyVec::constructor_for_capacity(INVOKED_ELEM_COUNT) {
-        TinyVecConstructor::Inline(f) => f($crate::array_vec!($array_type, $($elem),*)),
-        TinyVecConstructor::Heap(f) => f(vec!($($elem),*)),
+        $crate::TinyVecConstructor::Inline(f) => f($crate::array_vec!($array_type, $($elem),*)),
+        $crate::TinyVecConstructor::Heap(f) => f(vec!($($elem),*)),
       }
     }
   };
