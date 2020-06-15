@@ -46,11 +46,11 @@ macro_rules! tiny_vec {
       const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
-      let av: $crate::TinyVec<$array_type> = $crate::TinyVec::from_either_with_capacity(
-        INVOKED_ELEM_COUNT,
-        #[inline(always)] || $crate::array_vec!($array_type, $($elem),*),
-        #[inline(always)] || vec!($($elem),*));
-      av
+      if INVOKED_ELEM_COUNT <= $crate::TinyVec::<$array_type>::array_capacity() {
+        $crate::TinyVec::Inline($crate::array_vec!($array_type, $($elem),*))
+      } else {
+        $crate::TinyVec::Heap(vec!($($elem),*))
+      }
     }
   };
   () => {
@@ -344,16 +344,8 @@ impl<A: Array> TinyVec<A> {
 
   #[inline(always)]
   #[doc(hidden)] // Internal implementation details of `tiny_vec!`
-  pub fn from_either_with_capacity(
-    cap: usize,
-    make_array: impl FnOnce() -> ArrayVec<A>,
-    make_vec: impl FnOnce() -> Vec<A::Item>,
-  ) -> Self {
-    if cap <= A::CAPACITY {
-      TinyVec::Inline(make_array())
-    } else {
-      TinyVec::Heap(make_vec())
-    }
+  pub fn array_capacity() -> usize {
+    A::CAPACITY
   }
 
   /// Inserts an item at the position given, moving all following elements +1
