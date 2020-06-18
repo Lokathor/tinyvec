@@ -88,6 +88,9 @@ pub extern crate alloc;
 mod array;
 pub use array::*;
 
+mod arrayset;
+pub use arrayset::*;
+
 mod arrayvec;
 pub use arrayvec::*;
 
