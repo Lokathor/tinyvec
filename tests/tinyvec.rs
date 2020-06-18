@@ -93,3 +93,10 @@ fn TinyVec_from_array() {
   let tv = TinyVec::from(array);
   assert_eq!(&array, &tv[..]);
 }
+
+#[test]
+fn TinyVec_macro_non_copy() {
+  // must use a variable here to avoid macro shenanigans
+  let s = String::new();
+  let _: TinyVec<[String; 10]> = tiny_vec!([String; 10], s);
+}
