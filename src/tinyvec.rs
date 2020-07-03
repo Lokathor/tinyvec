@@ -17,8 +17,8 @@ use alloc::vec::Vec;
 ///
 /// // The backing array type can be specified in the macro call
 /// let empty_tv = tiny_vec!([u8; 16]);
-/// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
-/// let many_ints = tiny_vec!([i32; 4], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+/// let some_ints = tiny_vec!([i32; 4] => 1, 2, 3);
+/// let many_ints = tiny_vec!([i32; 4] => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 ///
 /// // Or left to inference
 /// let empty_tv: TinyVec<[u8; 16]> = tiny_vec!();
@@ -27,36 +27,30 @@ use alloc::vec::Vec;
 /// ```
 #[macro_export]
 macro_rules! tiny_vec {
-  ($array_type:ty) => {
+  ($array_type:ty => $($elem:expr),* $(,)?) => {
     {
-      let mut tv: $crate::TinyVec<$array_type> = Default::default();
-      tv
-    }
-  };
-  ($array_type:ty, $($elem:expr),* $(,)?) => {
-    {
-      // Note(Lokathor): This goofy looking thing will count the number of
-      // `$elem` entries we were given. We can't spit out the "+1"s on their
-      // own, we need to use `$elem` in the repetition-expansion somehow.
-      // However, we also can't assume it's `Copy` data, so we must use `$elem`
-      // only once "for real" in the expansion as a whole. To achieve this, we
-      // can `stringify!` each element in an inner block, then have the block
-      // return a 1. The stringification is a compile time thing, it won't
-      // actually move any values.
+      // https://github.com/rust-lang/lang-team/issues/28
       const INVOKED_ELEM_COUNT: usize = 0 $( + { let _ = stringify!($elem); 1 })*;
       // If we have more `$elem` than the `CAPACITY` we will simply go directly
       // to constructing on the heap.
       match $crate::TinyVec::constructor_for_capacity(INVOKED_ELEM_COUNT) {
-        $crate::TinyVecConstructor::Inline(f) => f($crate::array_vec!($array_type, $($elem),*)),
-        $crate::TinyVecConstructor::Heap(f) => f(vec!($($elem),*)),
+        $crate::TinyVecConstructor::Inline(f) => {
+          f($crate::array_vec!($array_type => $($elem),*))
+        }
+        $crate::TinyVecConstructor::Heap(f) => {
+          f(vec!($($elem),*))
+        }
       }
     }
   };
-  () => {
-    tiny_vec!(_)
+  ($array_type:ty) => {
+    $crate::tiny_vec!($array_type =>)
   };
   ($($elem:expr),*) => {
-    tiny_vec!(_, $($elem),*)
+    $crate::tiny_vec!(_ => $($elem),*)
+  };
+  () => {
+    $crate::tiny_vec!(_)
   };
 }
 
@@ -85,7 +79,7 @@ pub enum TinyVecConstructor<A: Array> {
 /// ```rust
 /// # use tinyvec::*;
 /// let empty_tv = tiny_vec!([u8; 16]);
-/// let some_ints = tiny_vec!([i32; 4], 1, 2, 3);
+/// let some_ints = tiny_vec!([i32; 4] => 1, 2, 3);
 /// ```
 #[derive(Clone)]
 pub enum TinyVec<A: Array> {
@@ -152,7 +146,7 @@ impl<A: Array> TinyVec<A> {
         for item in arr.drain(..) {
           v.push(item);
         }
-        replace(self, TinyVec::Heap(v));
+        *self = TinyVec::Heap(v);
       }
       TinyVec::Heap(_) => (),
     }
@@ -274,7 +268,7 @@ impl<A: Array> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
   /// let tv2: TinyVec<[i32; 4]> = tv.drain(1..).collect();
   /// assert_eq!(tv.as_slice(), &[1][..]);
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
@@ -366,7 +360,7 @@ impl<A: Array> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3);
   /// tv.insert(1, 4);
   /// assert_eq!(tv.as_slice(), &[1, 4, 2, 3]);
   /// tv.insert(4, 5);
@@ -456,7 +450,7 @@ impl<A: Array> TinyVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
   /// assert_eq!(tv.remove(1), 2);
   /// assert_eq!(tv.as_slice(), &[1, 3][..]);
   /// ```
@@ -478,11 +472,11 @@ impl<A: Array> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut tv = tiny_vec!([&str; 10], "hello");
+  /// let mut tv = tiny_vec!([&str; 10] => "hello");
   /// tv.resize(3, "world");
   /// assert_eq!(tv.as_slice(), &["hello", "world", "world"][..]);
   ///
-  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3, 4);
+  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3, 4);
   /// tv.resize(2, 0);
   /// assert_eq!(tv.as_slice(), &[1, 2][..]);
   /// ```
@@ -514,7 +508,7 @@ impl<A: Array> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3);
   /// tv.resize_with(5, Default::default);
   /// assert_eq!(tv.as_slice(), &[1, 2, 3, 0, 0][..]);
   ///
@@ -541,7 +535,7 @@ impl<A: Array> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut tv = tiny_vec!([i32; 10], 1, 2, 3, 4);
+  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3, 4);
   /// tv.retain(|&x| x % 2 == 0);
   /// assert_eq!(tv.as_slice(), &[2, 4][..]);
   /// ```
@@ -565,7 +559,7 @@ impl<A: Array> TinyVec<A> {
   ///
   /// ```rust
   /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([i32; 4], 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
   /// let tv2 = tv.split_off(1);
   /// assert_eq!(tv.as_slice(), &[1][..]);
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
@@ -589,7 +583,7 @@ impl<A: Array> TinyVec<A> {
   /// ## Example
   /// ```rust
   /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([&str; 4], "foo", "bar", "quack", "zap");
+  /// let mut tv = tiny_vec!([&str; 4] => "foo", "bar", "quack", "zap");
   ///
   /// assert_eq!(tv.swap_remove(1), "bar");
   /// assert_eq!(tv.as_slice(), &["foo", "zap", "quack"][..]);
@@ -640,7 +634,7 @@ pub struct TinyVecDrain<'p, A: Array> {
   target_index: usize,
   target_count: usize,
 }
-impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> { }
+impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> {}
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
   #[inline]
@@ -778,7 +772,7 @@ impl<A: Array> TinyVecIterator<A> {
     }
   }
 }
-impl<A: Array> FusedIterator for TinyVecIterator<A> { }
+impl<A: Array> FusedIterator for TinyVecIterator<A> {}
 impl<A: Array> Iterator for TinyVecIterator<A> {
   type Item = A::Item;
   #[inline]
@@ -819,7 +813,10 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
   }
 }
 
-impl<A: Array> Debug for TinyVecIterator<A> where A::Item: Debug {
+impl<A: Array> Debug for TinyVecIterator<A>
+where
+  A::Item: Debug,
+{
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()

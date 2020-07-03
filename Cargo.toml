@@ -36,6 +36,11 @@ nightly_const_generics = []
 # an experimental impl only for now.
 experimental_write_impl = []
 
+# EXPERIMENTAL: Not part of SemVer. This adds an "ArraySet" type which is
+# an array backed set type for situations where you need a set of a known
+# small size without allocation.
+experimental_array_set = []
+
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
 travis-ci = { repository = "Lokathor/tinyvec" }
