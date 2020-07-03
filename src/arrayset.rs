@@ -134,9 +134,7 @@ where
           arr.swap(i, l1);
         }
         self.len -= L::from(1);
-        let mut r = Default::default();
-        swap(&mut arr[l1], &mut r);
-        return Some(r);
+        return take(&mut arr[l1]);
       }
     }
     None
