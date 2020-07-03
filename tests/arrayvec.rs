@@ -10,7 +10,7 @@ fn test_a_vec() {
   expected.push(2);
   expected.push(3);
 
-  let actual = array_vec!([i32; 4], 1, 2, 3);
+  let actual = array_vec!(1, 2, 3);
 
   assert_eq!(expected, actual);
 }
@@ -88,7 +88,7 @@ fn ArrayVec_formatting() {
 
 #[test]
 fn ArrayVec_iteration() {
-  let av = array_vec!([i32; 4], 10, 11, 12, 13);
+  let av = array_vec!([i32; 4] => 10, 11, 12, 13);
 
   let mut i = av.into_iter();
   assert_eq!(i.next(), Some(10));
@@ -97,7 +97,7 @@ fn ArrayVec_iteration() {
   assert_eq!(i.next(), Some(13));
   assert_eq!(i.next(), None);
 
-  let av = array_vec!([i32; 4], 10, 11, 12, 13);
+  let av = array_vec!([i32; 4] => 10, 11, 12, 13);
 
   let mut av2: ArrayVec<[i32; 4]> = av.clone().into_iter().collect();
   assert_eq!(av, av2);
@@ -113,8 +113,8 @@ fn ArrayVec_iteration() {
 
 #[test]
 fn ArrayVec_append() {
-  let mut av = array_vec!([i32; 8], 1, 2, 3);
-  let mut av2 = array_vec!([i32; 8], 4, 5, 6);
+  let mut av = array_vec!([i32; 8] => 1, 2, 3);
+  let mut av2 = array_vec!([i32; 8] => 4, 5, 6);
   //
   av.append(&mut av2);
   assert_eq!(av.as_slice(), &[1_i32, 2, 3, 4, 5, 6]);

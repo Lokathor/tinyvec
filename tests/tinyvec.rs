@@ -1,5 +1,4 @@
 #![cfg(feature = "alloc")]
-
 #![allow(bad_style)]
 #![allow(clippy::redundant_clone)]
 
@@ -98,5 +97,5 @@ fn TinyVec_from_array() {
 fn TinyVec_macro_non_copy() {
   // must use a variable here to avoid macro shenanigans
   let s = String::new();
-  let _: TinyVec<[String; 10]> = tiny_vec!([String; 10], s);
+  let _: TinyVec<[String; 10]> = tiny_vec!([String; 10] => s);
 }

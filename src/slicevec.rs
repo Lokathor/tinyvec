@@ -352,7 +352,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline(always)]
   pub fn push(&mut self, val: T) {
     if self.len < self.capacity() {
-      replace(&mut self.data[self.len], val);
+      self.data[self.len] = val;
       self.len += 1;
     } else {
       panic!("SliceVec::push> capacity overflow")
@@ -448,7 +448,7 @@ impl<'s, T> SliceVec<'s, T> {
         if needs_drop::<T>() {
           while self.len() > new_len {
             self.len -= 1;
-            replace(&mut self.data[self.len], f());
+            self.data[self.len] = f();
           }
         } else {
           self.len = new_len;

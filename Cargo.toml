@@ -1,7 +1,7 @@
 [package]
 name = "tinyvec"
 description = "Just, really the littlest Vec you could need. So smol."
-version = "0.3.4-alpha.0"
+version = "0.4.0"
 authors = ["Lokathor <zefria@gmail.com>"]
 edition = "2018"
 license = "Zlib"
@@ -35,6 +35,11 @@ nightly_const_generics = []
 # `std::io::Write` trait instead of `core::fmt::Write`, so we're keeping it as
 # an experimental impl only for now.
 experimental_write_impl = []
+
+# EXPERIMENTAL: Not part of SemVer. This adds an "ArraySet" type which is
+# an array backed set type for situations where you need a set of a known
+# small size without allocation.
+experimental_array_set = []
 
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }

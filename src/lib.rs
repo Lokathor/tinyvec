@@ -10,7 +10,7 @@
 #![warn(clippy::must_use_candidate)]
 #![warn(missing_docs)]
 
-//! Programmers can have a little vec, as a treat.
+//! For all those times when you need just a little bit of vec support.
 //!
 //! ## What This Is
 //!
@@ -88,7 +88,9 @@ pub extern crate alloc;
 mod array;
 pub use array::*;
 
+#[cfg(feature = "experimental_array_set")]
 mod arrayset;
+#[cfg(feature = "experimental_array_set")]
 pub use arrayset::*;
 
 mod arrayvec;
