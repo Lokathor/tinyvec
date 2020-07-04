@@ -32,4 +32,6 @@ script:
       cargo test --features="nightly_const_generics"
       cargo build --features="experimental_write_impl"
       cargo test --features="experimental_write_impl"
+      cargo build --features="experimental_array_set"
+      cargo test --features="experimental_array_set"
     fi
