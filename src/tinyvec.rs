@@ -360,9 +360,7 @@ impl<A: Array> TinyVec<A> {
       return self.extend_from_slice(sli);
     }
 
-    for i in sli {
-      arr.push(i.clone())
-    }
+    arr.extend_from_slice(sli);
   }
 
   /// Wraps up an array and uses the given length as the initial length.
