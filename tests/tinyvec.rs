@@ -99,3 +99,4 @@ fn TinyVec_macro_non_copy() {
   let s = String::new();
   let _: TinyVec<[String; 10]> = tiny_vec!([String; 10] => s);
 }
+

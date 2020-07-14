@@ -350,17 +350,11 @@ impl<A: Array> TinyVec<A> {
   where
     A::Item: Clone,
   {
-    let arr = match self {
-      TinyVec::Inline(ref mut a) => a,
-      TinyVec::Heap(ref mut h) => return h.extend_from_slice(sli),
-    };
-
-    if arr.capacity() - arr.len() < sli.len() {
-      self.move_to_the_heap_and_reserve(sli.len());
-      return self.extend_from_slice(sli);
+    self.reserve(sli.len());
+    match self {
+      TinyVec::Inline(ref mut a) => a.extend_from_slice(sli),
+      TinyVec::Heap(ref mut h) => h.extend_from_slice(sli),
     }
-
-    arr.extend_from_slice(sli);
   }
 
   /// Wraps up an array and uses the given length as the initial length.
@@ -526,17 +520,7 @@ impl<A: Array> TinyVec<A> {
   where
     A::Item: Clone,
   {
-    match self {
-      TinyVec::Inline(a) => {
-        if new_len > A::CAPACITY {
-          self.move_to_the_heap();
-          self.resize(new_len, new_val);
-        } else {
-          a.resize(new_len, new_val);
-        }
-      }
-      TinyVec::Heap(v) => v.resize(new_len, new_val),
-    }
+    self.resize_with(new_len, || new_val.clone());
   }
 
   /// Resize the vec to the new length.
@@ -563,6 +547,11 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(&mut self, new_len: usize, f: F) {
+    match new_len.checked_sub(self.len()) {
+      None    => return self.truncate(new_len),
+      Some(n) => self.reserve(n),
+    }
+
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
       TinyVec::Heap(v) => v.resize_with(new_len, f),
