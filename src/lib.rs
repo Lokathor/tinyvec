@@ -19,21 +19,43 @@
 //!
 //! Similarly, there is also a [`SliceVec`] type available, which is a vec-like
 //! that's backed by a slice you provide. You can add and remove elements, but
-//! if you overflow the vec it will panic.
+//! if you overflow the slice it will panic.
 //!
 //! With the `alloc` feature enabled, the crate also has a [`TinyVec`] type.
 //! This is an enum type which is either an `Inline(ArrayVec)` or a `Heap(Vec)`.
 //! If a `TinyVec` is `Inline` and would overflow it automatically transitions
 //! itself into being `Heap` mode instead of a panic.
 //!
-//! All of this is done with no `unsafe` code within the crate. (Technically
+//! All of this is done with no `unsafe` code within the crate. Technically
 //! the `Vec` type from the standard library uses `unsafe` internally, but *this
-//! crate* introduces no new `unsafe` code into your project).
+//! crate* introduces no new `unsafe` code into your project.
 //!
-//! The limitation on all of this is that the element type of a vec from this
-//! crate must support the [`Default`] trait. This means that this crate isn't
-//! suitable for all situations, but a very surprising number of types do
-//! support `Default`.
+//! The limitation is that the element type of a vec from this crate must
+//! support the [`Default`] trait. This means that this crate isn't suitable for
+//! all situations, but a very surprising number of types do support `Default`.
+//!
+//! ## API
+//! The general goal of the crate is that, as much as possible, the vecs here
+//! should be a "drop in" replacement for the standard library `Vec` type. We
+//! strive to provide all of the `Vec` methods with the same names and
+//! signatures. The "exception" is of course that the element type of each
+//! method will have a `Default` bound that's not part of the normal `Vec` type.
+//!
+//! The vecs here also have additional methods that aren't on the `Vec` type. In
+//! this case, the names tend to be fairly long so that they are unlikely to
+//! clash with any future methods added to `Vec`.
+//!
+//! ## Stability
+//! `tinyvec` is starting to get some real usage within the ecosystem! The more
+//! popular you are, the less people want you breaking anything that they're
+//! using.
+//!
+//! * With the 0.4 release we had to make a small breaking change to how the vec
+//!   creation macros work, because of an unfortunate problem with how `rustc`
+//!   was parsing things under the old syntax.
+//!
+//! If we don't have any more unexpected problems, I'd like to declare the crate
+//! to be 1.0 by the end of 2020.
 
 #[allow(unused_imports)]
 use core::{
