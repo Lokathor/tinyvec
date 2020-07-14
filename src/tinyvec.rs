@@ -727,6 +727,10 @@ impl<A: Array> BorrowMut<[A::Item]> for TinyVec<A> {
 impl<A: Array> Extend<A::Item> for TinyVec<A> {
   #[inline]
   fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
+    let iter = iter.into_iter();
+    let (lower_bound, _) = iter.size_hint();
+    self.reserve(lower_bound);
+
     for t in iter {
       self.push(t)
     }
