@@ -183,9 +183,15 @@ impl<A: Array> TinyVec<A> {
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     self.reserve(other.len());
+    let iter = other.drain(..);
 
-    for item in other.drain(..) {
-      self.push(item)
+    let arr = match self {
+      TinyVec::Heap(h) => return h.extend(iter),
+      TinyVec::Inline(ref mut a) => a,
+    };
+
+    for item in iter {
+      arr.push(item)
     }
   }
 
