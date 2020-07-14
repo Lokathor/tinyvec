@@ -140,16 +140,41 @@ impl<A: Array> TinyVec<A> {
   /// Moves the content of the TinyVec to the heap, if it's inline.
   #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
+    let len = match self {
+      TinyVec::Heap(_) => return,
+      TinyVec::Inline(ref arr) => arr.len(),
+    };
+
+    self.move_to_the_heap_and_reserve(len);
+  }
+
+  /// If TinyVec is inline, moves the content of it to the heap.
+  /// Also reserves additional space.
+  pub fn move_to_the_heap_and_reserve(&mut self, n: usize) {
     match self {
+      TinyVec::Heap(h) => h.reserve(n),
       TinyVec::Inline(ref mut arr) => {
-        let mut v = Vec::with_capacity(A::CAPACITY * 2);
-        for item in arr.drain(..) {
-          v.push(item);
-        }
+        let mut v = Vec::with_capacity(arr.len() + n);
+        v.extend(arr.drain(..));
         *self = TinyVec::Heap(v);
       }
-      TinyVec::Heap(_) => (),
     }
+  }
+
+  /// Reserves additional space.
+  /// Moves to the heap if array can't hold `n` more items
+  pub fn reserve(&mut self, n: usize) {
+    let arr = match self {
+      TinyVec::Heap(h) => return h.reserve(n),
+      TinyVec::Inline(ref mut a) => a,
+    };
+
+    if n > arr.capacity() - arr.len() {
+      return self.move_to_the_heap_and_reserve(n);
+    }
+
+    /* In this place array has enough place, so no work is needed more */
+    return;
   }
 }
 
@@ -157,6 +182,8 @@ impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
+    self.reserve(other.len());
+
     for item in other.drain(..) {
       self.push(item)
     }
@@ -317,8 +344,18 @@ impl<A: Array> TinyVec<A> {
   where
     A::Item: Clone,
   {
+    let arr = match self {
+      TinyVec::Inline(ref mut a) => a,
+      TinyVec::Heap(ref mut h) => return h.extend_from_slice(sli),
+    };
+
+    if arr.capacity() - arr.len() < sli.len() {
+      self.move_to_the_heap_and_reserve(sli.len());
+      return self.extend_from_slice(sli);
+    }
+
     for i in sli {
-      self.push(i.clone())
+      arr.push(i.clone())
     }
   }
 
