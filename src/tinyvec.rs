@@ -137,6 +137,23 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 }
 
 impl<A: Array> TinyVec<A> {
+  /// Shrinks the capacity of the vector as much as possible.\
+  /// It is inlined if length is less than `A::CAPACITY`.
+  pub fn shrink_to_fit(&mut self)
+  where A: Default,
+  {
+    let movedvec = match self {
+      TinyVec::Inline(_) => return,
+      TinyVec::Heap(h) if h.len() > A::CAPACITY => return h.shrink_to_fit(),
+      TinyVec::Heap(ref mut h) => core::mem::replace(h, Vec::new()),
+    };
+
+    let mut av = ArrayVec::default();
+    let mut rest = av.fill(movedvec);
+    debug_assert!(rest.next().is_none());
+    *self = TinyVec::Inline(av);
+  }
+
   /// Moves the content of the TinyVec to the heap, if it's inline.
   #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
