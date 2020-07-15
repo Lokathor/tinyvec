@@ -2,7 +2,7 @@
 
 // This was contributed by user `dhardy`! Big thanks.
 
-use super::{Array, take};
+use super::{take, Array};
 use core::{
   borrow::Borrow,
   fmt,
