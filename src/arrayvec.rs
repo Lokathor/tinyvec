@@ -293,13 +293,12 @@ impl<A: Array> ArrayVec<A> {
     }
 
     let new_len = self.len + sli.len();
-    if new_len > A::CAPACITY {
-      panic!(
-        "ArrayVec::extend_from_slice> total length {} exceeds capacity {}!",
-        new_len,
-        A::CAPACITY
-      )
-    }
+    assert!(
+      new_len <= A::CAPACITY,
+      "ArrayVec::extend_from_slice> total length {} exceeds capacity {}!",
+      new_len,
+      A::CAPACITY
+    );
 
     let target = &mut self.data.as_slice_mut()[self.len..new_len];
     target.clone_from_slice(sli);
@@ -397,9 +396,12 @@ impl<A: Array> ArrayVec<A> {
   ///
   #[inline]
   pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
-    if index > self.len {
-      panic!("ArrayVec::try_insert> index {} is out of bounds {}", index, self.len);
-    }
+    assert!(
+      index <= self.len,
+      "ArrayVec::try_insert> index {} is out of bounds {}",
+      index,
+      self.len
+    );
 
     if let Some(x) = self.try_push(item) {
       return Some(x);
