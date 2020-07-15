@@ -146,9 +146,32 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
+    let new_len = self.len() + other.len();
+    assert!(new_len <= A::CAPACITY, 
+        "ArrayVec::append> total length {} exceeds capacity {}!",
+        new_len, A::CAPACITY
+    );
+
     for item in other.drain(..) {
-      self.push(item)
+      let x = self.try_push(item);
+      debug_assert!(x.is_none());
     }
+  }
+
+  /// Move all values from `other` into this vec.
+  /// If appending would overflow the capacity, Some(other) is returned.
+  pub fn try_append<'other>(&mut self, other: &'other mut Self) -> Option<&'other mut Self> {
+    let new_len = self.len() + other.len();
+    if new_len > A::CAPACITY {
+      return Some(other);
+    }
+
+    for item in other.drain(..) {
+      let x = self.try_push(item);
+      debug_assert!(x.is_none());
+    }
+
+    return None;
   }
 
   /// A `*mut` pointer to the backing array.
@@ -371,6 +394,27 @@ impl<A: Array> ArrayVec<A> {
     self.as_mut_slice()[index..].rotate_right(1);
   }
 
+  /// Tries to insert an item at the position given, moving all following elements +1
+  /// index.
+  /// Returns back the element if the capacity is exhausted,
+  /// otherwise returns None.
+  ///
+  /// ## Panics
+  /// * If `index` > `len`
+  ///
+  pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
+    if index > self.len {
+      panic!("ArrayVec::insert> index {} is out of bounds {}", index, self.len);
+    }
+
+    if let Some(x) = self.try_push(item) {
+      return Some(x);
+    }
+
+    self.as_mut_slice()[index..].rotate_right(1);
+    return None;
+  }
+
   /// Checks if the length is 0.
   #[inline(always)]
   #[must_use]
@@ -437,12 +481,22 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
-    if self.len < A::CAPACITY {
-      self.data.as_slice_mut()[self.len] = val;
-      self.len += 1;
-    } else {
-      panic!("ArrayVec::push> capacity overflow!")
+    let x = self.try_push(val);
+    assert!(x.is_none(), "ArrayVec::push> capacity overflow!");
+  }
+
+  /// Tries to place an element onto the end of the vec.\
+  /// Returns back the element if the capacity is exhausted,
+  /// otherwise returns None.
+  #[inline(always)]
+  pub fn try_push(&mut self, val: A::Item) -> Option<A::Item> {
+    if self.len == A::CAPACITY {
+      return Some(val);
     }
+
+    self.data.as_slice_mut()[self.len] = val;
+    self.len += 1;
+    return None;
   }
 
   /// Removes the item at `index`, shifting all others down by one index.
@@ -1217,3 +1271,21 @@ where
     write!(f, "]")
   }
 }
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "alloc")]
+impl<A: Array> ArrayVec<A> {
+  pub(crate) fn to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
+    let cap = n + self.len();
+    let mut v = Vec::with_capacity(cap);
+    v.extend(self.drain(..));
+    return v;
+  }
+
+  pub(crate) fn to_vec(&mut self) -> Vec<A::Item> {
+    self.to_vec_and_reserve(self.len())
+  }
+}
+
