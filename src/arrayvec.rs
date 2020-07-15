@@ -1273,15 +1273,17 @@ use alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 impl<A: Array> ArrayVec<A> {
-  pub(crate) fn to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
+  /// Drains all elements to a Vec, but reserves additional space
+  pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
     v.extend(self.drain(..));
     return v;
   }
 
-  pub(crate) fn to_vec(&mut self) -> Vec<A::Item> {
-    self.to_vec_and_reserve(self.len())
+  /// Drains all elements to a Vec
+  pub fn drain_to_vec(&mut self) -> Vec<A::Item> {
+    self.drain_to_vec_and_reserve(0)
   }
 }
 

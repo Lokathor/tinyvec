@@ -160,6 +160,7 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Moves the content of the TinyVec to the heap, if it's inline.
+  /// Note that this does not allocate additional memory
   #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
     let arr = match self {
@@ -167,7 +168,7 @@ impl<A: Array> TinyVec<A> {
       TinyVec::Inline(a) => a,
     };
 
-    let v = arr.to_vec();
+    let v = arr.drain_to_vec();
     *self = TinyVec::Heap(v);
   }
 
@@ -179,7 +180,7 @@ impl<A: Array> TinyVec<A> {
       TinyVec::Inline(a) => a,
     };
     
-    let v = arr.to_vec_and_reserve(n);
+    let v = arr.drain_to_vec_and_reserve(n);
     *self = TinyVec::Heap(v);
   }
 
@@ -192,7 +193,7 @@ impl<A: Array> TinyVec<A> {
     };
 
     if n > arr.capacity() - arr.len() {
-      let v = arr.to_vec();
+      let v = arr.drain_to_vec_and_reserve(n);
       *self = TinyVec::Heap(v);
     }
 
@@ -433,7 +434,8 @@ impl<A: Array> TinyVec<A> {
     };
 
     if let Some(x) = arr.try_insert(index, item) {
-      let mut v = arr.to_vec();
+      /* Make the Vec twice the size to amortize the cost of draining */
+      let mut v = arr.drain_to_vec_and_reserve(arr.len());
       v.insert(index, x);
       *self = TinyVec::Heap(v);
     }
@@ -489,7 +491,8 @@ impl<A: Array> TinyVec<A> {
     };
 
     if let Some(x) = arr.try_push(val) {
-      let mut v = arr.to_vec();
+      /* Make the Vec twice the size to amortize the cost of draining */
+      let mut v = arr.drain_to_vec_and_reserve(arr.len());
       v.push(x);
       *self = TinyVec::Heap(v);
     }
