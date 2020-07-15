@@ -153,13 +153,13 @@ impl<A: Array> ArrayVec<A> {
     );
 
     for item in other.drain(..) {
-      let x = self.try_push(item);
-      debug_assert!(x.is_none());
+      self.push(item);
     }
   }
 
   /// Move all values from `other` into this vec.
   /// If appending would overflow the capacity, Some(other) is returned.
+  #[inline]
   pub fn try_append<'other>(&mut self, other: &'other mut Self) -> Option<&'other mut Self> {
     let new_len = self.len() + other.len();
     if new_len > A::CAPACITY {
@@ -167,8 +167,7 @@ impl<A: Array> ArrayVec<A> {
     }
 
     for item in other.drain(..) {
-      let x = self.try_push(item);
-      debug_assert!(x.is_none());
+      self.push(item);
     }
 
     return None;
@@ -384,14 +383,8 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
-    if index > self.len {
-      panic!("ArrayVec::insert> index {} is out of bounds {}", index, self.len);
-    }
-
-    // Try to push the element.
-    self.push(item);
-    // And move it into its place.
-    self.as_mut_slice()[index..].rotate_right(1);
+    let x = self.try_insert(index, item);
+    assert!(x.is_none(), "ArrayVec::insert> capacity overflow!");
   }
 
   /// Tries to insert an item at the position given, moving all following elements +1
@@ -402,9 +395,10 @@ impl<A: Array> ArrayVec<A> {
   /// ## Panics
   /// * If `index` > `len`
   ///
+  #[inline]
   pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
     if index > self.len {
-      panic!("ArrayVec::insert> index {} is out of bounds {}", index, self.len);
+      panic!("ArrayVec::try_insert> index {} is out of bounds {}", index, self.len);
     }
 
     if let Some(x) = self.try_push(item) {

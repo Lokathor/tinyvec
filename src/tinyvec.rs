@@ -208,10 +208,7 @@ impl<A: Array> TinyVec<A> {
       TinyVec::Inline(ref mut a) => a,
     };
 
-    for item in iter {
-      let x = arr.try_push(item);
-      debug_assert!(x.is_none());
-    }
+    arr.extend(iter);
   }
 
   /// A mutable pointer to the backing array.
