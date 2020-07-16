@@ -194,7 +194,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   pub fn capacity(&self) -> usize {
-    A::CAPACITY
+    self.data.as_slice().len()
   }
 
   /// Truncates the `ArrayVec` down to length 0.
