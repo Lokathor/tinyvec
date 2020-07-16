@@ -212,6 +212,7 @@ impl<A: Array> TinyVec<A> {
   #[must_use]
   pub fn capacity(&self) -> usize {
     match self {
+      // Note: this shouldn't use A::CAPACITY. See ArrayVec::capacity().
       TinyVec::Inline(v) => v.capacity(),
       TinyVec::Heap(v) => v.capacity(),
     }

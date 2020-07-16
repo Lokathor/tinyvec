@@ -194,6 +194,9 @@ impl<A: Array> ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   pub fn capacity(&self) -> usize {
+    // Note: This shouldn't use A::CAPACITY, because unsafe code can't rely on
+    // any Array invariants. This ensures that at the very least, the returned
+    // value is a valid length for a subslice of the backing array.
     self.data.as_slice().len()
   }
 
