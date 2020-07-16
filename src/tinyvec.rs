@@ -720,6 +720,69 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
+  /// Creates a splicing iterator that removes the specified range in the
+  /// vector, yields the removed items, and replaces them with elements from
+  /// the provided iterator.
+  ///
+  /// ## Panics
+  /// * If the start is greater than the end.
+  /// * If the end is past the edge of the vec.
+  /// * If the provided iterator panics.
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
+  /// let tv2: TinyVec<[i32; 4]> = tv.splice(1.., 4..=6).collect();
+  /// assert_eq!(tv.as_slice(), &[1, 4, 5, 6][..]);
+  /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
+  ///
+  /// tv.splice(.., None);
+  /// assert_eq!(tv.as_slice(), &[]);
+  /// ```
+  #[inline]
+  pub fn splice<R, I>(
+    &mut self,
+    range: R,
+    replacement: I,
+  ) -> TinyVecSplice<'_, A, I::IntoIter>
+  where
+    R: RangeBounds<usize>,
+    I: IntoIterator<Item = A::Item>,
+    I::IntoIter: FusedIterator,
+  {
+    use core::ops::Bound;
+    let start = match range.start_bound() {
+      Bound::Included(x) => *x,
+      Bound::Excluded(x) => x + 1,
+      Bound::Unbounded => 0,
+    };
+    let end = match range.end_bound() {
+      Bound::Included(x) => x + 1,
+      Bound::Excluded(x) => *x,
+      Bound::Unbounded => self.len(),
+    };
+    assert!(
+      start <= end,
+      "TinyVec::splice> Illegal range, {} to {}",
+      start,
+      end
+    );
+    assert!(
+      end <= self.len(),
+      "TinyVec::splice> Range ends at {} but length is only {}!",
+      end,
+      self.len()
+    );
+
+    TinyVecSplice {
+      removal_start: start,
+      removal_end: end,
+      parent: self,
+      replacement: replacement.into_iter(),
+    }
+  }
+
   /// Remove an element, swapping the end of the vec into its place.
   ///
   /// ## Panics
@@ -797,6 +860,112 @@ impl<'p, A: Array> Drop for TinyVecDrain<'p, A> {
   #[inline]
   fn drop(&mut self) {
     for _ in self {}
+  }
+}
+
+/// Splicing iterator for `TinyVec`
+/// See [`TinyVec::splice`](TinyVec::<A>::splice)
+pub struct TinyVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
+  parent: &'p mut TinyVec<A>,
+  removal_start: usize,
+  removal_end: usize,
+  replacement: I,
+}
+
+impl<'p, A, I> Iterator for TinyVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item>,
+{
+  type Item = A::Item;
+
+  fn next(&mut self) -> Option<A::Item> {
+    if self.removal_start < self.removal_end {
+      match self.replacement.next() {
+        Some(replacement) => {
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_start],
+            replacement,
+          );
+          self.removal_start += 1;
+          Some(removed)
+        }
+        None => {
+          let removed = self.parent.remove(self.removal_start);
+          self.removal_end -= 1;
+          Some(removed)
+        }
+      }
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let len = self.len();
+    (len, Some(len))
+  }
+}
+
+impl<'p, A, I> ExactSizeIterator for TinyVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item>,
+{
+  #[inline]
+  fn len(&self) -> usize {
+    self.removal_end - self.removal_start
+  }
+}
+
+impl<'p, A, I> FusedIterator for TinyVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item>,
+{
+}
+
+impl<'p, A, I> DoubleEndedIterator for TinyVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item> + DoubleEndedIterator,
+{
+  fn next_back(&mut self) -> Option<A::Item> {
+    if self.removal_start < self.removal_end {
+      match self.replacement.next_back() {
+        Some(replacement) => {
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_end - 1],
+            replacement,
+          );
+          self.removal_end -= 1;
+          Some(removed)
+        }
+        None => {
+          let removed = self.parent.remove(self.removal_end - 1);
+          self.removal_end -= 1;
+          Some(removed)
+        }
+      }
+    } else {
+      None
+    }
+  }
+}
+
+impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
+  for TinyVecSplice<'p, A, I>
+{
+  fn drop(&mut self) {
+    for _ in self.by_ref() {}
+
+    // FIXME: reserve lower bound of size_hint
+
+    for replacement in self.replacement.by_ref() {
+      self.parent.insert(self.removal_end, replacement);
+      self.removal_end += 1;
+    }
   }
 }
 

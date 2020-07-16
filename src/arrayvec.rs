@@ -730,6 +730,72 @@ impl<A: Array> ArrayVec<A> {
     new
   }
 
+  /// Creates a splicing iterator that removes the specified range in the
+  /// vector, yields the removed items, and replaces them with elements from
+  /// the provided iterator.
+  ///
+  /// ## Panics
+  /// * If the start is greater than the end.
+  /// * If the end is past the edge of the vec.
+  /// * If the provided iterator panics.
+  /// * If the new length would overflow the capacity of the array. Because
+  ///   `ArrayVecSplice` adds elements to this vec in its destructor when
+  ///   necessary, this panic would occur when it is dropped.
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([i32; 4] => 1, 2, 3);
+  /// let av2: TinyVec<[i32; 4]> = av.splice(1.., 4..=6).collect();
+  /// assert_eq!(av.as_slice(), &[1, 4, 5, 6][..]);
+  /// assert_eq!(av2.as_slice(), &[2, 3][..]);
+  ///
+  /// av.splice(.., None);
+  /// assert_eq!(av.as_slice(), &[]);
+  /// ```
+  #[inline]
+  pub fn splice<R, I>(
+    &mut self,
+    range: R,
+    replacement: I,
+  ) -> ArrayVecSplice<'_, A, I::IntoIter>
+  where
+    R: RangeBounds<usize>,
+    I: IntoIterator<Item = A::Item>,
+    I::IntoIter: FusedIterator,
+  {
+    use core::ops::Bound;
+    let start = match range.start_bound() {
+      Bound::Included(x) => *x,
+      Bound::Excluded(x) => x + 1,
+      Bound::Unbounded => 0,
+    };
+    let end = match range.end_bound() {
+      Bound::Included(x) => x + 1,
+      Bound::Excluded(x) => *x,
+      Bound::Unbounded => self.len(),
+    };
+    assert!(
+      start <= end,
+      "ArrayVec::splice> Illegal range, {} to {}",
+      start,
+      end
+    );
+    assert!(
+      end <= self.len(),
+      "ArrayVec::splice> Range ends at {} but length is only {}!",
+      end,
+      self.len()
+    );
+
+    ArrayVecSplice {
+      removal_start: start,
+      removal_end: end,
+      parent: self,
+      replacement: replacement.into_iter(),
+    }
+  }
+
   /// Remove an element, swapping the end of the vec into its place.
   ///
   /// ## Panics
@@ -902,6 +968,110 @@ impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
       &mut self.parent.deref_mut()[self.target_start..];
     targets.rotate_left(count);
     self.parent.len -= count;
+  }
+}
+
+/// Splicing iterator for `ArrayVec`
+/// See [`ArrayVec::splice`](ArrayVec::<A>::splice)
+pub struct ArrayVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
+  parent: &'p mut ArrayVec<A>,
+  removal_start: usize,
+  removal_end: usize,
+  replacement: I,
+}
+
+impl<'p, A: Array, I: Iterator<Item = A::Item>> Iterator
+  for ArrayVecSplice<'p, A, I>
+{
+  type Item = A::Item;
+
+  fn next(&mut self) -> Option<A::Item> {
+    if self.removal_start < self.removal_end {
+      match self.replacement.next() {
+        Some(replacement) => {
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_start],
+            replacement,
+          );
+          self.removal_start += 1;
+          Some(removed)
+        }
+        None => {
+          let removed = self.parent.remove(self.removal_start);
+          self.removal_end -= 1;
+          Some(removed)
+        }
+      }
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let len = self.len();
+    (len, Some(len))
+  }
+}
+
+impl<'p, A, I> ExactSizeIterator for ArrayVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item>,
+{
+  #[inline]
+  fn len(&self) -> usize {
+    self.removal_end - self.removal_start
+  }
+}
+
+impl<'p, A, I> FusedIterator for ArrayVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item>,
+{
+}
+
+impl<'p, A, I> DoubleEndedIterator for ArrayVecSplice<'p, A, I>
+where
+  A: Array,
+  I: Iterator<Item = A::Item> + DoubleEndedIterator,
+{
+  fn next_back(&mut self) -> Option<A::Item> {
+    if self.removal_start < self.removal_end {
+      match self.replacement.next_back() {
+        Some(replacement) => {
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_end - 1],
+            replacement,
+          );
+          self.removal_end -= 1;
+          Some(removed)
+        }
+        None => {
+          let removed = self.parent.remove(self.removal_end - 1);
+          self.removal_end -= 1;
+          Some(removed)
+        }
+      }
+    } else {
+      None
+    }
+  }
+}
+
+impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
+  for ArrayVecSplice<'p, A, I>
+{
+  fn drop(&mut self) {
+    for _ in self.by_ref() {}
+
+    // FIXME: reserve lower bound of size_hint
+
+    for replacement in self.replacement.by_ref() {
+      self.parent.insert(self.removal_end, replacement);
+      self.removal_end += 1;
+    }
   }
 }
 
