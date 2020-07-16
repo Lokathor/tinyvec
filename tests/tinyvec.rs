@@ -68,6 +68,42 @@ fn TinyVec_resize() {
 }
 
 #[test]
+fn TinyVec_reserve() {
+  let mut tv: TinyVec<[i32; 4]> = Default::default();
+  assert_eq!(tv.capacity(), 4);
+
+  tv.extend_from_slice(&[1, 2]);
+  assert_eq!(tv.capacity(), 4);
+
+  tv.reserve(2);
+  assert_eq!(tv.capacity(), 4);
+
+  tv.extend_from_slice(&[3, 4, 5, 6]);
+  assert!(tv.capacity() >= 6);
+
+  tv.reserve(4);
+  assert!(tv.capacity() >= 10);
+}
+
+#[test]
+fn TinyVec_reserve_exact() {
+  let mut tv: TinyVec<[i32; 4]> = Default::default();
+  assert_eq!(tv.capacity(), 4);
+
+  tv.extend_from_slice(&[1, 2]);
+  assert_eq!(tv.capacity(), 4);
+
+  tv.reserve_exact(2);
+  assert_eq!(tv.capacity(), 4);
+
+  tv.extend_from_slice(&[3, 4, 5, 6]);
+  assert!(tv.capacity() >= 6);
+
+  tv.reserve_exact(4);
+  assert!(tv.capacity() == 10);
+}
+
+#[test]
 fn TinyVec_from_slice_impl() {
   let bigger_slice: [u8; 11] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   let tinyvec: TinyVec<[u8; 10]> = TinyVec::Heap((&bigger_slice[..]).into());

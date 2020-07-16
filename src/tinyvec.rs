@@ -463,6 +463,77 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
+  /// Reserve `amount` additional length.
+  ///
+  /// After this is called, `capacity` will be at least `len + amount`.
+  ///
+  /// If the capacity is already at least `len + amount`, then nothing happens.
+  /// If the vec needs to expand and it's inline, it will be moved to the heap.
+  /// If the vec needs to expand is already on the heap, then `Vec::reserve` is
+  /// called.
+  ///
+  /// ```
+  /// use tinyvec::*;
+  ///
+  /// let mut tv = tiny_vec!([i32; 5] => 2, 3, 5, 7);
+  /// assert_eq!(tv.capacity(), 5);
+  ///
+  /// tv.reserve(5);
+  /// assert!(tv.capacity() >= 10);
+  /// ```
+  #[inline]
+  pub fn reserve(&mut self, amount: usize) {
+    let len = self.len();
+    match self {
+      TinyVec::Inline(arr) => {
+        if A::CAPACITY < len + amount {
+          let mut v =
+            Vec::with_capacity(usize::max(A::CAPACITY * 2, len + amount));
+          for item in arr.drain(..) {
+            v.push(item);
+          }
+          *self = TinyVec::Heap(v);
+        }
+      }
+      TinyVec::Heap(v) => v.reserve(amount),
+    }
+  }
+
+  /// Reserve exactly `amount` additional length.
+  ///
+  /// After this is called, `capacity` will be `len + amount`.
+  ///
+  /// If the capacity is already at least `len + amount`, then nothing happens.
+  /// If the vec needs to expand and it's inline, it will be moved to the heap.
+  /// If the vec needs to expand is already on the heap, then
+  /// `Vec::reserve_exact` is called.
+  ///
+  /// ```
+  /// use tinyvec::*;
+  ///
+  /// let mut tv = tiny_vec!([i32; 5] => 2, 3, 5, 7);
+  /// assert_eq!(tv.capacity(), 5);
+  ///
+  /// tv.reserve_exact(7);
+  /// assert_eq!(tv.capacity(), 11);
+  /// ```
+  #[inline]
+  pub fn reserve_exact(&mut self, amount: usize) {
+    let len = self.len();
+    match self {
+      TinyVec::Inline(arr) => {
+        if A::CAPACITY < len + amount {
+          let mut v = Vec::with_capacity(len + amount);
+          for item in arr.drain(..) {
+            v.push(item);
+          }
+          *self = TinyVec::Heap(v);
+        }
+      }
+      TinyVec::Heap(v) => v.reserve_exact(amount),
+    }
+  }
+
   /// Resize the vec to the new length.
   ///
   /// If it needs to be longer, it's filled with clones of the provided value.
