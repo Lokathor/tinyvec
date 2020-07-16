@@ -746,7 +746,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// use tinyvec::*;
   /// let mut av = array_vec!([i32; 4] => 1, 2, 3);
-  /// let av2: TinyVec<[i32; 4]> = av.splice(1.., 4..=6).collect();
+  /// let av2: ArrayVec<[i32; 4]> = av.splice(1.., 4..=6).collect();
   /// assert_eq!(av.as_slice(), &[1, 4, 5, 6][..]);
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
   ///
