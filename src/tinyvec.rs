@@ -140,16 +140,41 @@ impl<A: Array> TinyVec<A> {
   /// Moves the content of the TinyVec to the heap, if it's inline.
   #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
+    let len = match self {
+      TinyVec::Heap(_) => return,
+      TinyVec::Inline(ref arr) => arr.len(),
+    };
+
+    self.move_to_the_heap_and_reserve(len);
+  }
+
+  /// If TinyVec is inline, moves the content of it to the heap.
+  /// Also reserves additional space.
+  pub fn move_to_the_heap_and_reserve(&mut self, n: usize) {
     match self {
+      TinyVec::Heap(h) => h.reserve(n),
       TinyVec::Inline(ref mut arr) => {
-        let mut v = Vec::with_capacity(A::CAPACITY * 2);
-        for item in arr.drain(..) {
-          v.push(item);
-        }
+        let mut v = Vec::with_capacity(arr.len() + n);
+        v.extend(arr.drain(..));
         *self = TinyVec::Heap(v);
       }
-      TinyVec::Heap(_) => (),
     }
+  }
+
+  /// Reserves additional space.
+  /// Moves to the heap if array can't hold `n` more items
+  pub fn reserve(&mut self, n: usize) {
+    let arr = match self {
+      TinyVec::Heap(h) => return h.reserve(n),
+      TinyVec::Inline(ref mut a) => a,
+    };
+
+    if n > arr.capacity() - arr.len() {
+      return self.move_to_the_heap_and_reserve(n);
+    }
+
+    /* In this place array has enough place, so no work is needed more */
+    return;
   }
 }
 
@@ -157,8 +182,16 @@ impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    for item in other.drain(..) {
-      self.push(item)
+    self.reserve(other.len());
+    let iter = other.drain(..);
+
+    let arr = match self {
+      TinyVec::Heap(h) => return h.extend(iter),
+      TinyVec::Inline(ref mut a) => a,
+    };
+
+    for item in iter {
+      arr.push(item)
     }
   }
 
@@ -318,8 +351,10 @@ impl<A: Array> TinyVec<A> {
   where
     A::Item: Clone,
   {
-    for i in sli {
-      self.push(i.clone())
+    self.reserve(sli.len());
+    match self {
+      TinyVec::Inline(ref mut a) => a.extend_from_slice(sli),
+      TinyVec::Heap(ref mut h) => h.extend_from_slice(sli),
     }
   }
 
@@ -486,17 +521,7 @@ impl<A: Array> TinyVec<A> {
   where
     A::Item: Clone,
   {
-    match self {
-      TinyVec::Inline(a) => {
-        if new_len > A::CAPACITY {
-          self.move_to_the_heap();
-          self.resize(new_len, new_val);
-        } else {
-          a.resize(new_len, new_val);
-        }
-      }
-      TinyVec::Heap(v) => v.resize(new_len, new_val),
-    }
+    self.resize_with(new_len, || new_val.clone());
   }
 
   /// Resize the vec to the new length.
@@ -523,6 +548,11 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(&mut self, new_len: usize, f: F) {
+    match new_len.checked_sub(self.len()) {
+      None    => return self.truncate(new_len),
+      Some(n) => self.reserve(n),
+    }
+
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
       TinyVec::Heap(v) => v.resize_with(new_len, f),
@@ -691,6 +721,10 @@ impl<A: Array> BorrowMut<[A::Item]> for TinyVec<A> {
 impl<A: Array> Extend<A::Item> for TinyVec<A> {
   #[inline]
   fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
+    let iter = iter.into_iter();
+    let (lower_bound, _) = iter.size_hint();
+    self.reserve(lower_bound);
+
     for t in iter {
       self.push(t)
     }
