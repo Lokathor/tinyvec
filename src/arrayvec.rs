@@ -146,9 +146,45 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
+    let new_len = self.len() + other.len();
+    assert!(new_len <= A::CAPACITY, 
+        "ArrayVec::append> total length {} exceeds capacity {}!",
+        new_len, A::CAPACITY
+    );
+
     for item in other.drain(..) {
-      self.push(item)
+      self.push(item);
     }
+  }
+
+  /// Move all values from `other` into this vec.
+  /// If appending would overflow the capacity, Some(other) is returned.
+  /// ## Example
+  /// ```rust
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 7] => 1, 2, 3);
+  /// let mut av2 = array_vec!([i32; 7] => 4, 5, 6);
+  /// av.append(&mut av2);
+  /// assert_eq!(av, &[1, 2, 3, 4, 5, 6][..]);
+  /// assert_eq!(av2, &[][..]);
+  ///
+  /// let mut av3 = array_vec!([i32; 7] => 7, 8, 9);
+  /// assert!(av.try_append(&mut av3).is_some());
+  /// assert_eq!(av, &[1, 2, 3, 4, 5, 6][..]);
+  /// assert_eq!(av3, &[7, 8, 9][..]);
+  /// ```
+  #[inline]
+  pub fn try_append<'other>(&mut self, other: &'other mut Self) -> Option<&'other mut Self> {
+    let new_len = self.len() + other.len();
+    if new_len > A::CAPACITY {
+      return Some(other);
+    }
+
+    for item in other.drain(..) {
+      self.push(item);
+    }
+
+    return None;
   }
 
   /// A `*mut` pointer to the backing array.
@@ -274,13 +310,12 @@ impl<A: Array> ArrayVec<A> {
     }
 
     let new_len = self.len + sli.len();
-    if new_len > A::CAPACITY {
-      panic!(
-        "ArrayVec::extend_from_slice> total length {} exceeds capacity {}!",
-        new_len,
-        A::CAPACITY
-      )
-    }
+    assert!(
+      new_len <= A::CAPACITY,
+      "ArrayVec::extend_from_slice> total length {} exceeds capacity {}!",
+      new_len,
+      A::CAPACITY
+    );
 
     let target = &mut self.data.as_slice_mut()[self.len..new_len];
     target.clone_from_slice(sli);
@@ -364,14 +399,41 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
-    if index > self.len {
-      panic!("ArrayVec::insert> index {} is out of bounds {}", index, self.len);
+    let x = self.try_insert(index, item);
+    assert!(x.is_none(), "ArrayVec::insert> capacity overflow!");
+  }
+
+  /// Tries to insert an item at the position given, moving all following elements +1
+  /// index.
+  /// Returns back the element if the capacity is exhausted,
+  /// otherwise returns None.
+  ///
+  /// ## Panics
+  /// * If `index` > `len`
+  ///
+  /// ## Example
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut av = array_vec!([&'static str; 4] => "one", "two", "three");
+  /// av.insert(1, "four");
+  /// assert_eq!(av.as_slice(), &["one", "four", "two", "three"]);
+  /// assert_eq!(av.try_insert(4, "five"), Some("five"));
+  /// ```
+  #[inline]
+  pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
+    assert!(
+      index <= self.len,
+      "ArrayVec::try_insert> index {} is out of bounds {}",
+      index,
+      self.len
+    );
+
+    if let Some(x) = self.try_push(item) {
+      return Some(x);
     }
 
-    // Try to push the element.
-    self.push(item);
-    // And move it into its place.
     self.as_mut_slice()[index..].rotate_right(1);
+    return None;
   }
 
   /// Checks if the length is 0.
@@ -440,12 +502,32 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
-    if self.len < A::CAPACITY {
-      self.data.as_slice_mut()[self.len] = val;
-      self.len += 1;
-    } else {
-      panic!("ArrayVec::push> capacity overflow!")
+    let x = self.try_push(val);
+    assert!(x.is_none(), "ArrayVec::push> capacity overflow!");
+  }
+
+  /// Tries to place an element onto the end of the vec.\
+  /// Returns back the element if the capacity is exhausted,
+  /// otherwise returns None.
+  /// ```rust
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 2]);
+  /// assert_eq!(av.as_slice(), []);
+  /// assert_eq!(av.try_push(1), None);
+  /// assert_eq!(&av[..], [1]);
+  /// assert_eq!(av.try_push(2), None);
+  /// assert_eq!(&av[..], [1, 2]);
+  /// assert_eq!(av.try_push(3), Some(3));
+  /// ```
+  #[inline(always)]
+  pub fn try_push(&mut self, val: A::Item) -> Option<A::Item> {
+    if self.len == A::CAPACITY {
+      return Some(val);
     }
+
+    self.data.as_slice_mut()[self.len] = val;
+    self.len += 1;
+    return None;
   }
 
   /// Removes the item at `index`, shifting all others down by one index.
@@ -1220,3 +1302,37 @@ where
     write!(f, "]")
   }
 }
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "alloc")]
+impl<A: Array> ArrayVec<A> {
+  /// Drains all elements to a Vec, but reserves additional space
+  /// ```
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 7] => 1, 2, 3);
+  /// let v = av.drain_to_vec_and_reserve(10);
+  /// assert_eq!(v, &[1, 2, 3]);
+  /// assert_eq!(v.capacity(), 13);
+  /// ```
+  pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
+    let cap = n + self.len();
+    let mut v = Vec::with_capacity(cap);
+    v.extend(self.drain(..));
+    return v;
+  }
+
+  /// Drains all elements to a Vec
+  /// ```
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 7] => 1, 2, 3);
+  /// let v = av.drain_to_vec();
+  /// assert_eq!(v, &[1, 2, 3]);
+  /// assert_eq!(v.capacity(), 3);
+  /// ```
+  pub fn drain_to_vec(&mut self) -> Vec<A::Item> {
+    self.drain_to_vec_and_reserve(0)
+  }
+}
+

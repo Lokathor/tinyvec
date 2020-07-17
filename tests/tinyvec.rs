@@ -100,3 +100,55 @@ fn TinyVec_macro_non_copy() {
   let _: TinyVec<[String; 10]> = tiny_vec!([String; 10] => s);
 }
 
+#[test]
+fn TinyVec_reserve() {
+  let mut tv: TinyVec<[i32; 4]> = Default::default();
+  assert_eq!(tv.capacity(), 4);
+  tv.extend_from_slice(&[1, 2]);
+  assert_eq!(tv.capacity(), 4);
+  tv.reserve(2);
+  assert_eq!(tv.capacity(), 4);
+  tv.reserve(4);
+  assert!(tv.capacity() >= 6);
+  tv.extend_from_slice(&[3, 4, 5, 6]);
+  tv.reserve(4);
+  assert!(tv.capacity() >= 10);
+}
+
+#[test]
+fn TinyVec_reserve_exact() {
+  let mut tv: TinyVec<[i32; 4]> = Default::default();
+  assert_eq!(tv.capacity(), 4);
+
+  tv.extend_from_slice(&[1, 2]);
+  assert_eq!(tv.capacity(), 4);
+  tv.reserve_exact(2);
+  assert_eq!(tv.capacity(), 4);
+  tv.reserve_exact(4);
+  assert!(tv.capacity() >= 6);
+  tv.extend_from_slice(&[3, 4, 5, 6]);
+  tv.reserve_exact(4);
+  assert!(tv.capacity() >= 10);
+}
+
+#[test]
+fn TinyVec_move_to_heap_and_shrink() {
+  let mut tv: TinyVec<[i32; 4]> = Default::default();
+  assert!(tv.is_inline());
+  tv.move_to_the_heap();
+  assert!(tv.is_heap());
+  assert_eq!(tv.capacity(), 0);
+
+  tv.push(1);
+  tv.shrink_to_fit();
+  assert!(tv.is_inline());
+  assert_eq!(tv.capacity(), 4);
+
+  tv.move_to_the_heap_and_reserve(3);
+  assert!(tv.is_heap());
+  assert_eq!(tv.capacity(), 4);
+  tv.extend(2..=4);
+  assert_eq!(tv.capacity(), 4);
+  assert_eq!(tv.as_slice(), [1,2,3,4]);
+}
+

@@ -137,40 +137,139 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 }
 
 impl<A: Array> TinyVec<A> {
-  /// Moves the content of the TinyVec to the heap, if it's inline.
-  #[allow(clippy::missing_inline_in_public_items)]
-  pub fn move_to_the_heap(&mut self) {
-    let len = match self {
-      TinyVec::Heap(_) => return,
-      TinyVec::Inline(ref arr) => arr.len(),
+  /// Returns whether elements are on heap
+  pub fn is_heap(&self) -> bool {
+    match self {
+      TinyVec::Heap(_) => true,
+      TinyVec::Inline(_) => false,
+    }
+  }
+  /// Returns whether elements are on stack
+  pub fn is_inline(&self) -> bool {
+    !self.is_heap()
+  }
+
+  /// Shrinks the capacity of the vector as much as possible.\
+  /// It is inlined if length is less than `A::CAPACITY`.
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 2] => 1, 2, 3);
+  /// assert!(tv.is_heap());
+  /// let _ = tv.pop();
+  /// assert!(tv.is_heap());
+  /// tv.shrink_to_fit();
+  /// assert!(tv.is_inline());
+  /// ```
+  pub fn shrink_to_fit(&mut self)
+  where A: Default,
+  {
+    let vec = match self {
+      TinyVec::Inline(_) => return,
+      TinyVec::Heap(h)   => h,
     };
 
-    self.move_to_the_heap_and_reserve(len);
+    if vec.len() > A::CAPACITY {
+      return vec.shrink_to_fit();
+    }
+
+    let movedvec = core::mem::replace(vec, Vec::new());
+
+    let mut av = ArrayVec::default();
+    let mut rest = av.fill(movedvec);
+    debug_assert!(rest.next().is_none());
+    *self = TinyVec::Inline(av);
+  }
+
+  /// Moves the content of the TinyVec to the heap, if it's inline.
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
+  /// assert!(tv.is_inline());
+  /// tv.move_to_the_heap();
+  /// assert!(tv.is_heap());
+  /// ```
+  #[allow(clippy::missing_inline_in_public_items)]
+  pub fn move_to_the_heap(&mut self) {
+    let arr = match self {
+      TinyVec::Heap(_)   => return,
+      TinyVec::Inline(a) => a,
+    };
+
+    let v = arr.drain_to_vec();
+    *self = TinyVec::Heap(v);
   }
 
   /// If TinyVec is inline, moves the content of it to the heap.
   /// Also reserves additional space.
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
+  /// assert!(tv.is_inline());
+  /// tv.move_to_the_heap_and_reserve(32);
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 35);
+  /// ```
   pub fn move_to_the_heap_and_reserve(&mut self, n: usize) {
-    match self {
-      TinyVec::Heap(h) => h.reserve(n),
-      TinyVec::Inline(ref mut arr) => {
-        let mut v = Vec::with_capacity(arr.len() + n);
-        v.extend(arr.drain(..));
-        *self = TinyVec::Heap(v);
-      }
-    }
+    let arr = match self {
+      TinyVec::Heap(h)   => return h.reserve(n),
+      TinyVec::Inline(a) => a,
+    };
+    
+    let v = arr.drain_to_vec_and_reserve(n);
+    *self = TinyVec::Heap(v);
   }
 
   /// Reserves additional space.
   /// Moves to the heap if array can't hold `n` more items
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3, 4);
+  /// assert!(tv.is_inline());
+  /// tv.reserve(1);
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 5);
+  /// ```
   pub fn reserve(&mut self, n: usize) {
     let arr = match self {
-      TinyVec::Heap(h) => return h.reserve(n),
-      TinyVec::Inline(ref mut a) => a,
+      TinyVec::Heap(h)   => return h.reserve(n),
+      TinyVec::Inline(a) => a,
     };
 
     if n > arr.capacity() - arr.len() {
-      return self.move_to_the_heap_and_reserve(n);
+      let v = arr.drain_to_vec_and_reserve(n);
+      *self = TinyVec::Heap(v);
+    }
+
+    /* In this place array has enough place, so no work is needed more */
+    return;
+  }
+
+  /// Reserves additional space.
+  /// Moves to the heap if array can't hold `n` more items
+  ///
+  /// From [Vec::reserve_exact](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve_exact)
+  /// ```text
+  /// Note that the allocator may give the collection more space than it requests.
+  /// Therefore, capacity can not be relied upon to be precisely minimal. 
+  /// Prefer reserve if future insertions are expected.
+  /// ```
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3, 4);
+  /// assert!(tv.is_inline());
+  /// tv.reserve_exact(1);
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 5);
+  /// ```
+  pub fn reserve_exact(&mut self, n: usize) {
+    let arr = match self {
+      TinyVec::Heap(h)   => return h.reserve_exact(n),
+      TinyVec::Inline(a) => a,
+    };
+
+    if n > arr.capacity() - arr.len() {
+      let v = arr.drain_to_vec_and_reserve(n);
+      *self = TinyVec::Heap(v);
     }
 
     /* In this place array has enough place, so no work is needed more */
@@ -185,13 +284,9 @@ impl<A: Array> TinyVec<A> {
     self.reserve(other.len());
     let iter = other.drain(..);
 
-    let arr = match self {
-      TinyVec::Heap(h) => return h.extend(iter),
-      TinyVec::Inline(ref mut a) => a,
-    };
-
-    for item in iter {
-      arr.push(item)
+    match self {
+      TinyVec::Heap(h)   => h.extend(iter),
+      TinyVec::Inline(a) => a.extend(iter),
     }
   }
 
@@ -346,6 +441,12 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Clone each element of the slice into this vec.
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2);
+  /// tv.extend_from_slice(&[3, 4]);
+  /// assert_eq!(tv.as_slice(), [1, 2, 3, 4]);
+  /// ```
   #[inline]
   pub fn extend_from_slice(&mut self, sli: &[A::Item])
   where
@@ -353,8 +454,8 @@ impl<A: Array> TinyVec<A> {
   {
     self.reserve(sli.len());
     match self {
-      TinyVec::Inline(ref mut a) => a.extend_from_slice(sli),
-      TinyVec::Heap(ref mut h) => h.extend_from_slice(sli),
+      TinyVec::Inline(a) => a.extend_from_slice(sli),
+      TinyVec::Heap(h)   => h.extend_from_slice(sli),
     }
   }
 
@@ -404,16 +505,23 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
-    match self {
-      TinyVec::Inline(a) => {
-        if a.len() == A::CAPACITY {
-          self.move_to_the_heap();
-          self.insert(index, item)
-        } else {
-          a.insert(index, item);
-        }
-      }
-      TinyVec::Heap(v) => v.insert(index, item),
+    assert!(index <= self.len(), 
+        "insertion index (is {}) should be <= len (is {})",
+        index, self.len()
+    );
+
+    let arr = match self {
+      TinyVec::Heap(v)   => return v.insert(index, item),
+      TinyVec::Inline(a) => a,
+    };
+
+    if let Some(x) = arr.try_insert(index, item) {
+      let mut v = Vec::with_capacity(arr.len() * 2);
+      let mut it = arr.iter_mut().map(|r| core::mem::replace(r, Default::default()));
+      v.extend(it.by_ref().take(index));
+      v.push(x);
+      v.extend(it);
+      *self = TinyVec::Heap(v);
     }
   }
 
@@ -459,18 +567,24 @@ impl<A: Array> TinyVec<A> {
   /// Place an element onto the end of the vec.
   /// ## Panics
   /// * If the length of the vec would overflow the capacity.
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3);
+  /// tv.push(4);
+  /// assert_eq!(tv.as_slice(), &[1, 2, 3, 4]);
+  /// ```
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
-    match self {
-      TinyVec::Inline(a) => {
-        if a.len() == A::CAPACITY {
-          self.move_to_the_heap();
-          self.push(val)
-        } else {
-          a.push(val);
-        }
-      }
-      TinyVec::Heap(v) => v.push(val),
+    let arr = match self {
+      TinyVec::Heap(v)   => return v.push(val),
+      TinyVec::Inline(a) => a,
+    };
+
+    if let Some(x) = arr.try_push(val) {
+      /* Make the Vec twice the size to amortize the cost of draining */
+      let mut v = arr.drain_to_vec_and_reserve(arr.len());
+      v.push(x);
+      *self = TinyVec::Heap(v);
     }
   }
 
@@ -534,11 +648,11 @@ impl<A: Array> TinyVec<A> {
   /// ```rust
   /// use tinyvec::*;
   ///
-  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3);
+  /// let mut tv = tiny_vec!([i32; 3] => 1, 2, 3);
   /// tv.resize_with(5, Default::default);
   /// assert_eq!(tv.as_slice(), &[1, 2, 3, 0, 0][..]);
   ///
-  /// let mut tv = tiny_vec!([i32; 10]);
+  /// let mut tv = tiny_vec!([i32; 2]);
   /// let mut p = 1;
   /// tv.resize_with(4, || {
   ///   p *= 2;
@@ -555,7 +669,7 @@ impl<A: Array> TinyVec<A> {
 
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
-      TinyVec::Heap(v) => v.resize_with(new_len, f),
+      TinyVec::Heap(v)   => v.resize_with(new_len, f),
     }
   }
 
@@ -725,9 +839,23 @@ impl<A: Array> Extend<A::Item> for TinyVec<A> {
     let (lower_bound, _) = iter.size_hint();
     self.reserve(lower_bound);
 
-    for t in iter {
-      self.push(t)
-    }
+	let a = match self {
+      TinyVec::Heap(h) => return h.extend(iter),
+      TinyVec::Inline(a) => a,
+    };
+    
+    let mut iter = a.fill(iter);
+    let maybe = iter.next();
+    
+    let surely = match maybe {
+      Some(x) => x,
+      None => return,
+    };
+    
+    let mut v = a.drain_to_vec_and_reserve(a.len());
+    v.push(surely);
+    v.extend(iter);
+    *self = TinyVec::Heap(v);
   }
 }
 
@@ -781,9 +909,7 @@ impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
     let mut av = Self::default();
-    for i in iter {
-      av.push(i)
-    }
+    av.extend(iter);
     av
   }
 }
