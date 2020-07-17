@@ -275,22 +275,6 @@ impl<A: Array> TinyVec<A> {
     /* In this place array has enough place, so no work is needed more */
     return;
   }
-
-  /// Reserves additional space.
-  /// Moves to the heap if array can't hold `n` more items
-  pub fn reserve(&mut self, n: usize) {
-    let arr = match self {
-      TinyVec::Heap(h) => return h.reserve(n),
-      TinyVec::Inline(ref mut a) => a,
-    };
-
-    if n > arr.capacity() - arr.len() {
-      return self.move_to_the_heap_and_reserve(n);
-    }
-
-    /* In this place array has enough place, so no work is needed more */
-    return;
-  }
 }
 
 impl<A: Array> TinyVec<A> {
