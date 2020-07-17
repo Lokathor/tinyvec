@@ -1,10 +1,10 @@
 [package]
 name = "tinyvec"
 description = "Just, really the littlest Vec you could need. So smol."
-version = "0.4.0-alpha.2"
+version = "0.4.0-alpha.4"
 authors = ["Lokathor <zefria@gmail.com>"]
 edition = "2018"
-license = "Zlib"
+license = "Zlib OR Apache-2.0 OR MIT"
 keywords = ["vec", "no_std", "no-std", "smol"]
 categories = ["data-structures", "no-std"]
 repository = "https://github.com/Lokathor/tinyvec"
