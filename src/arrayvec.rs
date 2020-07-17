@@ -734,6 +734,9 @@ impl<A: Array> ArrayVec<A> {
   /// vector, yields the removed items, and replaces them with elements from
   /// the provided iterator.
   ///
+  /// `splice` fuses the provided iterator, so elements after the first `None`
+  /// are ignored.
+  ///
   /// ## Panics
   /// * If the start is greater than the end.
   /// * If the end is past the edge of the vec.
@@ -758,11 +761,10 @@ impl<A: Array> ArrayVec<A> {
     &mut self,
     range: R,
     replacement: I,
-  ) -> ArrayVecSplice<'_, A, I::IntoIter>
+  ) -> ArrayVecSplice<'_, A, core::iter::Fuse<I::IntoIter>>
   where
     R: RangeBounds<usize>,
     I: IntoIterator<Item = A::Item>,
-    I::IntoIter: FusedIterator,
   {
     use core::ops::Bound;
     let start = match range.start_bound() {
@@ -792,7 +794,7 @@ impl<A: Array> ArrayVec<A> {
       removal_start: start,
       removal_end: end,
       parent: self,
-      replacement: replacement.into_iter(),
+      replacement: replacement.into_iter().fuse(),
     }
   }
 
