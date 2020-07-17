@@ -139,7 +139,10 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 impl<A: Array> TinyVec<A> {
   /// Returns whether elements are on heap
   pub fn is_heap(&self) -> bool {
-    matches!(self, TinyVec::Heap(_))
+    match self {
+      TinyVec::Heap(_) => true,
+      TinyVec::Inline(_) => false,
+    }
   }
   /// Returns whether elements are on stack
   pub fn is_inline(&self) -> bool {
