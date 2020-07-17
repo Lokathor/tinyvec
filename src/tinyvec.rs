@@ -516,9 +516,11 @@ impl<A: Array> TinyVec<A> {
     };
 
     if let Some(x) = arr.try_insert(index, item) {
-      /* Make the Vec twice the size to amortize the cost of draining */
-      let mut v = arr.drain_to_vec_and_reserve(arr.len());
-      v.insert(index, x);
+      let mut v = Vec::with_capacity(arr.len() * 2);
+      let mut it = arr.iter_mut().map(core::mem::take);
+      v.extend(it.by_ref().take(index));
+      v.push(x);
+      v.extend(it);
       *self = TinyVec::Heap(v);
     }
   }
@@ -837,9 +839,23 @@ impl<A: Array> Extend<A::Item> for TinyVec<A> {
     let (lower_bound, _) = iter.size_hint();
     self.reserve(lower_bound);
 
-    for t in iter {
-      self.push(t)
-    }
+	let a = match self {
+      TinyVec::Heap(h) => return h.extend(iter),
+      TinyVec::Inline(a) => a,
+    };
+    
+    let mut iter = a.fill(iter);
+    let maybe = iter.next();
+    
+    let surely = match maybe {
+      Some(x) => x,
+      None => return,
+    };
+    
+    let mut v = a.drain_to_vec_and_reserve(a.len());
+    v.push(surely);
+    v.extend(iter);
+    *self = TinyVec::Heap(v);
   }
 }
 
@@ -893,9 +909,7 @@ impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
     let mut av = Self::default();
-    for i in iter {
-      av.push(i)
-    }
+    av.extend(iter);
     av
   }
 }
