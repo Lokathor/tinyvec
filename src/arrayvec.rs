@@ -184,7 +184,7 @@ impl<A: Array> ArrayVec<A> {
       return Some(other);
     }
 
-    let iter = other.into_iter().map(take);
+    let iter = other.iter_mut().map(take);
     for item in iter {
       self.push(item);
     }
@@ -1169,13 +1169,11 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    if self.base < self.len {
-      let out = take(&mut self.data.as_slice_mut()[self.base]);
-      self.base += 1;
-      Some(out)
-    } else {
-      None
-    }
+    let slice = &mut self.data.as_slice_mut()[..self.len];
+    //assert_eq!(self.len, 4);
+    let itemref = slice.get_mut(self.base)?;
+    self.base += 1;
+    return Some(take(itemref));
   }
   #[inline(always)]
   #[must_use]
@@ -1189,18 +1187,22 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(take(&mut self.data.as_slice_mut()[self.len]))
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let item = slice.first_mut()?;
+    return Some(take(item));
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
-    let i = self.base + (n - 1);
-    if i < self.len {
-      let out = take(&mut self.data.as_slice_mut()[i]);
-      self.base = i + 1;
-      Some(out)
-    } else {
-      None
+    let slice = &mut self.data.as_slice_mut()[..self.len];
+    let newbase = self.base + n;
+    
+    if let Some(x) = slice.get_mut(newbase) {
+      self.base = newbase + 1;
+      return Some(take(x));
     }
+
+    self.base = self.len;
+    return None;
   }
 }
 
@@ -1498,7 +1500,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
-    let iter = self.into_iter().map(take);
+    let iter = self.iter_mut().map(take);
     v.extend(iter);
     self.set_len(0);
     return v;
