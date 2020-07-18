@@ -315,6 +315,5 @@ fn TinyVec_move_to_heap_and_shrink() {
   assert_eq!(tv.capacity(), 4);
   tv.extend(2..=4);
   assert_eq!(tv.capacity(), 4);
-  assert_eq!(tv.as_slice(), [1,2,3,4]);
+  assert_eq!(tv.as_slice(), [1, 2, 3, 4]);
 }
-

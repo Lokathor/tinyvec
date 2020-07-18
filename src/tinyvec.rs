@@ -161,11 +161,12 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_inline());
   /// ```
   pub fn shrink_to_fit(&mut self)
-  where A: Default,
+  where
+    A: Default,
   {
     let vec = match self {
       TinyVec::Inline(_) => return,
-      TinyVec::Heap(h)   => h,
+      TinyVec::Heap(h) => h,
     };
 
     if vec.len() > A::CAPACITY {
@@ -191,7 +192,7 @@ impl<A: Array> TinyVec<A> {
   #[allow(clippy::missing_inline_in_public_items)]
   pub fn move_to_the_heap(&mut self) {
     let arr = match self {
-      TinyVec::Heap(_)   => return,
+      TinyVec::Heap(_) => return,
       TinyVec::Inline(a) => a,
     };
 
@@ -211,10 +212,10 @@ impl<A: Array> TinyVec<A> {
   /// ```
   pub fn move_to_the_heap_and_reserve(&mut self, n: usize) {
     let arr = match self {
-      TinyVec::Heap(h)   => return h.reserve(n),
+      TinyVec::Heap(h) => return h.reserve(n),
       TinyVec::Inline(a) => a,
     };
-    
+
     let v = arr.drain_to_vec_and_reserve(n);
     *self = TinyVec::Heap(v);
   }
@@ -231,7 +232,7 @@ impl<A: Array> TinyVec<A> {
   /// ```
   pub fn reserve(&mut self, n: usize) {
     let arr = match self {
-      TinyVec::Heap(h)   => return h.reserve(n),
+      TinyVec::Heap(h) => return h.reserve(n),
       TinyVec::Inline(a) => a,
     };
 
@@ -250,7 +251,7 @@ impl<A: Array> TinyVec<A> {
   /// From [Vec::reserve_exact](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve_exact)
   /// ```text
   /// Note that the allocator may give the collection more space than it requests.
-  /// Therefore, capacity can not be relied upon to be precisely minimal. 
+  /// Therefore, capacity can not be relied upon to be precisely minimal.
   /// Prefer reserve if future insertions are expected.
   /// ```
   /// ```rust
@@ -263,7 +264,7 @@ impl<A: Array> TinyVec<A> {
   /// ```
   pub fn reserve_exact(&mut self, n: usize) {
     let arr = match self {
-      TinyVec::Heap(h)   => return h.reserve_exact(n),
+      TinyVec::Heap(h) => return h.reserve_exact(n),
       TinyVec::Inline(a) => a,
     };
 
@@ -285,7 +286,7 @@ impl<A: Array> TinyVec<A> {
     let iter = other.drain(..);
 
     match self {
-      TinyVec::Heap(h)   => h.extend(iter),
+      TinyVec::Heap(h) => h.extend(iter),
       TinyVec::Inline(a) => a.extend(iter),
     }
   }
@@ -455,7 +456,7 @@ impl<A: Array> TinyVec<A> {
     self.reserve(sli.len());
     match self {
       TinyVec::Inline(a) => a.extend_from_slice(sli),
-      TinyVec::Heap(h)   => h.extend_from_slice(sli),
+      TinyVec::Heap(h) => h.extend_from_slice(sli),
     }
   }
 
@@ -505,19 +506,22 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn insert(&mut self, index: usize, item: A::Item) {
-    assert!(index <= self.len(), 
-        "insertion index (is {}) should be <= len (is {})",
-        index, self.len()
+    assert!(
+      index <= self.len(),
+      "insertion index (is {}) should be <= len (is {})",
+      index,
+      self.len()
     );
 
     let arr = match self {
-      TinyVec::Heap(v)   => return v.insert(index, item),
+      TinyVec::Heap(v) => return v.insert(index, item),
       TinyVec::Inline(a) => a,
     };
 
     if let Some(x) = arr.try_insert(index, item) {
       let mut v = Vec::with_capacity(arr.len() * 2);
-      let mut it = arr.iter_mut().map(|r| core::mem::replace(r, Default::default()));
+      let mut it =
+        arr.iter_mut().map(|r| core::mem::replace(r, Default::default()));
       v.extend(it.by_ref().take(index));
       v.push(x);
       v.extend(it);
@@ -576,7 +580,7 @@ impl<A: Array> TinyVec<A> {
   #[inline(always)]
   pub fn push(&mut self, val: A::Item) {
     let arr = match self {
-      TinyVec::Heap(v)   => return v.push(val),
+      TinyVec::Heap(v) => return v.push(val),
       TinyVec::Inline(a) => a,
     };
 
@@ -663,13 +667,13 @@ impl<A: Array> TinyVec<A> {
   #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(&mut self, new_len: usize, f: F) {
     match new_len.checked_sub(self.len()) {
-      None    => return self.truncate(new_len),
+      None => return self.truncate(new_len),
       Some(n) => self.reserve(n),
     }
 
     match self {
       TinyVec::Inline(a) => a.resize_with(new_len, f),
-      TinyVec::Heap(v)   => v.resize_with(new_len, f),
+      TinyVec::Heap(v) => v.resize_with(new_len, f),
     }
   }
 
@@ -1011,19 +1015,19 @@ impl<A: Array> Extend<A::Item> for TinyVec<A> {
     let (lower_bound, _) = iter.size_hint();
     self.reserve(lower_bound);
 
-	let a = match self {
+    let a = match self {
       TinyVec::Heap(h) => return h.extend(iter),
       TinyVec::Inline(a) => a,
     };
-    
+
     let mut iter = a.fill(iter);
     let maybe = iter.next();
-    
+
     let surely = match maybe {
       Some(x) => x,
       None => return,
     };
-    
+
     let mut v = a.drain_to_vec_and_reserve(a.len());
     v.push(surely);
     v.extend(iter);

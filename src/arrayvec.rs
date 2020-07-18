@@ -147,9 +147,11 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     let new_len = self.len() + other.len();
-    assert!(new_len <= A::CAPACITY, 
-        "ArrayVec::append> total length {} exceeds capacity {}!",
-        new_len, A::CAPACITY
+    assert!(
+      new_len <= A::CAPACITY,
+      "ArrayVec::append> total length {} exceeds capacity {}!",
+      new_len,
+      A::CAPACITY
     );
 
     for item in other.drain(..) {
@@ -174,7 +176,10 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av3, &[7, 8, 9][..]);
   /// ```
   #[inline]
-  pub fn try_append<'other>(&mut self, other: &'other mut Self) -> Option<&'other mut Self> {
+  pub fn try_append<'other>(
+    &mut self,
+    other: &'other mut Self,
+  ) -> Option<&'other mut Self> {
     let new_len = self.len() + other.len();
     if new_len > A::CAPACITY {
       return Some(other);
@@ -403,8 +408,8 @@ impl<A: Array> ArrayVec<A> {
     assert!(x.is_none(), "ArrayVec::insert> capacity overflow!");
   }
 
-  /// Tries to insert an item at the position given, moving all following elements +1
-  /// index.
+  /// Tries to insert an item at the position given, moving all following
+  /// elements +1 index.
   /// Returns back the element if the capacity is exhausted,
   /// otherwise returns None.
   ///
@@ -1507,4 +1512,3 @@ impl<A: Array> ArrayVec<A> {
     self.drain_to_vec_and_reserve(0)
   }
 }
-
