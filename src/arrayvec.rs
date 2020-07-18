@@ -154,9 +154,8 @@ impl<A: Array> ArrayVec<A> {
       A::CAPACITY
     );
 
-    for item in other.drain(..) {
-      self.push(item);
-    }
+    let x = self.try_append(other);
+    debug_assert!(x.is_none());
   }
 
   /// Move all values from `other` into this vec.
@@ -185,9 +184,12 @@ impl<A: Array> ArrayVec<A> {
       return Some(other);
     }
 
-    for item in other.drain(..) {
+    let iter = other.into_iter().map(take);
+    for item in iter {
       self.push(item);
     }
+
+    other.set_len(0);
 
     return None;
   }
@@ -1496,7 +1498,9 @@ impl<A: Array> ArrayVec<A> {
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
-    v.extend(self.drain(..));
+    let iter = self.into_iter().map(take);
+    v.extend(iter);
+    self.set_len(0);
     return v;
   }
 
