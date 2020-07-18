@@ -962,7 +962,8 @@ impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
   fn drop(&mut self) {
     for _ in self.by_ref() {}
 
-    // FIXME: reserve lower bound of size_hint
+    let (lower_bound, _) = self.replacement.size_hint();
+    self.parent.reserve(lower_bound);
 
     for replacement in self.replacement.by_ref() {
       self.parent.insert(self.removal_end, replacement);
