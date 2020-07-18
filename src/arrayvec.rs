@@ -1169,9 +1169,8 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[..self.len];
-    //assert_eq!(self.len, 4);
-    let itemref = slice.get_mut(self.base)?;
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let itemref = slice.first_mut()?;
     self.base += 1;
     return Some(take(itemref));
   }
@@ -1187,22 +1186,38 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
-    let item = slice.first_mut()?;
-    return Some(take(item));
+    self.next_back()
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
-    let slice = &mut self.data.as_slice_mut()[..self.len];
-    let newbase = self.base + n;
-    
-    if let Some(x) = slice.get_mut(newbase) {
-      self.base = newbase + 1;
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+
+    if let Some(x) = slice.get_mut(n) {
+      self.base += n + 1;
       return Some(take(x));
     }
 
     self.base = self.len;
     return None;
+  }
+}
+
+impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
+  #[inline]
+  fn next_back(&mut self) -> Option<Self::Item> {
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let item = slice.last_mut()?;
+    self.len -= 1;
+    return Some(take(item));
+  }
+  #[inline]
+  fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let n = slice.len().checked_sub(n + 1)?;
+    let item = &mut slice[n];
+    self.len = n;
+
+    return Some(take(item));
   }
 }
 

@@ -375,3 +375,33 @@ fn iter_last_nth() {
   assert_eq!(av.into_iter().nth(0), Some(1));
 }
 
+#[test]
+fn reviter() {
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+  av.push(4);
+
+  let mut iter = av.into_iter();
+
+  assert_eq!(iter.next(), Some(1));
+  assert_eq!(iter.next_back(), Some(4));
+  assert_eq!(iter.next(), Some(2));
+  assert_eq!(iter.next_back(), Some(3));
+  assert_eq!(iter.next(), None);
+  assert_eq!(iter.next_back(), None);
+
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+  av.push(4);
+
+  let mut iter = av.into_iter();
+
+  assert_eq!(iter.nth_back(0), Some(4));
+  assert_eq!(iter.nth_back(2), Some(1));
+  assert_eq!(iter.nth_back(0), None);
+  assert_eq!(iter.nth_back(99), None);
+}
