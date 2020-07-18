@@ -184,3 +184,169 @@ fn ArrayVec_drain() {
   assert_eq!(Vec::from_iter(av.clone().drain(1..=1)), vec![2]);
   assert_eq!(Vec::from_iter(av.clone().drain(1..=2)), vec![2, 3]);
 }
+
+#[test]
+fn ArrayVec_splice() {
+  let mut av: ArrayVec<[i32; 10]> = Default::default();
+  av.push(1);
+  av.push(2);
+  av.push(3);
+
+  // splice returns the same things as drain
+  assert_eq!(Vec::from_iter(av.clone().splice(.., None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().splice(..2, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(..3, None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().splice(..=1, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(..=2, None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().splice(0.., None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().splice(1.., None)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().splice(0..2, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(0..3, None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().splice(1..2, None)), vec![2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(1..3, None)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(av.clone().splice(0..=1, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(0..=2, None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(av.clone().splice(1..=1, None)), vec![2]);
+  assert_eq!(Vec::from_iter(av.clone().splice(1..=2, None)), vec![2, 3]);
+
+  // splice removes the same things as drain
+  let mut av2 = av.clone();
+  av2.splice(.., None);
+  assert_eq!(av2, array_vec![]);
+
+  let mut av2 = av.clone();
+  av2.splice(..2, None);
+  assert_eq!(av2, array_vec![3]);
+
+  let mut av2 = av.clone();
+  av2.splice(..3, None);
+  assert_eq!(av2, array_vec![]);
+
+  let mut av2 = av.clone();
+  av2.splice(..=1, None);
+  assert_eq!(av2, array_vec![3]);
+  let mut av2 = av.clone();
+  av2.splice(..=2, None);
+  assert_eq!(av2, array_vec![]);
+
+  let mut av2 = av.clone();
+  av2.splice(0.., None);
+  assert_eq!(av2, array_vec![]);
+  let mut av2 = av.clone();
+  av2.splice(1.., None);
+  assert_eq!(av2, array_vec![1]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..2, None);
+  assert_eq!(av2, array_vec![3]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..3, None);
+  assert_eq!(av2, array_vec![]);
+  let mut av2 = av.clone();
+  av2.splice(1..2, None);
+  assert_eq!(av2, array_vec![1, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..3, None);
+  assert_eq!(av2, array_vec![1]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..=1, None);
+  assert_eq!(av2, array_vec![3]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..=2, None);
+  assert_eq!(av2, array_vec![]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..=1, None);
+  assert_eq!(av2, array_vec![1, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..=2, None);
+  assert_eq!(av2, array_vec![1]);
+
+  // splice adds the elements correctly
+  let mut av2 = av.clone();
+  av2.splice(.., 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(..2, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(..3, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(..=1, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(..=2, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(0.., 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(1.., 4..=6);
+  assert_eq!(av2, array_vec![1, 4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..2, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..3, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..2, 4..=6);
+  assert_eq!(av2, array_vec![1, 4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..3, 4..=6);
+  assert_eq!(av2, array_vec![1, 4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..=1, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(0..=2, 4..=6);
+  assert_eq!(av2, array_vec![4, 5, 6]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..=1, 4..=6);
+  assert_eq!(av2, array_vec![1, 4, 5, 6, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..=2, 4..=6);
+  assert_eq!(av2, array_vec![1, 4, 5, 6]);
+
+  // splice adds the elements correctly when the replacement is smaller
+  let mut av2 = av.clone();
+  av2.splice(.., Some(4));
+  assert_eq!(av2, array_vec![4]);
+
+  let mut av2 = av.clone();
+  av2.splice(..2, Some(4));
+  assert_eq!(av2, array_vec![4, 3]);
+
+  let mut av2 = av.clone();
+  av2.splice(1.., Some(4));
+  assert_eq!(av2, array_vec![1, 4]);
+
+  let mut av2 = av.clone();
+  av2.splice(1..=1, Some(4));
+  assert_eq!(av2, array_vec![1, 4, 3]);
+}

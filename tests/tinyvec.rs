@@ -61,6 +61,172 @@ fn TinyVec_drain() {
 }
 
 #[test]
+fn TinyVec_splice() {
+  let mut tv: TinyVec<[i32; 10]> = Default::default();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+
+  // splice returns the same things as drain
+  assert_eq!(Vec::from_iter(tv.clone().splice(.., None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(tv.clone().splice(..2, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(..3, None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(tv.clone().splice(..=1, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(..=2, None)), vec![1, 2, 3]);
+
+  assert_eq!(Vec::from_iter(tv.clone().splice(0.., None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(1.., None)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(tv.clone().splice(0..2, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(0..3, None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(1..2, None)), vec![2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(1..3, None)), vec![2, 3]);
+
+  assert_eq!(Vec::from_iter(tv.clone().splice(0..=1, None)), vec![1, 2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(0..=2, None)), vec![1, 2, 3]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(1..=1, None)), vec![2]);
+  assert_eq!(Vec::from_iter(tv.clone().splice(1..=2, None)), vec![2, 3]);
+
+  // splice removes the same things as drain
+  let mut tv2 = tv.clone();
+  tv2.splice(.., None);
+  assert_eq!(tv2, tiny_vec![]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..2, None);
+  assert_eq!(tv2, tiny_vec![3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..3, None);
+  assert_eq!(tv2, tiny_vec![]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..=1, None);
+  assert_eq!(tv2, tiny_vec![3]);
+  let mut tv2 = tv.clone();
+  tv2.splice(..=2, None);
+  assert_eq!(tv2, tiny_vec![]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0.., None);
+  assert_eq!(tv2, tiny_vec![]);
+  let mut tv2 = tv.clone();
+  tv2.splice(1.., None);
+  assert_eq!(tv2, tiny_vec![1]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..2, None);
+  assert_eq!(tv2, tiny_vec![3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..3, None);
+  assert_eq!(tv2, tiny_vec![]);
+  let mut tv2 = tv.clone();
+  tv2.splice(1..2, None);
+  assert_eq!(tv2, tiny_vec![1, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..3, None);
+  assert_eq!(tv2, tiny_vec![1]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..=1, None);
+  assert_eq!(tv2, tiny_vec![3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..=2, None);
+  assert_eq!(tv2, tiny_vec![]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..=1, None);
+  assert_eq!(tv2, tiny_vec![1, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..=2, None);
+  assert_eq!(tv2, tiny_vec![1]);
+
+  // splice adds the elements correctly
+  let mut tv2 = tv.clone();
+  tv2.splice(.., 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..2, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..3, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..=1, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..=2, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0.., 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1.., 4..=6);
+  assert_eq!(tv2, tiny_vec![1, 4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..2, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..3, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..2, 4..=6);
+  assert_eq!(tv2, tiny_vec![1, 4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..3, 4..=6);
+  assert_eq!(tv2, tiny_vec![1, 4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..=1, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(0..=2, 4..=6);
+  assert_eq!(tv2, tiny_vec![4, 5, 6]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..=1, 4..=6);
+  assert_eq!(tv2, tiny_vec![1, 4, 5, 6, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..=2, 4..=6);
+  assert_eq!(tv2, tiny_vec![1, 4, 5, 6]);
+
+  // splice adds the elements correctly when the replacement is smaller
+  let mut tv2 = tv.clone();
+  tv2.splice(.., Some(4));
+  assert_eq!(tv2, tiny_vec![4]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(..2, Some(4));
+  assert_eq!(tv2, tiny_vec![4, 3]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1.., Some(4));
+  assert_eq!(tv2, tiny_vec![1, 4]);
+
+  let mut tv2 = tv.clone();
+  tv2.splice(1..=1, Some(4));
+  assert_eq!(tv2, tiny_vec![1, 4, 3]);
+}
+
+#[test]
 fn TinyVec_resize() {
   let mut tv: TinyVec<[i32; 10]> = Default::default();
   tv.resize(20, 5);
@@ -149,6 +315,5 @@ fn TinyVec_move_to_heap_and_shrink() {
   assert_eq!(tv.capacity(), 4);
   tv.extend(2..=4);
   assert_eq!(tv.capacity(), 4);
-  assert_eq!(tv.as_slice(), [1,2,3,4]);
+  assert_eq!(tv.as_slice(), [1, 2, 3, 4]);
 }
-
