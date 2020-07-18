@@ -392,6 +392,10 @@ fn reviter() {
   assert_eq!(iter.next(), None);
   assert_eq!(iter.next_back(), None);
 
+  /* @Soveu: nth_back is stable from 1.37
+   * If minimal version of rust gets updated, uncomment this code
+   */
+  /*
   let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);
   av.push(2);
@@ -404,4 +408,5 @@ fn reviter() {
   assert_eq!(iter.nth_back(2), Some(1));
   assert_eq!(iter.nth_back(0), None);
   assert_eq!(iter.nth_back(99), None);
+  */
 }
