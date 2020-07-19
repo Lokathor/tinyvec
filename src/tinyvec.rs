@@ -282,12 +282,15 @@ impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    match other {
-      TinyVec::Heap(h) => self.extend(h.drain(..)),
-      TinyVec::Inline(a) => {
-        let iter = a.into_iter().map(take);
-        self.extend(iter);
-        a.set_len(0);
+    self.reserve(other.len());
+
+    match (self, other) {
+      (TinyVec::Heap(sh), TinyVec::Heap(oh)) => sh.append(oh),
+      (TinyVec::Inline(a), TinyVec::Heap(h)) => a.extend(h.drain(..)),
+      (ref mut this, TinyVec::Inline(arr)) => {
+        let iter = arr.iter_mut().map(take);
+        this.extend(iter);
+        arr.set_len(0);
       }
     }
   }
