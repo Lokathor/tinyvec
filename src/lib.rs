@@ -89,6 +89,9 @@ pub use arrayset::*;
 mod arrayvec;
 pub use arrayvec::*;
 
+mod drain;
+pub use drain::*;
+
 mod slicevec;
 pub use slicevec::*;
 

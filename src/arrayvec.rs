@@ -92,7 +92,7 @@ macro_rules! array_vec {
 #[derive(Clone, Copy, Default)]
 pub struct ArrayVec<A: Array> {
   len: usize,
-  data: A,
+  pub(crate) data: A,
 }
 
 impl<A: Array> Deref for ArrayVec<A> {
@@ -268,39 +268,11 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av.as_slice(), &[]);
   /// ```
   #[inline]
-  pub fn drain<R: RangeBounds<usize>>(
-    &mut self,
-    range: R,
-  ) -> ArrayVecDrain<'_, A> {
-    use core::ops::Bound;
-    let start = match range.start_bound() {
-      Bound::Included(x) => *x,
-      Bound::Excluded(x) => x + 1,
-      Bound::Unbounded => 0,
-    };
-    let end = match range.end_bound() {
-      Bound::Included(x) => x + 1,
-      Bound::Excluded(x) => *x,
-      Bound::Unbounded => self.len,
-    };
-    assert!(
-      start <= end,
-      "ArrayVec::drain> Illegal range, {} to {}",
-      start,
-      end
-    );
-    assert!(
-      end <= self.len,
-      "ArrayVec::drain> Range ends at {} but length is only {}!",
-      end,
-      self.len
-    );
-    ArrayVecDrain {
-      parent: self,
-      target_start: start,
-      target_index: start,
-      target_end: end,
-    }
+  pub fn drain<R>(&mut self, range: R) -> ArrayVecDrain<'_, A::Item>
+  where
+    R: RangeBounds<usize>,
+  {
+    ArrayVecDrain::new(self, range)
   }
 
   /// Clone each element of the slice into this `ArrayVec`.
@@ -939,44 +911,6 @@ impl<A: Array> ArrayVec<A> {
     K: PartialEq,
   {
     self.dedup_by(|a, b| key(a) == key(b))
-  }
-}
-
-/// Draining iterator for [`ArrayVec`]
-///
-/// See [`ArrayVec::drain`](ArrayVec::drain)
-pub struct ArrayVecDrain<'p, A: Array> {
-  parent: &'p mut ArrayVec<A>,
-  target_start: usize,
-  target_index: usize,
-  target_end: usize,
-}
-impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
-  type Item = A::Item;
-  #[inline]
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.target_index != self.target_end {
-      let out = take(&mut self.parent[self.target_index]);
-      self.target_index += 1;
-      Some(out)
-    } else {
-      None
-    }
-  }
-}
-impl<'p, A: Array> FusedIterator for ArrayVecDrain<'p, A> {}
-impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
-  #[inline]
-  fn drop(&mut self) {
-    // Changed because it was moving `self`, it's also more clear and the std
-    // does the same
-    self.for_each(drop);
-    // Implementation very similar to [`ArrayVec::remove`](ArrayVec::remove)
-    let count = self.target_end - self.target_start;
-    let targets: &mut [A::Item] =
-      &mut self.parent.deref_mut()[self.target_start..];
-    targets.rotate_left(count);
-    self.parent.len -= count;
   }
 }
 
