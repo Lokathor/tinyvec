@@ -1144,10 +1144,7 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
     self.len -= 1;
     return Some(take(item));
   }
-  /* @Soveu: nth_back is stable from 1.37
-   * If minimal version of rust gets updated, uncomment this code
-   */
-  /*
+  #[cfg(feature = "rustc_1_40")]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     let slice = &mut self.data.as_slice_mut()[self.base..self.len];
@@ -1157,7 +1154,6 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
 
     return Some(take(item));
   }
-  */
 }
 
 impl<A: Array> Debug for ArrayVecIterator<A>

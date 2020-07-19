@@ -59,11 +59,11 @@ impl<'a, T: 'a + Default> DoubleEndedIterator for ArrayVecDrain<'a, T> {
   fn next_back(&mut self) -> Option<Self::Item> {
     self.iter.next_back().map(take)
   }
-  /*
+
+  #[cfg(feature = "rustc_1_40")]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-      self.iter.nth_back(n).map(take)
+    self.iter.nth_back(n).map(take)
   }
-  */
 }
 
 impl<'a, T: 'a + Default> Iterator for ArrayVecDrain<'a, T> {

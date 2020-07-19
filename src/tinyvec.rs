@@ -280,18 +280,26 @@ impl<A: Array> TinyVec<A> {
 
 impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
+  #[cfg(feature = "rustc_1_40")]
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     self.reserve(other.len());
 
+    /* Doing append should be faster, because it is effectively a memcpy */
     match (self, other) {
       (TinyVec::Heap(sh), TinyVec::Heap(oh)) => sh.append(oh),
       (TinyVec::Inline(a), TinyVec::Heap(h)) => a.extend(h.drain(..)),
-      (ref mut this, TinyVec::Inline(arr)) => {
-        let iter = arr.iter_mut().map(take);
-        this.extend(iter);
-        arr.set_len(0);
-      }
+      (ref mut this, TinyVec::Inline(arr)) => this.extend(arr.drain(..)),
+    }
+  }
+
+  /// Move all values from `other` into this vec.
+  #[cfg(not(feature = "rustc_1_40"))]
+  #[inline]
+  pub fn append(&mut self, other: &mut Self) {
+    match other {
+      TinyVec::Inline(a) => self.extend(a.drain(..)),
+      TinyVec::Heap(h) => self.extend(h.drain(..)),
     }
   }
 
