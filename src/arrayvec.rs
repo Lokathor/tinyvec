@@ -496,11 +496,14 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn try_push(&mut self, val: A::Item) -> Option<A::Item> {
-    if self.len == A::CAPACITY {
-      return Some(val);
-    }
+    debug_assert!(self.len <= A::CAPACITY);
 
-    self.data.as_slice_mut()[self.len] = val;
+    let itemref = match self.data.as_slice_mut().get_mut(self.len) {
+      None => return Some(val),
+      Some(x) => x,
+    };
+
+    *itemref = val;
     self.len += 1;
     return None;
   }
