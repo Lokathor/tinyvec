@@ -146,16 +146,12 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    let new_len = self.len() + other.len();
     assert!(
-      new_len <= A::CAPACITY,
+      self.try_append(other).is_none(),
       "ArrayVec::append> total length {} exceeds capacity {}!",
-      new_len,
+      self.len() + other.len(),
       A::CAPACITY
     );
-
-    let x = self.try_append(other);
-    debug_assert!(x.is_none());
   }
 
   /// Move all values from `other` into this vec.
