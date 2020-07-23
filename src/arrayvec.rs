@@ -92,7 +92,7 @@ macro_rules! array_vec {
 #[derive(Clone, Copy, Default)]
 pub struct ArrayVec<A: Array> {
   len: usize,
-  data: A,
+  pub(crate) data: A,
 }
 
 impl<A: Array> Deref for ArrayVec<A> {
@@ -146,17 +146,12 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
-    let new_len = self.len() + other.len();
     assert!(
-      new_len <= A::CAPACITY,
+      self.try_append(other).is_none(),
       "ArrayVec::append> total length {} exceeds capacity {}!",
-      new_len,
+      self.len() + other.len(),
       A::CAPACITY
     );
-
-    for item in other.drain(..) {
-      self.push(item);
-    }
   }
 
   /// Move all values from `other` into this vec.
@@ -185,9 +180,12 @@ impl<A: Array> ArrayVec<A> {
       return Some(other);
     }
 
-    for item in other.drain(..) {
+    let iter = other.iter_mut().map(take);
+    for item in iter {
       self.push(item);
     }
+
+    other.set_len(0);
 
     return None;
   }
@@ -266,39 +264,11 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av.as_slice(), &[]);
   /// ```
   #[inline]
-  pub fn drain<R: RangeBounds<usize>>(
-    &mut self,
-    range: R,
-  ) -> ArrayVecDrain<'_, A> {
-    use core::ops::Bound;
-    let start = match range.start_bound() {
-      Bound::Included(x) => *x,
-      Bound::Excluded(x) => x + 1,
-      Bound::Unbounded => 0,
-    };
-    let end = match range.end_bound() {
-      Bound::Included(x) => x + 1,
-      Bound::Excluded(x) => *x,
-      Bound::Unbounded => self.len,
-    };
-    assert!(
-      start <= end,
-      "ArrayVec::drain> Illegal range, {} to {}",
-      start,
-      end
-    );
-    assert!(
-      end <= self.len,
-      "ArrayVec::drain> Range ends at {} but length is only {}!",
-      end,
-      self.len
-    );
-    ArrayVecDrain {
-      parent: self,
-      target_start: start,
-      target_index: start,
-      target_end: end,
-    }
+  pub fn drain<R>(&mut self, range: R) -> ArrayVecDrain<'_, A::Item>
+  where
+    R: RangeBounds<usize>,
+  {
+    ArrayVecDrain::new(self, range)
   }
 
   /// Clone each element of the slice into this `ArrayVec`.
@@ -526,11 +496,14 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn try_push(&mut self, val: A::Item) -> Option<A::Item> {
-    if self.len == A::CAPACITY {
-      return Some(val);
-    }
+    debug_assert!(self.len <= A::CAPACITY);
 
-    self.data.as_slice_mut()[self.len] = val;
+    let itemref = match self.data.as_slice_mut().get_mut(self.len) {
+      None => return Some(val),
+      Some(x) => x,
+    };
+
+    *itemref = val;
     self.len += 1;
     return None;
   }
@@ -940,44 +913,6 @@ impl<A: Array> ArrayVec<A> {
   }
 }
 
-/// Draining iterator for [`ArrayVec`]
-///
-/// See [`ArrayVec::drain`](ArrayVec::drain)
-pub struct ArrayVecDrain<'p, A: Array> {
-  parent: &'p mut ArrayVec<A>,
-  target_start: usize,
-  target_index: usize,
-  target_end: usize,
-}
-impl<'p, A: Array> Iterator for ArrayVecDrain<'p, A> {
-  type Item = A::Item;
-  #[inline]
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.target_index != self.target_end {
-      let out = take(&mut self.parent[self.target_index]);
-      self.target_index += 1;
-      Some(out)
-    } else {
-      None
-    }
-  }
-}
-impl<'p, A: Array> FusedIterator for ArrayVecDrain<'p, A> {}
-impl<'p, A: Array> Drop for ArrayVecDrain<'p, A> {
-  #[inline]
-  fn drop(&mut self) {
-    // Changed because it was moving `self`, it's also more clear and the std
-    // does the same
-    self.for_each(drop);
-    // Implementation very similar to [`ArrayVec::remove`](ArrayVec::remove)
-    let count = self.target_end - self.target_start;
-    let targets: &mut [A::Item] =
-      &mut self.parent.deref_mut()[self.target_start..];
-    targets.rotate_left(count);
-    self.parent.len -= count;
-  }
-}
-
 /// Splicing iterator for `ArrayVec`
 /// See [`ArrayVec::splice`](ArrayVec::<A>::splice)
 pub struct ArrayVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
@@ -1167,13 +1102,10 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    if self.base < self.len {
-      let out = take(&mut self.data.as_slice_mut()[self.base]);
-      self.base += 1;
-      Some(out)
-    } else {
-      None
-    }
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let itemref = slice.first_mut()?;
+    self.base += 1;
+    return Some(take(itemref));
   }
   #[inline(always)]
   #[must_use]
@@ -1187,18 +1119,39 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
-    Some(take(&mut self.data.as_slice_mut()[self.len]))
+    self.next_back()
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
-    let i = self.base + (n - 1);
-    if i < self.len {
-      let out = take(&mut self.data.as_slice_mut()[i]);
-      self.base = i + 1;
-      Some(out)
-    } else {
-      None
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+
+    if let Some(x) = slice.get_mut(n) {
+      self.base += n + 1;
+      return Some(take(x));
     }
+
+    self.base = self.len;
+    return None;
+  }
+}
+
+impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
+  #[inline]
+  fn next_back(&mut self) -> Option<Self::Item> {
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let item = slice.last_mut()?;
+    self.len -= 1;
+    return Some(take(item));
+  }
+  #[cfg(feature = "rustc_1_40")]
+  #[inline]
+  fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let n = slice.len().checked_sub(n + 1)?;
+    let item = &mut slice[n];
+    self.len = n;
+
+    return Some(take(item));
   }
 }
 
@@ -1496,7 +1449,9 @@ impl<A: Array> ArrayVec<A> {
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
-    v.extend(self.drain(..));
+    let iter = self.iter_mut().map(take);
+    v.extend(iter);
+    self.set_len(0);
     return v;
   }
 

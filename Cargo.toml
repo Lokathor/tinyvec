@@ -41,6 +41,11 @@ experimental_write_impl = []
 # small size without allocation.
 experimental_array_set = []
 
+# features that require rustc 1.40
+# use Vec::append if possible in TinyVec::append - 1.37
+# DoubleEndedIterator::nth_back - 1.40
+rustc_1_40 = []
+
 [badges]
 appveyor = { repository = "Lokathor/tinyvec" }
 travis-ci = { repository = "Lokathor/tinyvec" }

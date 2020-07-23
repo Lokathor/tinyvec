@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 tinyvec = { path = "..", features = ["alloc", "nightly_slice_partition_dedup"] }
-arbitrary-model-tests = { git = "https://github.com/jakubadamw/arbitrary-model-tests" }
+rutenspitz = "0.2"
 honggfuzz = "0.5.45"
 arbitrary = "0.2.0"
 better-panic = "0.2.0"
