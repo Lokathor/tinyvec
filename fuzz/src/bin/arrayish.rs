@@ -2,7 +2,7 @@ use honggfuzz::fuzz;
 use std::{
   fmt::Debug,
   iter::FromIterator,
-  ops::{Bound, RangeBounds},
+  ops::RangeBounds,
 };
 use rutenspitz::arbitrary_stateful_operations;
 
