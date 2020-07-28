@@ -1,11 +1,10 @@
-use arbitrary_model_tests::arbitrary_stateful_operations;
-use derive_arbitrary::Arbitrary;
 use honggfuzz::fuzz;
 use std::{
   fmt::Debug,
   iter::FromIterator,
   ops::{Bound, RangeBounds},
 };
+use rutenspitz::arbitrary_stateful_operations;
 
 use tinyvec::TinyVec;
 use tinyvec_fuzz::ArbRange;
@@ -82,12 +81,10 @@ arbitrary_stateful_operations! {
     }
 }
 
-const MAX_RING_SIZE: usize = 16_384;
-
 fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
-  use arbitrary::{Arbitrary, FiniteBuffer};
+  use arbitrary::{Arbitrary, Unstructured};
 
-  let mut ring = FiniteBuffer::new(&data, MAX_RING_SIZE).map_err(|_| ())?;
+  let mut ring = Unstructured::new(&data);
 
   let mut model = Vec::<u16>::default();
   let mut tested: TinyVec<[u16; 32]> = TinyVec::new();
