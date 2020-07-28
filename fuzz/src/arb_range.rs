@@ -1,4 +1,4 @@
-use arbitrary::{Arbitrary, Unstructured};
+use arbitrary::{Arbitrary, Result, Unstructured};
 use std::ops::{
   Bound, Range, RangeBounds, RangeFrom, RangeInclusive, RangeTo,
   RangeToInclusive,
@@ -50,7 +50,7 @@ impl<T> RangeBounds<T> for ArbRange<T> {
 }
 
 impl<T: Arbitrary> Arbitrary for ArbRange<T> {
-  fn arbitrary<U: Unstructured + ?Sized>(u: &mut U) -> Result<Self, U::Error> {
+  fn arbitrary(u: &mut Unstructured) -> Result<Self> {
     let variant = u8::arbitrary(u)? % 5;
     Ok(match variant {
       0 => ArbRange::Range(T::arbitrary(u)?..T::arbitrary(u)?),
