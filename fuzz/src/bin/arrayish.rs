@@ -47,37 +47,16 @@ arbitrary_stateful_operations! {
 
     pre {
         match self {
-            Self::insert { index, .. } | Self::split_off { at: index } if index > model.len() => {
-                // TODO: Should test that these identically panic
-                return;
-            }
-            Self::remove { index } | Self::swap_remove { index } if index >= model.len() => {
-                // TODO: Should test that these identically panic
-                return;
-            }
+            // We are comparing ArrayVec with a limited capacity against
+            // Vec to which you can push indefinitely. This is a behavior mismatch.
+            // To compensate we skip adding any elements if it would exceed capacity.
             Self::insert { .. } | Self::push { .. } if model.len() == CAPACITY => {
                 return;
             }
             Self::resize { new_len, .. } if new_len > CAPACITY => {
                 return;
             }
-            Self::drain { ref range } => {
-                // TODO: Should test that these identically panic
-                let start = match range.start_bound() {
-                    Bound::Included(&n) => n,
-                    Bound::Excluded(&n) => n + 1,
-                    Bound::Unbounded => 0,
-                };
-                let end = match range.end_bound() {
-                    // If it's already usize::max, doesn't really matter about adding 1
-                    Bound::Included(&n) => n.checked_add(1).unwrap_or(n),
-                    Bound::Excluded(&n) => n,
-                    Bound::Unbounded => model.len(),
-                };
-                if start > end || end > model.len() {
-                    return;
-                }
-            }
+
             _ => {}
         }
     }
@@ -89,7 +68,7 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
   let mut ring = Unstructured::new(&data);
 
   let mut model = Vec::<u16>::default();
-  let mut tested: ArrayVec<[u16; 32]> = ArrayVec::new();
+  let mut tested: ArrayVec<[u16; CAPACITY]> = ArrayVec::new();
 
   let mut _op_trace = String::new();
   while let Ok(op) =

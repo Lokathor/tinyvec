@@ -2,7 +2,7 @@ use honggfuzz::fuzz;
 use std::{
   fmt::Debug,
   iter::FromIterator,
-  ops::{Bound, RangeBounds},
+  ops::RangeBounds},
 };
 use rutenspitz::arbitrary_stateful_operations;
 
@@ -47,34 +47,9 @@ arbitrary_stateful_operations! {
 
     pre {
         match self {
-            Self::insert { index, .. } | Self::split_off { at: index } if index > model.len() => {
-                // TODO: Should test that these identically panic
-                return;
-            }
-            Self::remove { index } | Self::swap_remove { index } if index >= model.len() => {
-                // TODO: Should test that these identically panic
-                return;
-            }
             // Arbitrary limit to avoid allocating too large a buffer
             Self::resize { new_len, .. } if new_len > 4 * CAPACITY => {
                 return;
-            }
-            Self::drain { ref range } => {
-                // TODO: Should test that these identically panic
-                let start = match range.start_bound() {
-                    Bound::Included(&n) => n,
-                    Bound::Excluded(&n) => n + 1,
-                    Bound::Unbounded => 0,
-                };
-                let end = match range.end_bound() {
-                    // If it's already usize::max, doesn't really matter about adding 1
-                    Bound::Included(&n) => n.checked_add(1).unwrap_or(n),
-                    Bound::Excluded(&n) => n,
-                    Bound::Unbounded => model.len(),
-                };
-                if start > end || end > model.len() {
-                    return;
-                }
             }
             _ => {}
         }
@@ -87,7 +62,7 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
   let mut ring = Unstructured::new(&data);
 
   let mut model = Vec::<u16>::default();
-  let mut tested: TinyVec<[u16; 32]> = TinyVec::new();
+  let mut tested: TinyVec<[u16; CAPACITY]> = TinyVec::new();
 
   let mut _op_trace = String::new();
   while let Ok(op) =
