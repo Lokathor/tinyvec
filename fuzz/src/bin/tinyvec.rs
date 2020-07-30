@@ -26,6 +26,7 @@ arbitrary_stateful_operations! {
             fn as_slice(&self) -> &[T];
             fn clear(&mut self);
             fn dedup(&mut self);
+            fn extend_from_slice(&mut self, sli: &Box<[T]>);
             fn insert(&mut self, index: usize, item: T);
             fn is_empty(&self) -> bool;
             fn len(&self) -> usize;
@@ -58,6 +59,9 @@ arbitrary_stateful_operations! {
                 return;
             },
             Self::reserve_exact { n } if model.capacity().saturating_add(n) > 4 * CAPACITY => {
+                return;
+            },
+            Self::extend_from_slice { sli } if model.len().saturating_add(sli.len()) > 4 * CAPACITY => {
                 return;
             },
             _ => {}
