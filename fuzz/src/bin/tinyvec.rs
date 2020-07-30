@@ -32,7 +32,10 @@ arbitrary_stateful_operations! {
             fn pop(&mut self) -> Option<T>;
             fn push(&mut self, item: T);
             fn remove(&mut self, index: usize) -> T;
+            fn reserve(&mut self, n: usize);
+            fn reserve_exact(&mut self, n: usize);
             fn resize(&mut self, new_len: usize, new_val: T);
+            fn shrink_to_fit(&mut self);
             fn swap_remove(&mut self, index: usize) -> T;
             fn truncate(&mut self, new_len: usize);
         }
@@ -50,7 +53,13 @@ arbitrary_stateful_operations! {
             // Arbitrary limit to avoid allocating too large a buffer
             Self::resize { new_len, .. } if new_len > 4 * CAPACITY => {
                 return;
-            }
+            },
+            Self::reserve { n } if model.capacity() + n > 4 * CAPACITY => {
+                return;
+            },
+            Self::reserve_exact { n } if model.capacity() + n > 4 * CAPACITY => {
+                return;
+            },
             _ => {}
         }
     }
