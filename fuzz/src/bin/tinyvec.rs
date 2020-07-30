@@ -54,10 +54,10 @@ arbitrary_stateful_operations! {
             Self::resize { new_len, .. } if new_len > 4 * CAPACITY => {
                 return;
             },
-            Self::reserve { n } if model.capacity() + n > 4 * CAPACITY => {
+            Self::reserve { n } if model.capacity().saturating_add(n) > 4 * CAPACITY => {
                 return;
             },
-            Self::reserve_exact { n } if model.capacity() + n > 4 * CAPACITY => {
+            Self::reserve_exact { n } if model.capacity().saturating_add(n) > 4 * CAPACITY => {
                 return;
             },
             _ => {}
