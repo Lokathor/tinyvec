@@ -393,16 +393,14 @@ fn reviter() {
   assert_eq!(iter.next(), None);
   assert_eq!(iter.next_back(), None);
 
-  let mut av: ArrayVec<[i32; 10]> = Default::default();
-  av.push(1);
-  av.push(2);
-  av.push(3);
-  av.push(4);
+  let mut av: ArrayVec<[i32; 32]> = Default::default();
+  av.extend(0..32);
 
   let mut iter = av.into_iter();
 
-  assert_eq!(iter.nth_back(0), Some(4));
-  assert_eq!(iter.nth_back(2), Some(1));
-  assert_eq!(iter.nth_back(0), None);
+  assert_eq!(iter.nth_back(0), Some(31));
+  assert_eq!(iter.nth_back(2), Some(28));
+  assert_eq!(iter.nth_back(0), Some(27));
+  assert_eq!(iter.nth_back(99), None);
   assert_eq!(iter.nth_back(99), None);
 }
