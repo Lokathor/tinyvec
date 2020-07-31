@@ -1,4 +1,5 @@
 use super::*;
+use core::convert::TryInto;
 
 /// Helper to make an `ArrayVec`.
 ///
@@ -91,7 +92,7 @@ macro_rules! array_vec {
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub struct ArrayVec<A: Array> {
-  len: usize,
+  len: u16,
   pub(crate) data: A,
 }
 
@@ -100,7 +101,7 @@ impl<A: Array> Deref for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref(&self) -> &Self::Target {
-    &self.data.as_slice()[..self.len]
+    &self.data.as_slice()[..self.len as usize]
   }
 }
 
@@ -108,7 +109,7 @@ impl<A: Array> DerefMut for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn deref_mut(&mut self) -> &mut Self::Target {
-    &mut self.data.as_slice_mut()[..self.len]
+    &mut self.data.as_slice_mut()[..self.len as usize]
   }
 }
 
@@ -284,7 +285,7 @@ impl<A: Array> ArrayVec<A> {
       return;
     }
 
-    let new_len = self.len + sli.len();
+    let new_len = self.len as usize + sli.len();
     assert!(
       new_len <= A::CAPACITY,
       "ArrayVec::extend_from_slice> total length {} exceeds capacity {}!",
@@ -292,7 +293,7 @@ impl<A: Array> ArrayVec<A> {
       A::CAPACITY
     );
 
-    let target = &mut self.data.as_slice_mut()[self.len..new_len];
+    let target = &mut self.data.as_slice_mut()[self.len as usize..new_len];
     target.clone_from_slice(sli);
     self.set_len(new_len);
   }
@@ -397,7 +398,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
     assert!(
-      index <= self.len,
+      index <= self.len as usize,
       "ArrayVec::try_insert> index {} is out of bounds {}",
       index,
       self.len
@@ -422,7 +423,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   pub fn len(&self) -> usize {
-    self.len
+    self.len as usize
   }
 
   /// Makes a new, empty `ArrayVec`.
@@ -452,7 +453,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
       self.len -= 1;
-      let out = take(&mut self.data.as_slice_mut()[self.len]);
+      let out = take(&mut self.data.as_slice_mut()[self.len as usize]);
       Some(out)
     } else {
       None
@@ -496,9 +497,9 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn try_push(&mut self, val: A::Item) -> Option<A::Item> {
-    debug_assert!(self.len <= A::CAPACITY);
+    debug_assert!(self.len as usize <= A::CAPACITY);
 
-    let itemref = match self.data.as_slice_mut().get_mut(self.len) {
+    let itemref = match self.data.as_slice_mut().get_mut(self.len as usize) {
       None => return Some(val),
       Some(x) => x,
     };
@@ -585,7 +586,7 @@ impl<A: Array> ArrayVec<A> {
     new_len: usize,
     mut f: F,
   ) {
-    match new_len.checked_sub(self.len) {
+    match new_len.checked_sub(self.len as usize) {
       None => self.truncate(new_len),
       Some(new_elements) => {
         for _ in 0..new_elements {
@@ -624,12 +625,13 @@ impl<A: Array> ArrayVec<A> {
     }
 
     let mut rest = JoinOnDrop {
-      items: &mut self.data.as_slice_mut()[..self.len],
+      items: &mut self.data.as_slice_mut()[..self.len as usize],
       done_end: 0,
       tail_start: 0,
     };
 
-    for idx in 0..self.len {
+    let len = self.len as usize;
+    for idx in 0..len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
       if !acceptable(&rest.items[idx]) {
         let _ = take(&mut rest.items[idx]);
@@ -664,9 +666,11 @@ impl<A: Array> ArrayVec<A> {
         new_len,
         A::CAPACITY
       )
-    } else {
-      self.len = new_len;
     }
+
+    let new_len: u16 = new_len.try_into()
+        .expect("ArrayVec::set_len> new length is not in range 0..=u16::MAX");
+    self.len = new_len;
   }
 
   /// Splits the collection at the point given.
@@ -692,7 +696,7 @@ impl<A: Array> ArrayVec<A> {
     Self: Default,
   {
     // FIXME: should this just use drain into the output?
-    if at > self.len {
+    if at > self.len() {
       panic!(
         "ArrayVec::split_off> at value {} exceeds length of {}",
         at, self.len
@@ -703,8 +707,10 @@ impl<A: Array> ArrayVec<A> {
     let split_len = moves.len();
     let targets = &mut new.data.as_slice_mut()[..split_len];
     moves.swap_with_slice(targets);
-    new.len = split_len;
-    self.len = at;
+
+    /* moves.len() <= u16::MAX, so these are surely in u16 range */
+    new.len = split_len as u16;
+    self.len = at as u16;
     new
   }
 
@@ -795,12 +801,12 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn swap_remove(&mut self, index: usize) -> A::Item {
     assert!(
-      index < self.len,
+      index < self.len(),
       "ArrayVec::swap_remove> index {} is out of bounds {}",
       index,
       self.len
     );
-    if index == self.len - 1 {
+    if index == self.len() - 1 {
       self.pop().unwrap()
     } else {
       let i = self.pop().unwrap();
@@ -813,13 +819,20 @@ impl<A: Array> ArrayVec<A> {
   /// If the vec is already shorter than the input, nothing happens.
   #[inline]
   pub fn truncate(&mut self, new_len: usize) {
-    if needs_drop::<A::Item>() {
-      while self.len > new_len {
-        self.pop();
-      }
-    } else {
-      self.len = self.len.min(new_len);
+    if new_len >= self.len as usize {
+      return;
     }
+
+    if needs_drop::<A::Item>() {
+      let len = self.len as usize;
+      self.data.as_slice_mut()[new_len .. len]
+        .iter_mut()
+        .map(take)
+        .for_each(drop);
+    }
+
+    /* new_len is less than self.len */
+    self.len = new_len as u16;
   }
 
   /// Wraps an array, using the given length as the starting length.
@@ -833,8 +846,9 @@ impl<A: Array> ArrayVec<A> {
   /// error, and you'll get the array back in the `Err`.
   #[inline]
   pub fn try_from_array_len(data: A, len: usize) -> Result<Self, A> {
+    /* Note(Soveu): Should we allow A::CAPACITY > u16::MAX for now? */
     if len <= A::CAPACITY {
-      Ok(Self { data, len })
+      Ok(Self { data, len: len as u16 })
     } else {
       Err(data)
     }
@@ -858,7 +872,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn grab_spare_slice(&self) -> &[A::Item] {
-    &self.data.as_slice()[self.len..]
+    &self.data.as_slice()[self.len as usize..]
   }
 
   /// Obtain the mutable slice of the array _after_ the active memory.
@@ -874,7 +888,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline(always)]
   pub fn grab_spare_slice_mut(&mut self) -> &mut [A::Item] {
-    &mut self.data.as_slice_mut()[self.len..]
+    &mut self.data.as_slice_mut()[self.len as usize..]
   }
 }
 
@@ -1066,7 +1080,9 @@ impl<A: Array> From<A> for ArrayVec<A> {
   /// If you want to select a length, use
   /// [`from_array_len`](ArrayVec::from_array_len)
   fn from(data: A) -> Self {
-    Self { len: data.as_slice().len(), data }
+    let len: u16 = data.as_slice().len().try_into()
+      .expect("ArrayVec::from> lenght must be in range 0..=u16::MAX");
+    Self { len, data }
   }
 }
 
@@ -1084,8 +1100,8 @@ impl<A: Array + Default> FromIterator<A::Item> for ArrayVec<A> {
 
 /// Iterator for consuming an `ArrayVec` and returning owned elements.
 pub struct ArrayVecIterator<A: Array> {
-  base: usize,
-  len: usize,
+  base: u16,
+  len: u16,
   data: A,
 }
 
@@ -1094,7 +1110,7 @@ impl<A: Array> ArrayVecIterator<A> {
   #[inline]
   #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
-    &self.data.as_slice()[self.base..self.len]
+    &self.data.as_slice()[self.base as usize..self.len as usize]
   }
 }
 impl<A: Array> FusedIterator for ArrayVecIterator<A> {}
@@ -1102,7 +1118,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let itemref = slice.first_mut()?;
     self.base += 1;
     return Some(take(itemref));
@@ -1111,11 +1127,12 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[must_use]
   fn size_hint(&self) -> (usize, Option<usize>) {
     let s = self.len - self.base;
+    let s = s as usize;
     (s, Some(s))
   }
   #[inline(always)]
   fn count(self) -> usize {
-    self.len - self.base
+    self.size_hint().0
   }
   #[inline]
   fn last(mut self) -> Option<Self::Item> {
@@ -1123,10 +1140,12 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   }
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let slice = &mut self.data.as_slice_mut();
+    let slice = &mut slice[self.base as usize..self.len as usize];
 
     if let Some(x) = slice.get_mut(n) {
-      self.base += n + 1;
+      /* n is in range [0 .. self.len - self.base) so in u16 range */
+      self.base += n as u16 + 1;
       return Some(take(x));
     }
 
@@ -1138,7 +1157,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
 impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let item = slice.last_mut()?;
     self.len -= 1;
     return Some(take(item));
@@ -1146,10 +1165,12 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[cfg(feature = "rustc_1_40")]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base..self.len];
+    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let n = slice.len().checked_sub(n + 1)?;
     let item = &mut slice[n];
-    self.len = n;
+
+    /* n is in [0..self.len - self.base] range, so in u16 range */
+    self.len = self.base + n as u16;
 
     return Some(take(item));
   }
