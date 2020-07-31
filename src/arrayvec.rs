@@ -668,8 +668,9 @@ impl<A: Array> ArrayVec<A> {
       )
     }
 
-    let new_len: u16 = new_len.try_into()
-        .expect("ArrayVec::set_len> new length is not in range 0..=u16::MAX");
+    let new_len: u16 = new_len
+      .try_into()
+      .expect("ArrayVec::set_len> new length is not in range 0..=u16::MAX");
     self.len = new_len;
   }
 
@@ -825,7 +826,7 @@ impl<A: Array> ArrayVec<A> {
 
     if needs_drop::<A::Item>() {
       let len = self.len as usize;
-      self.data.as_slice_mut()[new_len .. len]
+      self.data.as_slice_mut()[new_len..len]
         .iter_mut()
         .map(take)
         .for_each(drop);
@@ -1080,7 +1081,10 @@ impl<A: Array> From<A> for ArrayVec<A> {
   /// If you want to select a length, use
   /// [`from_array_len`](ArrayVec::from_array_len)
   fn from(data: A) -> Self {
-    let len: u16 = data.as_slice().len().try_into()
+    let len: u16 = data
+      .as_slice()
+      .len()
+      .try_into()
       .expect("ArrayVec::from> lenght must be in range 0..=u16::MAX");
     Self { len, data }
   }
@@ -1118,7 +1122,8 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   type Item = A::Item;
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+    let slice =
+      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let itemref = slice.first_mut()?;
     self.base += 1;
     return Some(take(itemref));
@@ -1157,7 +1162,8 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
 impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+    let slice =
+      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let item = slice.last_mut()?;
     self.len -= 1;
     return Some(take(item));
@@ -1165,7 +1171,8 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[cfg(feature = "rustc_1_40")]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-    let slice = &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+    let slice =
+      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
     let n = slice.len().checked_sub(n + 1)?;
     let item = &mut slice[n];
 
