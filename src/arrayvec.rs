@@ -1105,7 +1105,7 @@ impl<A: Array + Default> FromIterator<A::Item> for ArrayVec<A> {
 /// Iterator for consuming an `ArrayVec` and returning owned elements.
 pub struct ArrayVecIterator<A: Array> {
   base: u16,
-  len: u16,
+  tail: u16,
   data: A,
 }
 
@@ -1114,7 +1114,7 @@ impl<A: Array> ArrayVecIterator<A> {
   #[inline]
   #[must_use]
   pub fn as_slice(&self) -> &[A::Item] {
-    &self.data.as_slice()[self.base as usize..self.len as usize]
+    &self.data.as_slice()[self.base as usize..self.tail as usize]
   }
 }
 impl<A: Array> FusedIterator for ArrayVecIterator<A> {}
@@ -1123,7 +1123,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     let slice =
-      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+      &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
     let itemref = slice.first_mut()?;
     self.base += 1;
     return Some(take(itemref));
@@ -1131,7 +1131,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline(always)]
   #[must_use]
   fn size_hint(&self) -> (usize, Option<usize>) {
-    let s = self.len - self.base;
+    let s = self.tail - self.base;
     let s = s as usize;
     (s, Some(s))
   }
@@ -1146,15 +1146,15 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
   #[inline]
   fn nth(&mut self, n: usize) -> Option<A::Item> {
     let slice = &mut self.data.as_slice_mut();
-    let slice = &mut slice[self.base as usize..self.len as usize];
+    let slice = &mut slice[self.base as usize..self.tail as usize];
 
     if let Some(x) = slice.get_mut(n) {
-      /* n is in range [0 .. self.len - self.base) so in u16 range */
+      /* n is in range [0 .. self.tail - self.base) so in u16 range */
       self.base += n as u16 + 1;
       return Some(take(x));
     }
 
-    self.base = self.len;
+    self.base = self.tail;
     return None;
   }
 }
@@ -1163,21 +1163,21 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
     let slice =
-      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+      &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
     let item = slice.last_mut()?;
-    self.len -= 1;
+    self.tail -= 1;
     return Some(take(item));
   }
   #[cfg(feature = "rustc_1_40")]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     let slice =
-      &mut self.data.as_slice_mut()[self.base as usize..self.len as usize];
+      &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
     let n = slice.len().checked_sub(n + 1)?;
     let item = &mut slice[n];
 
-    /* n is in [0..self.len - self.base] range, so in u16 range */
-    self.len = self.base + n as u16;
+    /* n is in [0..self.tail - self.base] range, so in u16 range */
+    self.tail = self.base + n as u16;
 
     return Some(take(item));
   }
@@ -1199,7 +1199,7 @@ impl<A: Array> IntoIterator for ArrayVec<A> {
   #[inline(always)]
   #[must_use]
   fn into_iter(self) -> Self::IntoIter {
-    ArrayVecIterator { base: 0, len: self.len, data: self.data }
+    ArrayVecIterator { base: 0, tail: self.len, data: self.data }
   }
 }
 
