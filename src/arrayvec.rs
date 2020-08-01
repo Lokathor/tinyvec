@@ -1173,7 +1173,8 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     let slice =
       &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
-    let n = slice.len().checked_sub(n + 1)?;
+    let n = n.checked_add(1)?;
+    let n = slice.len().checked_sub(n)?;
     let item = &mut slice[n];
 
     /* n is in [0..self.tail - self.base] range, so in u16 range */

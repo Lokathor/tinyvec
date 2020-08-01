@@ -1,0 +1,79 @@
+use honggfuzz::fuzz;
+use std::fmt::Debug;
+use std::convert::TryInto;
+use rutenspitz::arbitrary_stateful_operations;
+
+use tinyvec::{ArrayVec, ArrayVecIterator};
+use tinyvec_fuzz::ArbRange;
+
+const CAPACITY: usize = 20;
+
+arbitrary_stateful_operations! {
+    model = std::vec::IntoIter<u32>,
+    tested = ArrayVecIterator<[u32; CAPACITY]>,
+
+    methods {
+        equal {
+            fn next(&mut self) -> Option<u32>;
+            fn nth(&mut self, n: usize) -> Option<u32>;
+            fn next_back(&mut self) -> Option<u32>;
+            fn nth_back(&mut self, n: usize) -> Option<u32>;
+            fn size_hint(&self) -> (usize, Option<usize>);
+        }
+    }
+}
+
+fn xorshift(x: u32) -> u32 {
+    let x = x ^ (x << 13);
+    let x = x ^ (x >> 17);
+    let x = x ^ (x << 5);
+    return x;
+}
+
+fn rand_arrvec(mut x: u32) -> ArrayVec<[u32; CAPACITY]> {
+  let mut tested: ArrayVec<[u32; CAPACITY]> = ArrayVec::new();
+
+  for item in tested.iter_mut() {
+    x = xorshift(x);
+    *item = x;
+  }
+
+  return tested;
+}
+
+fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
+  use arbitrary::{Arbitrary, Unstructured};
+
+  let mut ring = Unstructured::new(&data);
+
+  let mut rng = [0u8; 4];
+  let len = if data.len() > 4 { 4 } else { data.len() };
+  rng[..len].copy_from_slice(&data[..len]);
+
+  let rng: u32 = u32::from_ne_bytes(rng);
+  let tested = rand_arrvec(rng);
+  let model: Vec<u32> = Vec::from(tested.as_slice());
+
+  let mut tested = tested.into_iter();
+  let mut model = model.into_iter();
+
+  let mut _op_trace = String::new();
+  while let Ok(op) = op::Op::arbitrary(&mut ring) {
+    #[cfg(fuzzing_debug)]
+    _op_trace.push_str(&format!("{}\n", op.to_string()));
+    // println!("Operations trace:\n{}", _op_trace);
+    op.execute_and_compare(&mut model, &mut tested);
+  }
+
+  Ok(())
+}
+
+fn main() -> Result<(), ()> {
+  better_panic::install();
+
+  loop {
+    fuzz!(|data: &[u8]| {
+      let _ = fuzz_cycle(data);
+    });
+  }
+}
