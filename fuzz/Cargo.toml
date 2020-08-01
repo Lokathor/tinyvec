@@ -6,8 +6,11 @@ edition = "2018"
 publish = false
 
 [dependencies]
-tinyvec = { path = "..", features = ["alloc", "nightly_slice_partition_dedup"] }
 rutenspitz = "0.2.1"
 honggfuzz = "0.5.45"
 arbitrary = { version = "0.4.5", features = ["derive"] }
 better-panic = "0.2.0"
+
+[dependencies.tinyvec]
+path = ".."
+features = ["rustc_1_40", "grab_spare_slice", "alloc", "nightly_slice_partition_dedup"]
