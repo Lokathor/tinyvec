@@ -1,10 +1,6 @@
 use honggfuzz::fuzz;
-use std::{
-  fmt::Debug,
-  iter::FromIterator,
-  ops::RangeBounds,
-};
 use rutenspitz::arbitrary_stateful_operations;
+use std::{fmt::Debug, iter::FromIterator, ops::RangeBounds};
 
 use tinyvec::TinyVec;
 use tinyvec_fuzz::ArbRange;

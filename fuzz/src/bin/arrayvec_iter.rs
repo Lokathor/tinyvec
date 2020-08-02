@@ -1,7 +1,6 @@
 use honggfuzz::fuzz;
-use std::fmt::Debug;
-use std::convert::TryInto;
 use rutenspitz::arbitrary_stateful_operations;
+use std::{convert::TryInto, fmt::Debug};
 
 use tinyvec::{ArrayVec, ArrayVecIterator};
 use tinyvec_fuzz::ArbRange;
@@ -24,10 +23,10 @@ arbitrary_stateful_operations! {
 }
 
 fn xorshift(x: u32) -> u32 {
-    let x = x ^ (x << 13);
-    let x = x ^ (x >> 17);
-    let x = x ^ (x << 5);
-    return x;
+  let x = x ^ (x << 13);
+  let x = x ^ (x >> 17);
+  let x = x ^ (x << 5);
+  return x;
 }
 
 fn seed(data: &[u8]) -> u32 {

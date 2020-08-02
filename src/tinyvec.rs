@@ -2,7 +2,7 @@
 
 use super::*;
 
-use alloc::vec::{Vec, self};
+use alloc::vec::{self, Vec};
 
 /// Helper to make a `TinyVec`.
 ///
