@@ -1,5 +1,6 @@
 use honggfuzz::fuzz;
 use rutenspitz::arbitrary_stateful_operations;
+use rutenspitz::OutcomePanic;
 use std::{convert::TryInto, fmt::Debug};
 
 use tinyvec::{ArrayVec, ArrayVecIterator};
@@ -62,6 +63,8 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
   let mut model = model.into_iter();
 
   while let Ok(op) = op::Op::arbitrary(&mut ring) {
+    #[cfg(fuzzing_debug)]
+    eprintln!("{:?}", op);
     op.execute_and_compare(&mut model, &mut tested);
   }
 
@@ -69,7 +72,14 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
 }
 
 fn main() -> Result<(), ()> {
-  better_panic::install();
+  //better_panic::install();
+  std::panic::set_hook(Box::new(|panic_info| {
+    if let Some(outpanic) = panic_info.payload().downcast_ref::<rutenspitz::OutcomePanic>() {
+      eprintln!("{}", outpanic.0);
+      std::process::abort();
+    }
+  }));
+
 
   loop {
     fuzz!(|data: &[u8]| {

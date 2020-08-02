@@ -1171,16 +1171,20 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   #[cfg(feature = "rustc_1_40")]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-    let slice =
-      &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
-    let n = n.checked_add(1)?;
-    let n = slice.len().checked_sub(n)?;
-    let item = &mut slice[n];
+    let base = self.base as usize;
+    let tail = self.tail as usize;
+    let slice = &mut self.data.as_slice_mut()[base .. tail];
+    let n = n.saturating_add(1);
 
-    /* n is in [0..self.tail - self.base] range, so in u16 range */
-    self.tail = self.base + n as u16;
+    if let Some(n) = slice.len().checked_sub(n) {
+      let item = &mut slice[n];
+      /* n is in [0..self.tail - self.base] range, so in u16 range */
+      self.tail = self.base + n as u16;
+      return Some(take(item));
+    }
 
-    return Some(take(item));
+    self.tail = self.base;
+    return None;
   }
 }
 
