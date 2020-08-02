@@ -1,6 +1,5 @@
 use honggfuzz::fuzz;
-use rutenspitz::arbitrary_stateful_operations;
-use rutenspitz::OutcomePanic;
+use rutenspitz::{arbitrary_stateful_operations, OutcomePanic};
 use std::{convert::TryInto, fmt::Debug};
 
 use tinyvec::{ArrayVec, ArrayVecIterator};
@@ -74,12 +73,13 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
 fn main() -> Result<(), ()> {
   //better_panic::install();
   std::panic::set_hook(Box::new(|panic_info| {
-    if let Some(outpanic) = panic_info.payload().downcast_ref::<rutenspitz::OutcomePanic>() {
+    if let Some(outpanic) =
+      panic_info.payload().downcast_ref::<rutenspitz::OutcomePanic>()
+    {
       eprintln!("{}", outpanic.0);
       std::process::abort();
     }
   }));
-
 
   loop {
     fuzz!(|data: &[u8]| {
