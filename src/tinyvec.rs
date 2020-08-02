@@ -843,29 +843,29 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
 
   fn next(&mut self) -> Option<Self::Item> {
     match self {
-      Self::Inline(i) => i.next(),
-      Self::Heap(h) => h.next(),
+      TinyVecDrain::Inline(i) => i.next(),
+      TinyVecDrain::Heap(h) => h.next(),
     }
   }
 
   fn nth(&mut self, n: usize) -> Option<Self::Item> {
     match self {
-      Self::Inline(i) => i.nth(n),
-      Self::Heap(h) => h.nth(n),
+      TinyVecDrain::Inline(i) => i.nth(n),
+      TinyVecDrain::Heap(h) => h.nth(n),
     }
   }
 
   fn size_hint(&self) -> (usize, Option<usize>) {
     match self {
-      Self::Inline(i) => i.size_hint(),
-      Self::Heap(h) => h.size_hint(),
+      TinyVecDrain::Inline(i) => i.size_hint(),
+      TinyVecDrain::Heap(h) => h.size_hint(),
     }
   }
 
   fn for_each<F: FnMut(Self::Item)>(self, f: F) {
     match self {
-      Self::Inline(i) => i.for_each(f),
-      Self::Heap(h) => h.for_each(f),
+      TinyVecDrain::Inline(i) => i.for_each(f),
+      TinyVecDrain::Heap(h) => h.for_each(f),
     }
   }
 }
@@ -873,16 +873,16 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
 impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
   fn next_back(&mut self) -> Option<Self::Item> {
     match self {
-      Self::Inline(i) => i.next_back(),
-      Self::Heap(h) => h.next_back(),
+      TinyVecDrain::Inline(i) => i.next_back(),
+      TinyVecDrain::Heap(h) => h.next_back(),
     }
   }
 
   #[cfg(feature = "rustc_1_40")]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     match self {
-      Self::Inline(i) => i.nth_back(n),
-      Self::Heap(h) => h.nth_back(n),
+      TinyVecDrain::Inline(i) => i.nth_back(n),
+      TinyVecDrain::Heap(h) => h.nth_back(n),
     }
   }
 }
