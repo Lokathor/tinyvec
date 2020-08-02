@@ -2,7 +2,7 @@
 
 use super::*;
 
-use alloc::vec::Vec;
+use alloc::vec::{Vec, self};
 
 /// Helper to make a `TinyVec`.
 ///
@@ -423,33 +423,9 @@ impl<A: Array> TinyVec<A> {
     &mut self,
     range: R,
   ) -> TinyVecDrain<'_, A> {
-    use core::ops::Bound;
-    let start = match range.start_bound() {
-      Bound::Included(x) => *x,
-      Bound::Excluded(x) => x + 1,
-      Bound::Unbounded => 0,
-    };
-    let end = match range.end_bound() {
-      Bound::Included(x) => x + 1,
-      Bound::Excluded(x) => *x,
-      Bound::Unbounded => self.len(),
-    };
-    assert!(
-      start <= end,
-      "TinyVec::drain> Illegal range, {} to {}",
-      start,
-      end
-    );
-    assert!(
-      end <= self.len(),
-      "TinyVec::drain> Range ends at {} but length is only {}!",
-      end,
-      self.len()
-    );
-    TinyVecDrain {
-      parent: self,
-      target_index: start,
-      target_count: end - start,
+    match self {
+      TinyVec::Inline(i) => TinyVecDrain::Inline(i.drain(range)),
+      TinyVec::Heap(h) => TinyVecDrain::Heap(h.drain(range)),
     }
   }
 
@@ -855,29 +831,59 @@ impl<A: Array> TinyVec<A> {
 /// Draining iterator for `TinyVecDrain`
 ///
 /// See [`TinyVecDrain::drain`](TinyVecDrain::<A>::drain)
-pub struct TinyVecDrain<'p, A: Array> {
-  parent: &'p mut TinyVec<A>,
-  target_index: usize,
-  target_count: usize,
+pub enum TinyVecDrain<'p, A: Array> {
+  #[allow(missing_docs)]
+  Inline(ArrayVecDrain<'p, A::Item>),
+  #[allow(missing_docs)]
+  Heap(vec::Drain<'p, A::Item>),
 }
-impl<'p, A: Array> FusedIterator for TinyVecDrain<'p, A> {}
+
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
-  #[inline]
+
   fn next(&mut self) -> Option<Self::Item> {
-    if self.target_count > 0 {
-      let out = self.parent.remove(self.target_index);
-      self.target_count -= 1;
-      Some(out)
-    } else {
-      None
+    match self {
+      Self::Inline(i) => i.next(),
+      Self::Heap(h) => h.next(),
+    }
+  }
+
+  fn nth(&mut self, n: usize) -> Option<Self::Item> {
+    match self {
+      Self::Inline(i) => i.nth(n),
+      Self::Heap(h) => h.nth(n),
+    }
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    match self {
+      Self::Inline(i) => i.size_hint(),
+      Self::Heap(h) => h.size_hint(),
+    }
+  }
+
+  fn for_each<F: FnMut(Self::Item)>(self, f: F) {
+    match self {
+      Self::Inline(i) => i.for_each(f),
+      Self::Heap(h) => h.for_each(f),
     }
   }
 }
-impl<'p, A: Array> Drop for TinyVecDrain<'p, A> {
-  #[inline]
-  fn drop(&mut self) {
-    for _ in self {}
+
+impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
+  fn next_back(&mut self) -> Option<Self::Item> {
+    match self {
+      Self::Inline(i) => i.next_back(),
+      Self::Heap(h) => h.next_back(),
+    }
+  }
+
+  #[cfg(feature = "rustc_1_40")]
+  fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+    match self {
+      Self::Inline(i) => i.nth_back(n),
+      Self::Heap(h) => h.nth_back(n),
+    }
   }
 }
 

@@ -3,14 +3,14 @@ use std::fmt::Debug;
 use std::convert::TryInto;
 use rutenspitz::arbitrary_stateful_operations;
 
-use tinyvec::{ArrayVec, ArrayVecIterator};
+use tinyvec::{ArrayVec, ArrayVecDrain};
 use tinyvec_fuzz::ArbRange;
 
 const CAPACITY: usize = 28;
 
 arbitrary_stateful_operations! {
-    model = std::vec::IntoIter<u32>,
-    tested = ArrayVecIterator<[u32; CAPACITY]>,
+    model = std::vec::Drain<'_, u32>,
+    tested = ArrayVecDrain<'_, u32>,
 
     methods {
         equal {
@@ -56,11 +56,11 @@ fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
   let mut ring = Unstructured::new(&data);
 
   let rng = seed(data);
-  let tested = rand_arrvec(rng);
-  let model: Vec<u32> = Vec::from(tested.as_slice());
+  let mut tested = rand_arrvec(rng);
+  let mut model: Vec<u32> = Vec::from(tested.as_slice());
 
-  let mut tested = tested.into_iter();
-  let mut model = model.into_iter();
+  let mut tested = tested.drain(..);
+  let mut model = model.drain(..);
 
   while let Ok(op) = op::Op::arbitrary(&mut ring) {
     op.execute_and_compare(&mut model, &mut tested);
