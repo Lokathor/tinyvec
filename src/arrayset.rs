@@ -87,8 +87,8 @@ where
 
   /// Iterate over all contents
   #[inline]
-  pub fn iter(&self) -> Iter<A::Item> {
-    Iter { a: self.arr.as_slice(), i: 0 }
+  pub fn iter(&self) -> core::slice::Iter<'_, A::Item> {
+    self.arr.as_slice().iter()
   }
 }
 
@@ -171,7 +171,7 @@ where
   ///
   /// Due to the fixed size of the backing array, insertion may fail.
   #[inline]
-  pub fn insert(&mut self, elt: A::Item) -> Result<bool, InsertError> {
+  pub fn try_insert(&mut self, elt: A::Item) -> Result<bool, InsertError> {
     if self.contains(&elt) {
       return Ok(false);
     }
@@ -201,7 +201,7 @@ where
   ///
   /// Returns the replaced item, if any. Fails when there is no matching item
   /// and the backing array is full, preventing insertion.
-  pub fn replace(
+  pub fn try_replace(
     &mut self,
     mut elt: A::Item,
   ) -> Result<Option<A::Item>, InsertError> {
@@ -221,83 +221,13 @@ where
     self.len += L::from(1);
     Ok(None)
   }
-}
 
-/// Type returned by [`ArraySet::iter`]
-pub struct Iter<'a, T> {
-  a: &'a [T],
-  i: usize,
-}
-
-impl<'a, T> ExactSizeIterator for Iter<'a, T> {
-  #[inline]
-  fn len(&self) -> usize {
-    self.a.len() - self.i
+  /// Same as `try_insert`, but unwraps for you
+  pub fn insert(&mut self, elt: A::Item) -> bool {
+    self.try_insert(elt).unwrap()
   }
-}
-
-impl<'a, T> Iterator for Iter<'a, T> {
-  type Item = &'a T;
-
-  #[inline]
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.i < self.a.len() {
-      let i = self.i;
-      self.i += 1;
-      Some(&self.a[i])
-    } else {
-      None
-    }
-  }
-
-  #[inline]
-  fn size_hint(&self) -> (usize, Option<usize>) {
-    let len = self.len();
-    (len, Some(len))
-  }
-}
-
-#[cfg(test)]
-mod test {
-  use super::*;
-  use core::mem::size_of;
-
-  #[test]
-  fn test_size() {
-    assert_eq!(size_of::<ArraySet<[i8; 7], u8>>(), 8);
-  }
-
-  #[test]
-  fn test() {
-    let mut set: ArraySet<[i8; 7], u8> = ArraySet::new();
-    assert_eq!(set.capacity(), 7);
-
-    assert_eq!(set.insert(1), Ok(true));
-    assert_eq!(set.insert(5), Ok(true));
-    assert_eq!(set.insert(6), Ok(true));
-    assert_eq!(set.len(), 3);
-
-    assert_eq!(set.insert(5), Ok(false));
-    assert_eq!(set.len(), 3);
-
-    assert_eq!(set.replace(1), Ok(Some(1)));
-    assert_eq!(set.replace(2), Ok(None));
-    assert_eq!(set.len(), 4);
-
-    assert_eq!(set.insert(3), Ok(true));
-    assert_eq!(set.insert(4), Ok(true));
-    assert_eq!(set.insert(7), Ok(true));
-    assert_eq!(set.insert(8), Err(InsertError));
-    assert_eq!(set.len(), 7);
-
-    assert_eq!(set.replace(9), Err(InsertError));
-
-    assert_eq!(set.remove(&3), Some(3));
-    assert_eq!(set.len(), 6);
-
-    set.retain(|x| *x == 3 || *x == 6);
-    assert_eq!(set.len(), 1);
-    assert!(!set.contains(&3));
-    assert!(set.contains(&6));
+  /// Same as `try_replace`, but unwraps for you
+  pub fn replace(&mut self, elt: A::Item) -> Option<A::Item> {
+    self.try_replace(elt).unwrap()
   }
 }
