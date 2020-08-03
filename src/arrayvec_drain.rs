@@ -21,11 +21,11 @@ impl<'a, T: 'a + Default> ArrayVecDrain<'a, T> {
     let start = match range.start_bound() {
       Bound::Unbounded => 0,
       Bound::Included(&n) => n,
-      Bound::Excluded(&n) => n + 1,
+      Bound::Excluded(&n) => n.saturating_add(1),
     };
     let end = match range.end_bound() {
       Bound::Unbounded => arr.len(),
-      Bound::Included(&n) => n + 1,
+      Bound::Included(&n) => n.saturating_add(1),
       Bound::Excluded(&n) => n,
     };
 
