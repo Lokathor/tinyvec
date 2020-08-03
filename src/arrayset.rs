@@ -3,7 +3,6 @@
 // This was contributed by user `dhardy`! Big thanks.
 
 use super::{Array, ArrayVec};
-use core::fmt;
 
 /// An array-backed set
 ///
@@ -12,15 +11,17 @@ use core::fmt;
 ///
 /// The item type must support `Default`.
 #[derive(Clone, Default)]
-pub struct ArraySet<A: Array> 
-where A::Item: Default + Eq,
+pub struct ArraySet<A: Array>
+where
+  A::Item: Default + Eq,
 {
   /// The underlying ArrayVec
   pub arr: ArrayVec<A>,
 }
 
 impl<A: Array> ArraySet<A>
-where A::Item: Default + Eq,
+where
+  A::Item: Default + Eq,
 {
   /// Returns the fixed capacity of the set
   #[inline]
@@ -54,7 +55,7 @@ where A::Item: Default + Eq,
 
   /// Check whether the set contains `elt`
   #[inline]
-  pub fn contains<Q>(&self, elt: &Q) -> bool 
+  pub fn contains<Q>(&self, elt: &Q) -> bool
   where
     A::Item: PartialEq<Q>,
   {
@@ -97,7 +98,7 @@ where A::Item: Default + Eq,
 
     return match self.arr.try_push(elt) {
       Some(x) => Err(x),
-      None    => Ok(true),
+      None => Ok(true),
     };
   }
 
@@ -126,22 +127,26 @@ where A::Item: Default + Eq,
 
     return match self.arr.try_push(elt) {
       Some(x) => Err(x),
-      None    => Ok(None),
+      None => Ok(None),
     };
   }
 
   /// Same as `try_insert`, but unwraps for you
   pub fn insert(&mut self, elt: A::Item) -> bool {
     match self.try_insert(elt) {
-      Err(_) => panic!("ArraySet::insert> tried to insert, but capacity is exhausted"),
-      Ok(x)  => x,
+      Err(_) => {
+        panic!("ArraySet::insert> tried to insert, but capacity is exhausted")
+      }
+      Ok(x) => x,
     }
   }
   /// Same as `try_replace`, but unwraps for you
   pub fn replace(&mut self, elt: A::Item) -> Option<A::Item> {
     match self.try_replace(elt) {
-      Err(_) => panic!("ArraySet::replace> tried to replace, but capacity is exhausted"),
-      Ok(x)  => x,
+      Err(_) => {
+        panic!("ArraySet::replace> tried to replace, but capacity is exhausted")
+      }
+      Ok(x) => x,
     }
   }
 }

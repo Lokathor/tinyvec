@@ -1,16 +1,10 @@
 #![allow(bad_style)]
 
-use core::mem::size_of;
-use tinyvec::{ArraySet, InsertError};
-
-#[test]
-fn ArraySet_test_size() {
-  assert_eq!(size_of::<ArraySet<[i8; 7], u8>>(), 8);
-}
+use tinyvec::ArraySet;
 
 #[test]
 fn ArraySet_test() {
-  let mut set: ArraySet<[i8; 7], u8> = ArraySet::new();
+  let mut set: ArraySet<[i8; 7]> = ArraySet::default();
   assert_eq!(set.capacity(), 7);
 
   assert_eq!(set.try_insert(1), Ok(true));
@@ -28,10 +22,10 @@ fn ArraySet_test() {
   assert_eq!(set.try_insert(3), Ok(true));
   assert_eq!(set.try_insert(4), Ok(true));
   assert_eq!(set.try_insert(7), Ok(true));
-  assert_eq!(set.try_insert(8), Err(InsertError));
+  assert_eq!(set.try_insert(8), Err(8));
   assert_eq!(set.len(), 7);
 
-  assert_eq!(set.try_replace(9), Err(InsertError));
+  assert_eq!(set.try_replace(9), Err(9));
 
   assert_eq!(set.remove(&3), Some(3));
   assert_eq!(set.len(), 6);
