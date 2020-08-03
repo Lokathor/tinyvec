@@ -66,6 +66,10 @@ criterion = "0.3.0"
 name = "tinyvec"
 required-features = ["alloc"]
 
+[[test]]
+name = "arrayset"
+required-features = ["experimental_array_set"]
+
 [[bench]]
 name = "macros"
 harness = false
