@@ -2,64 +2,25 @@
 
 // This was contributed by user `dhardy`! Big thanks.
 
-use super::{take, Array};
-use core::{
-  borrow::Borrow,
-  fmt,
-  mem::swap,
-  ops::{AddAssign, SubAssign},
-};
-
-/// Error resulting from attempting to insert into a full array
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct InsertError;
-
-// TODO(when std): impl std::error::Error for InsertError {}
-
-impl fmt::Display for InsertError {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "ArraySet: insertion failed")
-  }
-}
+use super::{Array, ArrayVec};
+use core::fmt;
 
 /// An array-backed set
 ///
 /// This set supports `O(n)` operations and has a fixed size, thus may fail to
 /// insert items. The potential advantage is a *really* small size.
 ///
-/// The set is backed by an array of type `A` and indexed by type `L`.
 /// The item type must support `Default`.
-/// Due to restrictions, `L` may be only `u8` or `u16`.
-#[derive(Clone, Debug, Default)]
-pub struct ArraySet<A: Array, L> {
-  arr: A,
-  len: L,
+#[derive(Clone, Default)]
+pub struct ArraySet<A: Array> 
+where A::Item: Default + Eq,
+{
+  /// The underlying ArrayVec
+  pub arr: ArrayVec<A>,
 }
 
-impl<A: Array + Default, L: From<u8>> ArraySet<A, L> {
-  /// Constructs a new, empty, set
-  #[inline]
-  pub fn new() -> Self {
-    ArraySet { arr: Default::default(), len: 0.into() }
-  }
-}
-
-impl<A: Array, L: Copy + Into<usize>> ArraySet<A, L> {
-  /// Constructs a new set from given inputs
-  ///
-  /// Panics if `len> arr.len()`.
-  #[inline]
-  pub fn from(arr: A, len: L) -> Self {
-    if len.into() > A::CAPACITY {
-      panic!("ArraySet::from(array, len): len > array.len()");
-    }
-    ArraySet { arr, len }
-  }
-}
-
-impl<A: Array, L> ArraySet<A, L>
-where
-  L: Copy + PartialEq + From<u8> + Into<usize>,
+impl<A: Array> ArraySet<A>
+where A::Item: Default + Eq,
 {
   /// Returns the fixed capacity of the set
   #[inline]
@@ -70,120 +31,74 @@ where
   /// Returns the number of elements in the set
   #[inline]
   pub fn len(&self) -> usize {
-    self.len.into()
+    self.arr.len()
   }
 
   /// Returns true when the set contains no elements
   #[inline]
   pub fn is_empty(&self) -> bool {
-    self.len == 0.into()
+    self.len() == 0
   }
 
   /// Removes all elements
   #[inline]
   pub fn clear(&mut self) {
-    self.len = 0.into();
+    self.arr.clear()
   }
 
   /// Iterate over all contents
   #[inline]
   pub fn iter(&self) -> core::slice::Iter<'_, A::Item> {
-    self.arr.as_slice().iter()
+    self.arr.iter()
   }
-}
 
-impl<A: Array, L> ArraySet<A, L>
-where
-  L: Copy + PartialOrd + AddAssign + SubAssign + From<u8> + Into<usize>,
-{
   /// Check whether the set contains `elt`
   #[inline]
-  pub fn contains<Q: Eq + ?Sized>(&self, elt: &Q) -> bool
+  pub fn contains<Q>(&self, elt: &Q) -> bool 
   where
-    A::Item: Borrow<Q>,
+    A::Item: PartialEq<Q>,
   {
     self.get(elt).is_some()
   }
 
   /// Get a reference to a contained item matching `elt`
-  pub fn get<Q: Eq + ?Sized>(&self, elt: &Q) -> Option<&A::Item>
+  pub fn get<Q>(&self, elt: &Q) -> Option<&A::Item>
   where
-    A::Item: Borrow<Q>,
+    A::Item: PartialEq<Q>,
   {
-    let len: usize = self.len.into();
-    let arr = self.arr.as_slice();
-    for i in 0..len {
-      if arr[i].borrow() == elt {
-        return Some(&arr[i]);
-      }
-    }
-    None
+    self.iter().find(|&x| x == elt)
   }
 
   /// Remove an item matching `elt`, if any
-  pub fn remove<Q: Eq + ?Sized>(&mut self, elt: &Q) -> Option<A::Item>
+  pub fn remove<Q>(&mut self, elt: &Q) -> Option<A::Item>
   where
-    A::Item: Borrow<Q>,
+    A::Item: PartialEq<Q>,
   {
-    let len: usize = self.len.into();
-    let arr = self.arr.as_slice_mut();
-    for i in 0..len {
-      if arr[i].borrow() == elt {
-        let l1 = len - 1;
-        if i < l1 {
-          arr.swap(i, l1);
-        }
-        self.len -= L::from(1);
-        return Some(take(&mut arr[l1]));
-      }
-    }
-    None
+    let (n, _) = self.iter().enumerate().find(|(_, x)| *x == elt)?;
+    Some(self.arr.remove(n))
   }
 
   /// Remove any items for which `f(item) == false`
-  pub fn retain<F>(&mut self, mut f: F)
+  pub fn retain<F>(&mut self, f: F)
   where
     F: FnMut(&A::Item) -> bool,
   {
-    let mut len = self.len;
-    let arr = self.arr.as_slice_mut();
-    let mut i = 0;
-    while i < len.into() {
-      if !f(&arr[i]) {
-        len -= L::from(1);
-        if i < len.into() {
-          arr.swap(i, len.into());
-        }
-      } else {
-        i += 1;
-      }
-    }
-    self.len = len;
+    self.arr.retain(f)
   }
-}
 
-impl<A: Array, L> ArraySet<A, L>
-where
-  A::Item: Eq,
-  L: Copy + PartialOrd + AddAssign + SubAssign + From<u8> + Into<usize>,
-{
   /// Insert an item
   ///
   /// Due to the fixed size of the backing array, insertion may fail.
   #[inline]
-  pub fn try_insert(&mut self, elt: A::Item) -> Result<bool, InsertError> {
+  pub fn try_insert(&mut self, elt: A::Item) -> Result<bool, A::Item> {
     if self.contains(&elt) {
       return Ok(false);
     }
 
-    let len = self.len.into();
-    let arr = self.arr.as_slice_mut();
-    if len >= arr.len() {
-      return Err(InsertError);
-    }
-    arr[len] = elt;
-    self.len += L::from(1);
-    Ok(true)
+    return match self.arr.try_push(elt) {
+      Some(x) => Err(x),
+      None    => Ok(true),
+    };
   }
 
   /* Hits borrow checker
@@ -203,31 +118,30 @@ where
   /// and the backing array is full, preventing insertion.
   pub fn try_replace(
     &mut self,
-    mut elt: A::Item,
-  ) -> Result<Option<A::Item>, InsertError> {
-    let len: usize = self.len.into();
-    let arr = self.arr.as_slice_mut();
-    for i in 0..len {
-      if arr[i] == elt {
-        swap(&mut arr[i], &mut elt);
-        return Ok(Some(elt));
-      }
+    elt: A::Item,
+  ) -> Result<Option<A::Item>, A::Item> {
+    if let Some(x) = self.arr.iter_mut().find(|x| *x == &elt) {
+      return Ok(Some(core::mem::replace(x, elt)));
     }
 
-    if len >= arr.len() {
-      return Err(InsertError);
-    }
-    arr[len] = elt;
-    self.len += L::from(1);
-    Ok(None)
+    return match self.arr.try_push(elt) {
+      Some(x) => Err(x),
+      None    => Ok(None),
+    };
   }
 
   /// Same as `try_insert`, but unwraps for you
   pub fn insert(&mut self, elt: A::Item) -> bool {
-    self.try_insert(elt).unwrap()
+    match self.try_insert(elt) {
+      Err(_) => panic!("ArraySet::insert> tried to insert, but capacity is exhausted"),
+      Ok(x)  => x,
+    }
   }
   /// Same as `try_replace`, but unwraps for you
   pub fn replace(&mut self, elt: A::Item) -> Option<A::Item> {
-    self.try_replace(elt).unwrap()
+    match self.try_replace(elt) {
+      Err(_) => panic!("ArraySet::replace> tried to replace, but capacity is exhausted"),
+      Ok(x)  => x,
+    }
   }
 }
