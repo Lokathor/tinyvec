@@ -17,6 +17,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
+        toolchain: ${{ matrix.rust }}
     - name: Test The Basics Everywhere
       uses: actions-rs/cargo@v1
       with:
