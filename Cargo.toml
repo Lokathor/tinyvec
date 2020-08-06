@@ -22,6 +22,11 @@ alloc = []
 # "active" portion of an `ArrayVec` or `SliceVec`.
 grab_spare_slice = []
 
+# features that require rustc 1.40
+# use Vec::append if possible in TinyVec::append - 1.37
+# DoubleEndedIterator::nth_back - 1.40
+rustc_1_40 = []
+
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:
 # https://github.com/rust-lang/rust/issues/54279
@@ -40,15 +45,6 @@ experimental_write_impl = []
 # an array backed set type for situations where you need a set of a known
 # small size without allocation.
 experimental_array_set = []
-
-# features that require rustc 1.40
-# use Vec::append if possible in TinyVec::append - 1.37
-# DoubleEndedIterator::nth_back - 1.40
-rustc_1_40 = []
-
-[badges]
-appveyor = { repository = "Lokathor/tinyvec" }
-travis-ci = { repository = "Lokathor/tinyvec" }
 
 [package.metadata.docs.rs]
 all-features = true
