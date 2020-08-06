@@ -19,17 +19,17 @@ jobs:
         profile: minimal
         toolchain: ${{ matrix.rust }}
         default: true
-    - name: Test The Basics Everywhere
+    - name: Build the crate on minimal version.
       uses: actions-rs/cargo@v1
       with:
-        command: test
-    - name: Test Stable and Later Features
+        command: build
+    - name: Test on Stable/Beta
       if: matrix.rust != '1.34.0'
       uses: actions-rs/cargo@v1
       with:
         command: test
         args: --features=alloc --features=grab_spare_slice --features=rustc_1_40
-    - name: Test Nightly Features
+    - name: Test on Nightly with All Features
       if: matrix.rust == 'nightly'
       uses: actions-rs/cargo@v1
       with:
