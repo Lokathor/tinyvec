@@ -1,11 +1,11 @@
 [package]
 name = "tinyvec"
-description = "Just, really the littlest Vec you could need. So smol."
+description = "`tinyvec` provides 100% safe vec-like data structures."
 version = "1.0.0-alpha.1"
 authors = ["Lokathor <zefria@gmail.com>"]
 edition = "2018"
 license = "Zlib OR Apache-2.0 OR MIT"
-keywords = ["vec", "no_std", "no-std", "smol"]
+keywords = ["vec", "no_std", "no-std"]
 categories = ["data-structures", "no-std"]
 repository = "https://github.com/Lokathor/tinyvec"
 
