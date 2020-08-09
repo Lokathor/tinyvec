@@ -256,7 +256,7 @@ impl<A: Array> TinyVec<A> {
   /// ```text
   /// Note that the allocator may give the collection more space than it requests.
   /// Therefore, capacity can not be relied upon to be precisely minimal.
-  /// Prefer reserve if future insertions are expected.
+  /// Prefer `reserve` if future insertions are expected.
   /// ```
   /// ```rust
   /// use tinyvec::*;
@@ -279,6 +279,33 @@ impl<A: Array> TinyVec<A> {
 
     /* In this place array has enough place, so no work is needed more */
     return;
+  }
+
+  /// Makes a new TinyVec with _at least_ the given capacity.
+  ///
+  /// If the requested capacity is less than or equal to the array capacity you
+  /// get an inline vec. If it's greater than you get a heap vec.
+  /// ```
+  /// # use tinyvec::*;
+  /// let t = TinyVec::<[u8; 10]>::with_capacity(5);
+  /// assert!(t.is_inline());
+  /// assert!(t.capacity() >= 5);
+  ///
+  /// let t = TinyVec::<[u8; 10]>::with_capacity(20);
+  /// assert!(t.is_heap());
+  /// assert!(t.capacity() >= 20);
+  /// ```
+  #[inline]
+  #[must_use]
+  pub fn with_capacity(cap: usize) -> Self
+  where
+    A: Default,
+  {
+    if cap <= A::CAPACITY {
+      TinyVec::Inline(ArrayVec::default())
+    } else {
+      TinyVec::Heap(Vec::with_capacity(cap))
+    }
   }
 }
 
