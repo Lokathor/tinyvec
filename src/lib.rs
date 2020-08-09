@@ -26,36 +26,39 @@
 //! If a `TinyVec` is `Inline` and would overflow it automatically transitions
 //! itself into being `Heap` mode instead of a panic.
 //!
-//! All of this is done with no `unsafe` code within the crate. Technically
-//! the `Vec` type from the standard library uses `unsafe` internally, but *this
+//! All of this is done with no `unsafe` code within the crate. Technically the
+//! `Vec` type from the standard library uses `unsafe` internally, but *this
 //! crate* introduces no new `unsafe` code into your project.
 //!
 //! The limitation is that the element type of a vec from this crate must
 //! support the [`Default`] trait. This means that this crate isn't suitable for
 //! all situations, but a very surprising number of types do support `Default`.
 //!
+//! ## Other Features
+//! * `grab_spare_slice` lets you get access to the "inactive" portions of an
+//!   ArrayVec.
+//! * `rustc_1_40` makes the crate assume a minimum rust version of `1.40.0`,
+//!   which allows some better internal optimizations.
+//!
 //! ## API
 //! The general goal of the crate is that, as much as possible, the vecs here
 //! should be a "drop in" replacement for the standard library `Vec` type. We
 //! strive to provide all of the `Vec` methods with the same names and
-//! signatures. The "exception" is of course that the element type of each
-//! method will have a `Default` bound that's not part of the normal `Vec` type.
+//! signatures. The exception is that the element type of some methods will have
+//! a `Default` bound that's not part of the normal `Vec` type.
 //!
-//! The vecs here also have additional methods that aren't on the `Vec` type. In
-//! this case, the names tend to be fairly long so that they are unlikely to
-//! clash with any future methods added to `Vec`.
+//! The vecs here also have a few additional methods that aren't on the `Vec`
+//! type. In this case, the names tend to be fairly long so that they are
+//! unlikely to clash with any future methods added to `Vec`.
 //!
 //! ## Stability
-//! `tinyvec` is starting to get some real usage within the ecosystem! The more
-//! popular you are, the less people want you breaking anything that they're
-//! using.
-//!
-//! * With the 0.4 release we had to make a small breaking change to how the vec
-//!   creation macros work, because of an unfortunate problem with how `rustc`
-//!   was parsing things under the old syntax.
-//!
-//! If we don't have any more unexpected problems, I'd like to declare the crate
-//! to be 1.0 by the end of 2020.
+//! * The `1.0` series of the crate works with Rustc `1.34.0` or later, though
+//!   you still need to have Rustc `1.36.0` to use the `alloc` feature.
+//! * The `2.0` version of the crate is planned for some time after the
+//!   `min_const_generics` stuff becomes stable. This would greatly raise the
+//!   minimum rust version and also allow us to totally eliminate the need for
+//!   the `Array` trait. The actual usage of the crate is not expected to break
+//!   significantly in this transition.
 
 #[allow(unused_imports)]
 use core::{

@@ -8,7 +8,9 @@
 ///
 /// You are generally **not** expected to need to implement this yourself. It is
 /// already implemented for all the major array lengths (`0..=32` and the powers
-/// of 2 up to 4,096). Additional lengths can easily be added upon request.
+/// of 2 up to 4,096).
+///
+/// **Additional lengths can easily be added upon request.**
 ///
 /// ## Safety Reminder
 ///
