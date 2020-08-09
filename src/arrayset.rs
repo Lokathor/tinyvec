@@ -75,8 +75,16 @@ where
   where
     A::Item: PartialEq<Q>,
   {
-    let (n, _) = self.iter().enumerate().find(|(_, x)| *x == elt)?;
-    Some(self.arr.remove(n))
+    let mut iter = self.arr.iter_mut();
+    let itemref = iter.find(|x| *x == elt)?;
+    let slice = iter.into_slice();
+
+    if let Some(first) = slice.first_mut() {
+      core::mem::swap(itemref, first);
+    }
+    slice.rotate_left(1);
+
+    self.arr.pop()
   }
 
   /// Remove any items for which `f(item) == false`
