@@ -789,11 +789,11 @@ impl<A: Array> TinyVec<A> {
     use core::ops::Bound;
     let start = match range.start_bound() {
       Bound::Included(x) => *x,
-      Bound::Excluded(x) => x + 1,
+      Bound::Excluded(x) => x.saturating_add(1),
       Bound::Unbounded => 0,
     };
     let end = match range.end_bound() {
-      Bound::Included(x) => x + 1,
+      Bound::Included(x) => x.saturating_add(1),
       Bound::Excluded(x) => *x,
       Bound::Unbounded => self.len(),
     };
