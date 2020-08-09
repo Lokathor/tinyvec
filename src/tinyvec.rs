@@ -26,7 +26,7 @@ use alloc::vec::{self, Vec};
 /// let many_ints: TinyVec<[i32; 4]> = tiny_vec!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 /// ```
 #[macro_export]
-#[cfg_attr(docs_rs, doc(cfg(target_feature = "alloc")))]
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 macro_rules! tiny_vec {
   ($array_type:ty => $($elem:expr),* $(,)?) => {
     {
@@ -83,7 +83,7 @@ pub enum TinyVecConstructor<A: Array> {
 /// let some_ints = tiny_vec!([i32; 4] => 1, 2, 3);
 /// ```
 #[derive(Clone)]
-#[cfg_attr(docs_rs, doc(cfg(target_feature = "alloc")))]
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVec<A>),
