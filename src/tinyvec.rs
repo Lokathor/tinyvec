@@ -407,6 +407,11 @@ impl<A: Array> TinyVec<A> {
   /// Creates a draining iterator that removes the specified range in the vector
   /// and yields the removed items.
   ///
+  /// **Note: This method has significant performance issues compared to
+  /// matching on the TinyVec and then calling drain on the Inline or Heap value
+  /// inside. The draining iterator has to branch on every single access. It is
+  /// provided for simplicity and compatability only.**
+  ///
   /// ## Panics
   /// * If the start is greater than the end
   /// * If the end is past the edge of the vec.
