@@ -138,6 +138,8 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 
 impl<A: Array> TinyVec<A> {
   /// Returns whether elements are on heap
+  #[inline(always)]
+  #[must_use]
   pub fn is_heap(&self) -> bool {
     match self {
       TinyVec::Heap(_) => true,
@@ -145,6 +147,8 @@ impl<A: Array> TinyVec<A> {
     }
   }
   /// Returns whether elements are on stack
+  #[inline(always)]
+  #[must_use]
   pub fn is_inline(&self) -> bool {
     !self.is_heap()
   }
@@ -173,10 +177,10 @@ impl<A: Array> TinyVec<A> {
       return vec.shrink_to_fit();
     }
 
-    let movedvec = core::mem::replace(vec, Vec::new());
+    let moved_vec = core::mem::replace(vec, Vec::new());
 
     let mut av = ArrayVec::default();
-    let mut rest = av.fill(movedvec);
+    let mut rest = av.fill(moved_vec);
     debug_assert!(rest.next().is_none());
     *self = TinyVec::Inline(av);
   }
@@ -467,8 +471,11 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
+  /// This is an internal implementation detail of the `tiny_vec!` macro, and
+  /// using it other than from that macro is not supported by this crate's
+  /// SemVer guarantee.
   #[inline(always)]
-  #[doc(hidden)] // Internal implementation details of `tiny_vec!`
+  #[doc(hidden)]
   pub fn constructor_for_capacity(cap: usize) -> TinyVecConstructor<A> {
     if cap <= A::CAPACITY {
       TinyVecConstructor::Inline(TinyVec::Inline)
@@ -841,6 +848,7 @@ pub enum TinyVecDrain<'p, A: Array> {
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   type Item = A::Item;
 
+  #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     match self {
       TinyVecDrain::Inline(i) => i.next(),
@@ -848,6 +856,7 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
     }
   }
 
+  #[inline]
   fn nth(&mut self, n: usize) -> Option<Self::Item> {
     match self {
       TinyVecDrain::Inline(i) => i.nth(n),
@@ -855,6 +864,7 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
     }
   }
 
+  #[inline]
   fn size_hint(&self) -> (usize, Option<usize>) {
     match self {
       TinyVecDrain::Inline(i) => i.size_hint(),
@@ -862,6 +872,7 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
     }
   }
 
+  #[inline]
   fn for_each<F: FnMut(Self::Item)>(self, f: F) {
     match self {
       TinyVecDrain::Inline(i) => i.for_each(f),
@@ -871,6 +882,7 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
 }
 
 impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
+  #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
     match self {
       TinyVecDrain::Inline(i) => i.next_back(),
@@ -879,6 +891,7 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
   }
 
   #[cfg(feature = "rustc_1_40")]
+  #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     match self {
       TinyVecDrain::Inline(i) => i.nth_back(n),
@@ -903,6 +916,7 @@ where
 {
   type Item = A::Item;
 
+  #[inline]
   fn next(&mut self) -> Option<A::Item> {
     if self.removal_start < self.removal_end {
       match self.replacement.next() {
@@ -955,6 +969,7 @@ where
   A: Array,
   I: Iterator<Item = A::Item> + DoubleEndedIterator,
 {
+  #[inline]
   fn next_back(&mut self) -> Option<A::Item> {
     if self.removal_start < self.removal_end {
       match self.replacement.next_back() {

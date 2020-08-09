@@ -942,6 +942,7 @@ impl<'p, A: Array, I: Iterator<Item = A::Item>> Iterator
 {
   type Item = A::Item;
 
+  #[inline]
   fn next(&mut self) -> Option<A::Item> {
     if self.removal_start < self.removal_end {
       match self.replacement.next() {
@@ -994,6 +995,7 @@ where
   A: Array,
   I: Iterator<Item = A::Item> + DoubleEndedIterator,
 {
+  #[inline]
   fn next_back(&mut self) -> Option<A::Item> {
     if self.removal_start < self.removal_end {
       match self.replacement.next_back() {
