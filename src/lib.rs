@@ -81,11 +81,6 @@ pub extern crate alloc;
 mod array;
 pub use array::*;
 
-#[cfg(feature = "experimental_array_set")]
-mod arrayset;
-#[cfg(feature = "experimental_array_set")]
-pub use arrayset::*;
-
 mod arrayvec;
 pub use arrayvec::*;
 
