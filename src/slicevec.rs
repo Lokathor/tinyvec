@@ -19,6 +19,8 @@ pub struct SliceVec<'s, T> {
 }
 
 impl<'s, T> Default for SliceVec<'s, T> {
+  #[inline(always)]
+  #[must_use]
   fn default() -> Self {
     Self { data: &mut [], len: 0 }
   }
