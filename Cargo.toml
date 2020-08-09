@@ -10,13 +10,13 @@ categories = ["data-structures", "no-std"]
 repository = "https://github.com/Lokathor/tinyvec"
 
 [dependencies]
-# not even std!
+tinyvec_macros = { version = "0.1", optional = true }
 
 [features]
 default = []
 
 # Provide things that utilize the `alloc` crate, namely `TinyVec`.
-alloc = []
+alloc = ["tinyvec_macros"]
 
 # (not part of Vec!) Extra methods to let you grab the slice of memory after the
 # "active" portion of an `ArrayVec` or `SliceVec`.
