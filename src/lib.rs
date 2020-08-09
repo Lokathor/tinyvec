@@ -6,6 +6,7 @@
 )]
 #![cfg_attr(feature = "nightly_const_generics", allow(incomplete_features))]
 #![cfg_attr(feature = "nightly_const_generics", feature(const_generics))]
+#![cfg_attr(docs_rs, feature(doc_cfg))]
 #![warn(clippy::missing_inline_in_public_items)]
 #![warn(clippy::must_use_candidate)]
 #![warn(missing_docs)]
