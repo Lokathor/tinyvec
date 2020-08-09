@@ -43,6 +43,7 @@ experimental_write_impl = []
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--cfg","docs_rs"]
 
 [profile.test]
 opt-level = 3
