@@ -1,6 +1,6 @@
 use super::Array;
 
-impl<T: Default, const N: usize> Array for [T; N] where [T; N]: Default {
+impl<T: Default, const N: usize> Array for [T; N] {
   type Item = T;
   const CAPACITY: usize = N;
 
@@ -18,6 +18,6 @@ impl<T: Default, const N: usize> Array for [T; N] where [T; N]: Default {
 
   #[inline(always)]
   fn default() -> Self {
-    Default::default()
+    [(); N].map(|_| Default::default())
   }
 }
