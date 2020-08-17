@@ -4,7 +4,9 @@ use core::convert::TryInto;
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
 #[cfg(feature = "serde")]
-use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+use serde::de::{
+  Deserialize, Deserializer, Error as DeserializeError, SeqAccess, Visitor,
+};
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, SerializeSeq, Serializer};
 
@@ -1566,12 +1568,13 @@ where
   {
     let mut new_arrayvec: ArrayVec<A> = Default::default();
 
+    let mut idx = 0usize;
     while let Some(value) = seq.next_element()? {
-      // Prefer to truncate rather than panic.
       if new_arrayvec.len() >= new_arrayvec.capacity() {
-        break;
+        return Err(DeserializeError::invalid_length(idx, &self));
       }
       new_arrayvec.push(value);
+      idx = idx + 1;
     }
 
     Ok(new_arrayvec)
