@@ -34,49 +34,14 @@ pub trait Array {
   /// A correct implementation will return a slice with a length equal to the
   /// `CAPACITY` value.
   fn as_slice_mut(&mut self) -> &mut [Self::Item];
+
+  /// Create a default-initialized instance of ourself, similar to the [`Default`] trait, but
+  /// implemented for the same range of sizes as [`Array`].
+  fn default() -> Self;
 }
 
 #[cfg(feature = "nightly_const_generics")]
-impl<T: Default, const N: usize> Array for [T; N] {
-  type Item = T;
-  const CAPACITY: usize = N;
-  #[inline(always)]
-  #[must_use]
-  fn as_slice(&self) -> &[T] {
-    &*self
-  }
-  #[inline(always)]
-  #[must_use]
-  fn as_slice_mut(&mut self) -> &mut [T] {
-    &mut *self
-  }
-}
+mod const_generic_impl;
 
 #[cfg(not(feature = "nightly_const_generics"))]
-macro_rules! impl_array_for_len {
-  ($($len:expr),+ $(,)?) => {
-    $(impl<T: Default> Array for [T; $len] {
-      type Item = T;
-      const CAPACITY: usize = $len;
-      #[inline(always)]
-      #[must_use]
-      fn as_slice(&self) -> &[T] {
-        &*self
-      }
-      #[inline(always)]
-      #[must_use]
-      fn as_slice_mut(&mut self) -> &mut [T] {
-        &mut *self
-      }
-    })+
-  }
-}
-
-#[cfg(not(feature = "nightly_const_generics"))]
-impl_array_for_len! {
-  0, /* The oft-forgotten 0-length array! */
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-  17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-  33, /* for luck */
-  64, 128, 256, 512, 1024, 2048, 4096,
-}
+mod generated_impl;
