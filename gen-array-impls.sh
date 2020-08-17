@@ -45,8 +45,9 @@ cat <<-END
 
 	use super::Array;
 
-	$(for ((i = 0; i < 32; i++)); do gen_impl $i; done)
-	$(for ((i = 32; i <= 4096; i *= 2)); do gen_impl $i; done)
+	$(for ((i = 0; i <= 33; i++)); do gen_impl $i; done)
+
+	$(for ((i = 64; i <= 4096; i *= 2)); do gen_impl $i; done)
 END
 
 # vim: noet

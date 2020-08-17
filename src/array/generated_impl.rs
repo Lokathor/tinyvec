@@ -836,6 +836,7 @@ impl<T: Default> Array for [T; 31] {
     ]
   }
 }
+
 impl<T: Default> Array for [T; 32] {
   type Item = T;
   const CAPACITY: usize = 32;
@@ -861,6 +862,35 @@ impl<T: Default> Array for [T; 32] {
       T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
       T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
       T::default(), T::default(),
+    ]
+  }
+}
+
+impl<T: Default> Array for [T; 33] {
+  type Item = T;
+  const CAPACITY: usize = 33;
+
+  #[inline(always)]
+  #[must_use]
+  fn as_slice(&self) -> &[T] {
+    &*self
+  }
+
+  #[inline(always)]
+  #[must_use]
+  fn as_slice_mut(&mut self) -> &mut [T] {
+    &mut *self
+  }
+
+  #[inline(always)]
+  fn default() -> Self {
+    [
+      T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+      T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+      T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+      T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+      T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+      T::default(), T::default(), T::default(),
     ]
   }
 }
