@@ -1473,8 +1473,10 @@ where
   where
     S: SeqAccess<'de>,
   {
-    let expected_size = seq.size_hint().unwrap_or(0);
-    let mut new_tinyvec: TinyVec<A> = TinyVec::with_capacity(expected_size);
+    let mut new_tinyvec = match seq.size_hint() {
+      Some(expected_size) => TinyVec::with_capacity(expected_size),
+      None => Default::default(),
+    };
 
     while let Some(value) = seq.next_element()? {
       new_tinyvec.push(value);
