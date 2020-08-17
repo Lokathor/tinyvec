@@ -39,6 +39,9 @@
 //!   ArrayVec.
 //! * `rustc_1_40` makes the crate assume a minimum rust version of `1.40.0`,
 //!   which allows some better internal optimizations.
+//! * `serde` provides a `Serialize` and `Deserialize` implementation for
+//!   [`TinyVec`] and [`ArrayVec`] types, provided the inner item also
+//!   has an implementation.
 //!
 //! ## API
 //! The general goal of the crate is that, as much as possible, the vecs here

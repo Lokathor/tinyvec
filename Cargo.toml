@@ -11,12 +11,14 @@ repository = "https://github.com/Lokathor/tinyvec"
 
 [dependencies]
 tinyvec_macros = { version = "0.1", optional = true }
+# Provides `Serialize` and `Deserialize` implementations
+serde = { version = "1.0", optional = true, default-features = false }
 
 [features]
 default = []
 
 # Provide things that utilize the `alloc` crate, namely `TinyVec`.
-alloc = ["tinyvec_macros"]
+alloc = ["tinyvec_macros", "serde/alloc"]
 
 # (not part of Vec!) Extra methods to let you grab the slice of memory after the
 # "active" portion of an `ArrayVec` or `SliceVec`.
@@ -53,6 +55,7 @@ members = ["fuzz"]
 
 [dev-dependencies]
 criterion = "0.3.0"
+serde_test = "1.0"
 
 [[test]]
 name = "tinyvec"

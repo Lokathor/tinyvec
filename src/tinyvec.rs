@@ -5,6 +5,13 @@ use super::*;
 use alloc::vec::{self, Vec};
 use tinyvec_macros::impl_mirrored;
 
+#[cfg(feature = "serde")]
+use core::marker::PhantomData;
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, SerializeSeq, Serializer};
+
 /// Helper to make a `TinyVec`.
 ///
 /// You specify the backing array type, and optionally give all the elements you
@@ -133,6 +140,38 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
     &mut self.deref_mut()[index]
+  }
+}
+
+#[cfg(feature = "serde")]
+impl<A: Array> Serialize for TinyVec<A>
+where
+  A::Item: Serialize,
+{
+  #[must_use]
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    let mut seq = serializer.serialize_seq(Some(self.len()))?;
+    for element in self.iter() {
+      seq.serialize_element(element)?;
+    }
+    seq.end()
+  }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, A: Array> Deserialize<'de> for TinyVec<A>
+where
+  A: Default,
+  A::Item: Deserialize<'de>,
+{
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    deserializer.deserialize_seq(TinyVecVisitor(PhantomData))
   }
 }
 
@@ -1409,5 +1448,37 @@ where
       UpperHex::fmt(elem, f)?;
     }
     write!(f, "]")
+  }
+}
+
+#[cfg(feature = "serde")]
+struct TinyVecVisitor<A: Array>(PhantomData<A>);
+
+#[cfg(feature = "serde")]
+impl<'de, A: Array> Visitor<'de> for TinyVecVisitor<A>
+where
+  A: Default,
+  A::Item: Deserialize<'de>,
+{
+  type Value = TinyVec<A>;
+
+  fn expecting(
+    &self,
+    formatter: &mut core::fmt::Formatter,
+  ) -> core::fmt::Result {
+    formatter.write_str("a sequence")
+  }
+
+  fn visit_seq<S>(self, mut seq: S) -> Result<Self::Value, S::Error>
+  where
+    S: SeqAccess<'de>,
+  {
+    let mut new_arrayvec: ArrayVec<A> = ArrayVec::new();
+
+    while let Some(value) = seq.next_element()? {
+      new_arrayvec.push(value);
+    }
+
+    Ok(TinyVec::Inline(new_arrayvec))
   }
 }
