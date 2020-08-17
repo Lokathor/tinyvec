@@ -1564,9 +1564,13 @@ where
   where
     S: SeqAccess<'de>,
   {
-    let mut new_arrayvec: ArrayVec<A> = ArrayVec::new();
+    let mut new_arrayvec: ArrayVec<A> = Default::default();
 
     while let Some(value) = seq.next_element()? {
+      // Prefer to truncate rather than panic.
+      if new_arrayvec.len() >= new_arrayvec.capacity() {
+        break;
+      }
       new_arrayvec.push(value);
     }
 

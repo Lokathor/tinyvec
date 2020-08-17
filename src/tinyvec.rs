@@ -1473,12 +1473,13 @@ where
   where
     S: SeqAccess<'de>,
   {
-    let mut new_arrayvec: ArrayVec<A> = ArrayVec::new();
+    let expected_size = seq.size_hint().unwrap_or(0);
+    let mut new_tinyvec: TinyVec<A> = TinyVec::with_capacity(expected_size);
 
     while let Some(value) = seq.next_element()? {
-      new_arrayvec.push(value);
+      new_tinyvec.push(value);
     }
 
-    Ok(TinyVec::Inline(new_arrayvec))
+    Ok(new_tinyvec)
   }
 }
