@@ -17,9 +17,6 @@ use serde::ser::{Serialize, SerializeSeq, Serializer};
 /// You specify the backing array type, and optionally give all the elements you
 /// want to initially place into the array.
 ///
-/// As an unfortunate restriction, the backing array type must support `Default`
-/// for it to work with this macro.
-///
 /// ```rust
 /// use tinyvec::*;
 ///
@@ -98,7 +95,8 @@ pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
   Heap(Vec<A::Item>),
 }
-impl<A: Array + Default> Default for TinyVec<A> {
+
+impl<A: Array> Default for TinyVec<A> {
   #[inline]
   #[must_use]
   fn default() -> Self {
@@ -164,7 +162,6 @@ where
 #[cfg(feature = "serde")]
 impl<'de, A: Array> Deserialize<'de> for TinyVec<A>
 where
-  A: Default,
   A::Item: Deserialize<'de>,
 {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -203,10 +200,7 @@ impl<A: Array> TinyVec<A> {
   /// tv.shrink_to_fit();
   /// assert!(tv.is_inline());
   /// ```
-  pub fn shrink_to_fit(&mut self)
-  where
-    A: Default,
-  {
+  pub fn shrink_to_fit(&mut self) {
     let vec = match self {
       TinyVec::Inline(_) => return,
       TinyVec::Heap(h) => h,
@@ -336,10 +330,7 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   #[must_use]
-  pub fn with_capacity(cap: usize) -> Self
-  where
-    A: Default,
-  {
+  pub fn with_capacity(cap: usize) -> Self {
     if cap <= A::CAPACITY {
       TinyVec::Inline(ArrayVec::default())
     } else {
@@ -668,10 +659,7 @@ impl<A: Array> TinyVec<A> {
   /// Makes a new, empty vec.
   #[inline(always)]
   #[must_use]
-  pub fn new() -> Self
-  where
-    A: Default,
-  {
+  pub fn new() -> Self {
     Self::default()
   }
 
@@ -778,10 +766,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   /// ```
   #[inline]
-  pub fn split_off(&mut self, at: usize) -> Self
-  where
-    A: Default,
-  {
+  pub fn split_off(&mut self, at: usize) -> Self {
     match self {
       TinyVec::Inline(a) => TinyVec::Inline(a.split_off(at)),
       TinyVec::Heap(v) => TinyVec::Heap(v.split_off(at)),
@@ -1104,7 +1089,7 @@ impl<A: Array> From<A> for TinyVec<A> {
 impl<T, A> From<&'_ [T]> for TinyVec<A>
 where
   T: Clone + Default,
-  A: Array<Item = T> + Default,
+  A: Array<Item = T>,
 {
   #[inline]
   #[must_use]
@@ -1123,7 +1108,7 @@ where
 impl<T, A> From<&'_ mut [T]> for TinyVec<A>
 where
   T: Clone + Default,
-  A: Array<Item = T> + Default,
+  A: Array<Item = T>,
 {
   #[inline]
   #[must_use]
@@ -1132,7 +1117,7 @@ where
   }
 }
 
-impl<A: Array + Default> FromIterator<A::Item> for TinyVec<A> {
+impl<A: Array> FromIterator<A::Item> for TinyVec<A> {
   #[inline]
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
@@ -1457,7 +1442,6 @@ struct TinyVecVisitor<A: Array>(PhantomData<A>);
 #[cfg(feature = "serde")]
 impl<'de, A: Array> Visitor<'de> for TinyVecVisitor<A>
 where
-  A: Default,
   A::Item: Deserialize<'de>,
 {
   type Value = TinyVec<A>;

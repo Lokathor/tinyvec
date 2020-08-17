@@ -15,9 +15,6 @@ use serde::ser::{Serialize, SerializeSeq, Serializer};
 /// You specify the backing array type, and optionally give all the elements you
 /// want to initially place into the array.
 ///
-/// As an unfortunate restriction, the backing array type must support `Default`
-/// for it to work with this macro.
-///
 /// ```rust
 /// use tinyvec::*;
 ///
@@ -64,8 +61,7 @@ macro_rules! array_vec {
 ///
 /// ## Construction
 ///
-/// If the backing array supports Default (length 32 or less), then you can use
-/// the `array_vec!` macro similarly to how you might use the `vec!` macro.
+/// You can use the `array_vec!` macro similarly to how you might use the `vec!` macro.
 /// Specify the array type, then optionally give all the initial values you want
 /// to have.
 /// ```rust
@@ -99,10 +95,19 @@ macro_rules! array_vec {
 /// assert_eq!(more_ints.len(), 2);
 /// ```
 #[repr(C)]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct ArrayVec<A: Array> {
   len: u16,
   pub(crate) data: A,
+}
+
+impl<A: Array> Default for ArrayVec<A> {
+  fn default() -> Self {
+    Self {
+      len: 0,
+      data: A::default(),
+    }
+  }
 }
 
 impl<A: Array> Deref for ArrayVec<A> {
@@ -160,7 +165,6 @@ where
 #[cfg(feature = "serde")]
 impl<'de, A: Array> Deserialize<'de> for ArrayVec<A>
 where
-  A: Default,
   A::Item: Deserialize<'de>,
 {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -470,10 +474,7 @@ impl<A: Array> ArrayVec<A> {
   /// Makes a new, empty `ArrayVec`.
   #[inline(always)]
   #[must_use]
-  pub fn new() -> Self
-  where
-    A: Default,
-  {
+  pub fn new() -> Self {
     Self::default()
   }
 
@@ -733,10 +734,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(&av2[..], [2, 3]);
   /// ```
   #[inline]
-  pub fn split_off(&mut self, at: usize) -> Self
-  where
-    Self: Default,
-  {
+  pub fn split_off(&mut self, at: usize) -> Self {
     // FIXME: should this just use drain into the output?
     if at > self.len() {
       panic!(
@@ -1133,7 +1131,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
   }
 }
 
-impl<A: Array + Default> FromIterator<A::Item> for ArrayVec<A> {
+impl<A: Array> FromIterator<A::Item> for ArrayVec<A> {
   #[inline]
   #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
@@ -1550,7 +1548,6 @@ struct ArrayVecVisitor<A: Array>(PhantomData<A>);
 #[cfg(feature = "serde")]
 impl<'de, A: Array> Visitor<'de> for ArrayVecVisitor<A>
 where
-  A: Default,
   A::Item: Deserialize<'de>,
 {
   type Value = ArrayVec<A>;
