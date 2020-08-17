@@ -1,5 +1,7 @@
 #![allow(bad_style)]
 
+#[cfg(feature = "serde")]
+use serde_test::{assert_tokens, Token};
 use std::iter::FromIterator;
 use tinyvec::*;
 
@@ -403,4 +405,34 @@ fn reviter() {
   assert_eq!(iter.nth_back(0), Some(27));
   assert_eq!(iter.nth_back(99), None);
   assert_eq!(iter.nth_back(99), None);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn ArrayVec_ser_de_empty() {
+  let tv: ArrayVec<[i32; 0]> = Default::default();
+
+  assert_tokens(&tv, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn ArrayVec_ser_de() {
+  let mut tv: ArrayVec<[i32; 4]> = Default::default();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+
+  assert_tokens(
+    &tv,
+    &[
+      Token::Seq { len: Some(4) },
+      Token::I32(1),
+      Token::I32(2),
+      Token::I32(3),
+      Token::I32(4),
+      Token::SeqEnd,
+    ],
+  );
 }

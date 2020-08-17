@@ -2,6 +2,8 @@
 #![allow(bad_style)]
 #![allow(clippy::redundant_clone)]
 
+#[cfg(feature = "serde")]
+use serde_test::{assert_tokens, Token};
 use std::iter::FromIterator;
 use tinyvec::*;
 
@@ -316,4 +318,49 @@ fn TinyVec_move_to_heap_and_shrink() {
   tv.extend(2..=4);
   assert_eq!(tv.capacity(), 4);
   assert_eq!(tv.as_slice(), [1, 2, 3, 4]);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn TinyVec_ser_de_empty() {
+  let tv: TinyVec<[i32; 0]> = tiny_vec![];
+
+  assert_tokens(&tv, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn TinyVec_ser_de() {
+  let tv: TinyVec<[i32; 4]> = tiny_vec![1, 2, 3, 4];
+
+  assert_tokens(
+    &tv,
+    &[
+      Token::Seq { len: Some(4) },
+      Token::I32(1),
+      Token::I32(2),
+      Token::I32(3),
+      Token::I32(4),
+      Token::SeqEnd,
+    ],
+  );
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn TinyVec_ser_de_heap() {
+  let mut tv: TinyVec<[i32; 4]> = tiny_vec![1, 2, 3, 4];
+  tv.move_to_the_heap();
+
+  assert_tokens(
+    &tv,
+    &[
+      Token::Seq { len: Some(4) },
+      Token::I32(1),
+      Token::I32(2),
+      Token::I32(3),
+      Token::I32(4),
+      Token::SeqEnd,
+    ],
+  );
 }
