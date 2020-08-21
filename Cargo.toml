@@ -44,7 +44,7 @@ nightly_const_generics = []
 experimental_write_impl = []
 
 [package.metadata.docs.rs]
-all-features = true
+features = ["alloc", "grab_spare_slice", "rustc_1_40", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
 
 [profile.test]
