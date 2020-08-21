@@ -142,6 +142,7 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "serde")))]
 impl<A: Array> Serialize for TinyVec<A>
 where
   A::Item: Serialize,
@@ -160,6 +161,7 @@ where
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "serde")))]
 impl<'de, A: Array> Deserialize<'de> for TinyVec<A>
 where
   A::Item: Deserialize<'de>,
