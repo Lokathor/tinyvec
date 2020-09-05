@@ -47,6 +47,9 @@ experimental_write_impl = []
 features = ["alloc", "grab_spare_slice", "rustc_1_40", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
 
+[package.metadata.playground]
+features = ["alloc", "grab_spare_slice", "rustc_1_40", "serde"]
+
 [profile.test]
 opt-level = 3
 
