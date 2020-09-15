@@ -262,6 +262,27 @@ fn TinyVec_from_array() {
 }
 
 #[test]
+fn TinyVec_macro() {
+  let mut expected: TinyVec<[i32; 4]> = Default::default();
+  expected.push(1);
+  expected.push(2);
+  expected.push(3);
+
+  let actual = tiny_vec!(1, 2, 3);
+
+  assert_eq!(expected, actual);
+
+  assert_eq!(tiny_vec![0u8; 4], tiny_vec!(0u8, 0u8, 0u8, 0u8));
+  assert_eq!(tiny_vec![0u8; 4], tiny_vec!([u8; 4] => 0, 0, 0, 0));
+  assert_eq!(tiny_vec![0; 4], tiny_vec!(0, 0, 0, 0));
+  assert_eq!(tiny_vec![0; 4], tiny_vec!([u8; 4] => 0, 0, 0, 0));
+
+  let expected2 = tiny_vec![1.1; 3];
+  let actual2 = tiny_vec!([f32; 3] => 1.1, 1.1, 1.1);
+  assert_eq!(expected2, actual2);
+}
+
+#[test]
 fn TinyVec_macro_non_copy() {
   // must use a variable here to avoid macro shenanigans
   let s = String::new();
