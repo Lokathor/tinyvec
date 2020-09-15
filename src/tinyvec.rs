@@ -50,10 +50,13 @@ macro_rules! tiny_vec {
     }
   };
   ($array_type:ty) => {
-    $crate::tiny_vec!($array_type =>)
+    $crate::TinyVec::<$array_type>::default()
   };
   ($($elem:expr),*) => {
     $crate::tiny_vec!(_ => $($elem),*)
+  };
+  ($elem:expr; $n:expr) => {
+    $crate::TinyVec::from([$elem; $n])
   };
   () => {
     $crate::tiny_vec!(_)
