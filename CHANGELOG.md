@@ -2,9 +2,10 @@
 
 ## 1.1.0
 
-* User `@slightlyoutofphase` added "array splat" style syntax to the `array_vec` and `tiny_vec` macros.
+* New contributor [slightlyoutofphase](https://github.com/slightlyoutofphase)
+added "array splat" style syntax to the `array_vec!` and `tiny_vec!` macros.
 You can now write `array_vec![true; 5]` and get a length 5 array vec full of `true`,
-just like normal array initialization allows. Same goes for `tiny_vec`.
+just like normal array initialization allows. Same goes for `tiny_vec!`.
 ([pr 118](https://github.com/Lokathor/tinyvec/pull/118))
 
 ## 1.0.2
