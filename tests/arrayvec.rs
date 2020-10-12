@@ -15,6 +15,15 @@ fn test_a_vec() {
   let actual = array_vec!(1, 2, 3);
 
   assert_eq!(expected, actual);
+
+  assert_eq!(array_vec![0u8; 4], array_vec!(0u8, 0u8, 0u8, 0u8));
+  assert_eq!(array_vec![0u8; 4], array_vec!([u8; 4] => 0, 0, 0, 0));
+  assert_eq!(array_vec![0; 4], array_vec!(0, 0, 0, 0));
+  assert_eq!(array_vec![0; 4], array_vec!([u8; 4] => 0, 0, 0, 0));
+
+  let expected2 = array_vec![1.1; 3];
+  let actual2 = array_vec!([f32; 3] => 1.1, 1.1, 1.1);
+  assert_eq!(expected2, actual2);
 }
 
 #[test]

@@ -36,10 +36,13 @@ macro_rules! array_vec {
     }
   };
   ($array_type:ty) => {
-    $crate::array_vec!($array_type =>)
+    $crate::ArrayVec::<$array_type>::default()
   };
   ($($elem:expr),*) => {
     $crate::array_vec!(_ => $($elem),*)
+  };
+  ($elem:expr; $n:expr) => {
+    $crate::ArrayVec::from([$elem; $n])
   };
   () => {
     $crate::array_vec!(_)
