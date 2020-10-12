@@ -61,9 +61,9 @@ macro_rules! array_vec {
 ///
 /// ## Construction
 ///
-/// You can use the `array_vec!` macro similarly to how you might use the `vec!` macro.
-/// Specify the array type, then optionally give all the initial values you want
-/// to have.
+/// You can use the `array_vec!` macro similarly to how you might use the `vec!`
+/// macro. Specify the array type, then optionally give all the initial values
+/// you want to have.
 /// ```rust
 /// # use tinyvec::*;
 /// let some_ints = array_vec!([i32; 4] => 1, 2, 3);
@@ -103,10 +103,7 @@ pub struct ArrayVec<A: Array> {
 
 impl<A: Array> Default for ArrayVec<A> {
   fn default() -> Self {
-    Self {
-      len: 0,
-      data: A::default(),
-    }
+    Self { len: 0, data: A::default() }
   }
 }
 
@@ -220,8 +217,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn try_append<'other>(
-    &mut self,
-    other: &'other mut Self,
+    &mut self, other: &'other mut Self,
   ) -> Option<&'other mut Self> {
     let new_len = self.len() + other.len();
     if new_len > A::CAPACITY {
@@ -319,6 +315,66 @@ impl<A: Array> ArrayVec<A> {
     ArrayVecDrain::new(self, range)
   }
 
+  /// Returns the inner backing storage of the `ArrayVec`. If this `ArrayVec` is
+  /// full, every element in the array will be used. If this `ArrayVec` is not
+  /// full, elements outside of the `ArrayVec`'s bounds with be set to their
+  /// default value.
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// # use tinyvec::{array_vec, ArrayVec};
+  ///
+  /// let mut favorite_numbers = array_vec!([i32; 5] => 87, 48, 33, 9, 26);
+  /// assert_eq!(favorite_numbers.clone().into_inner(), [87, 48, 33, 9, 26]);
+  ///
+  /// favorite_numbers.pop();
+  /// assert_eq!(favorite_numbers.into_inner(), [87, 48, 33, 9, 0]);
+  /// ```
+  ///
+  /// A use for this function is to build an array from an iterator by first
+  /// collecting it into an `ArrayVec`.
+  ///
+  /// ```rust
+  /// # use tinyvec::ArrayVec;
+  ///
+  /// struct FibonacciIterator {
+  ///   t1: i32,
+  ///   t2: i32,
+  /// }
+  ///
+  /// impl FibonacciIterator {
+  ///   fn new() -> Self {
+  ///     Self { t1: 0, t2: 1 }
+  ///   }
+  /// }
+  ///
+  /// impl Iterator for FibonacciIterator {
+  ///   type Item = i32;
+  ///   
+  ///   fn next(&mut self) -> Option<i32> {
+  ///     let res = self.t1;
+  ///     let next = self.t1 + self.t2;
+  ///     self.t1 = self.t2;
+  ///     self.t2 = next;
+  ///     Some(res)
+  ///   }
+  /// }
+  ///
+  /// // collect the first 10 numbers of the fibonacci sequence into an array, with a
+  /// // convenient one-liner
+  /// let fib_array: [i32; 10] =
+  ///   FibonacciIterator::new()
+  ///     .take(10)
+  ///     .collect::<ArrayVec<[i32; 10]>>()
+  ///     .into_inner();
+  /// assert_eq!(fib_array, [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]);
+  /// ```
+  #[inline]
+  pub fn into_inner(self) -> A {
+    self.data
+  }
+
   /// Clone each element of the slice into this `ArrayVec`.
   ///
   /// ## Panics
@@ -372,8 +428,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn fill<I: IntoIterator<Item = A::Item>>(
-    &mut self,
-    iter: I,
+    &mut self, iter: I,
   ) -> I::IntoIter {
     let mut iter = iter.into_iter();
     for element in iter.by_ref().take(self.capacity() - self.len()) {
@@ -626,9 +681,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(
-    &mut self,
-    new_len: usize,
-    mut f: F,
+    &mut self, new_len: usize, mut f: F,
   ) {
     match new_len.checked_sub(self.len as usize) {
       None => self.truncate(new_len),
@@ -784,9 +837,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   #[inline]
   pub fn splice<R, I>(
-    &mut self,
-    range: R,
-    replacement: I,
+    &mut self, range: R, replacement: I,
   ) -> ArrayVecSplice<'_, A, core::iter::Fuse<I::IntoIter>>
   where
     R: RangeBounds<usize>,
@@ -1555,8 +1606,7 @@ where
   type Value = ArrayVec<A>;
 
   fn expecting(
-    &self,
-    formatter: &mut core::fmt::Formatter,
+    &self, formatter: &mut core::fmt::Formatter,
   ) -> core::fmt::Result {
     formatter.write_str("a sequence")
   }

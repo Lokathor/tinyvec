@@ -152,8 +152,7 @@ impl<'s, T> SliceVec<'s, T> {
   /// ```
   #[inline]
   pub fn drain<'p, R: RangeBounds<usize>>(
-    &'p mut self,
-    range: R,
+    &'p mut self, range: R,
   ) -> SliceVecDrain<'p, 's, T>
   where
     T: Default,
