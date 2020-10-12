@@ -575,7 +575,7 @@ impl<A: Array> TinyVec<A> {
   /// ```rust
   /// # use tinyvec::{TinyVec, tiny_vec};
   /// /// In-memory representation of a crab. crab.
-  /// #[derive(Default)]
+  /// #[derive(Default, Clone)]
   /// struct Crab {
   ///   length: u16,
   ///   favorite_color: (u8, u8, u8),
@@ -589,17 +589,24 @@ impl<A: Array> TinyVec<A> {
   ///     Crab { length: 22, favorite_color: (0, 255, 0) },
   ///     Crab { length: 16, favorite_color: (255, 0, 255) },
   ///     Crab { length: 50, favorite_color: (255, 127, 0) },
-  ///     Crab { length: 21, favorite_color: {99, 33, 2) },
+  ///     Crab { length: 21, favorite_color: (99, 33, 2) },
   ///   );
   ///
   /// let dinner_plate = crab_cage.clone().into_inner();
-  /// assert_eq!(dinner_plate.is_ok());
+  /// assert!(dinner_plate.is_ok());
   ///
   /// // oh no! an excess crab has wandered into the cage!
   /// crab_cage.push(Crab { length: 24, favorite_color: (87, 48, 0) });
   /// let dinner_plate = crab_cage.into_inner();
-  /// assert_eq!(dinner_plate.is_err()); // look like we're eating hardtack tonight, boys!
+  /// assert!(dinner_plate.is_err()); // look like we're eating hardtack tonight, boys!
   /// ```
+  #[inline]
+  pub fn into_inner(self) -> Result<A, Self> {
+    match self {
+      Self::Inline(a) => Ok(a.into_inner()),
+      tv => Err(tv),
+    }
+  }
 
   /// Clone each element of the slice into this vec.
   /// ```rust
