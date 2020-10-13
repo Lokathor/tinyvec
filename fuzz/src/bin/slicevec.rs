@@ -84,7 +84,6 @@ fn rand_array(mut x: u32) -> [u32; 32] {
   return tested;
 }
 
-
 fn fuzz_cycle(data: &[u8]) -> Result<(), ()> {
   use arbitrary::{Arbitrary, Unstructured};
 
