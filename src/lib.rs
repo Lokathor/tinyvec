@@ -4,7 +4,10 @@
   feature = "nightly_slice_partition_dedup",
   feature(slice_partition_dedup)
 )]
-#![cfg_attr(feature = "nightly_const_generics", feature(min_const_generics, array_map))]
+#![cfg_attr(
+  feature = "nightly_const_generics",
+  feature(min_const_generics, array_map)
+)]
 #![cfg_attr(docs_rs, feature(doc_cfg))]
 #![warn(clippy::missing_inline_in_public_items)]
 #![warn(clippy::must_use_candidate)]
@@ -40,8 +43,8 @@
 //! * `rustc_1_40` makes the crate assume a minimum rust version of `1.40.0`,
 //!   which allows some better internal optimizations.
 //! * `serde` provides a `Serialize` and `Deserialize` implementation for
-//!   [`TinyVec`] and [`ArrayVec`] types, provided the inner item also
-//!   has an implementation.
+//!   [`TinyVec`] and [`ArrayVec`] types, provided the inner item also has an
+//!   implementation.
 //!
 //! ## API
 //! The general goal of the crate is that, as much as possible, the vecs here

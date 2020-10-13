@@ -35,8 +35,9 @@ pub trait Array {
   /// `CAPACITY` value.
   fn as_slice_mut(&mut self) -> &mut [Self::Item];
 
-  /// Create a default-initialized instance of ourself, similar to the [`Default`] trait, but
-  /// implemented for the same range of sizes as [`Array`].
+  /// Create a default-initialized instance of ourself, similar to the
+  /// [`Default`] trait, but implemented for the same range of sizes as
+  /// [`Array`].
   fn default() -> Self;
 }
 

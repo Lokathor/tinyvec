@@ -554,8 +554,7 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn drain<R: RangeBounds<usize>>(
-    &mut self,
-    range: R,
+    &mut self, range: R,
   ) -> TinyVecDrain<'_, A> {
     match self {
       TinyVec::Inline(i) => TinyVecDrain::Inline(i.drain(range)),
@@ -803,9 +802,7 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn splice<R, I>(
-    &mut self,
-    range: R,
-    replacement: I,
+    &mut self, range: R, replacement: I,
   ) -> TinyVecSplice<'_, A, core::iter::Fuse<I::IntoIter>>
   where
     R: RangeBounds<usize>,
@@ -1452,8 +1449,7 @@ where
   type Value = TinyVec<A>;
 
   fn expecting(
-    &self,
-    formatter: &mut core::fmt::Formatter,
+    &self, formatter: &mut core::fmt::Formatter,
   ) -> core::fmt::Result {
     formatter.write_str("a sequence")
   }
