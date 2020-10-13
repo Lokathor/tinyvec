@@ -559,55 +559,6 @@ impl<A: Array> TinyVec<A> {
     }
   }
 
-  /// Returns the inner backing array for this `TinyVec`, if possible.
-  ///
-  /// If the length of this `TinyVec` is less than or equal to its inline
-  /// capacity, it will return an array containing its elements, alongside
-  /// default elements if the length is less than the inline capacity.
-  ///
-  /// ## Errors
-  ///
-  /// If the length of this `TinyVec` is greater than its capacity, it will
-  /// return an error containing the un-disassembled `TinyVec`.
-  ///
-  /// ## Examples
-  ///
-  /// ```rust
-  /// # use tinyvec::{TinyVec, tiny_vec};
-  /// /// In-memory representation of a crab. crab.
-  /// #[derive(Default, Clone)]
-  /// struct Crab {
-  ///   length: u16,
-  ///   favorite_color: (u8, u8, u8),
-  /// }
-  ///
-  /// // time to go crab fishing! our crab cage can hold a theoretically infinite number of crabs.
-  /// // however, if there are more than five crabs, it's too heavy to lift out of the ocean.
-  /// let mut crab_cage: TinyVec<[Crab; 5]> =
-  ///   tiny_vec!([Crab; 5] =>
-  ///     Crab { length: 20, favorite_color: (0, 0, 0) },
-  ///     Crab { length: 22, favorite_color: (0, 255, 0) },
-  ///     Crab { length: 16, favorite_color: (255, 0, 255) },
-  ///     Crab { length: 50, favorite_color: (255, 127, 0) },
-  ///     Crab { length: 21, favorite_color: (99, 33, 2) },
-  ///   );
-  ///
-  /// let dinner_plate = crab_cage.clone().into_inner();
-  /// assert!(dinner_plate.is_ok());
-  ///
-  /// // oh no! an excess crab has wandered into the cage!
-  /// crab_cage.push(Crab { length: 24, favorite_color: (87, 48, 0) });
-  /// let dinner_plate = crab_cage.into_inner();
-  /// assert!(dinner_plate.is_err()); // look like we're eating hardtack tonight, boys!
-  /// ```
-  #[inline]
-  pub fn into_inner(self) -> Result<A, Self> {
-    match self {
-      Self::Inline(a) => Ok(a.into_inner()),
-      tv => Err(tv),
-    }
-  }
-
   /// Clone each element of the slice into this vec.
   /// ```rust
   /// use tinyvec::*;
