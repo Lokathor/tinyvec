@@ -318,10 +318,10 @@ impl<A: Array> ArrayVec<A> {
     ArrayVecDrain::new(self, range)
   }
 
-  /// Returns the inner backing storage of the `ArrayVec`. If this `ArrayVec` is
-  /// full, every element in the array will be used. If this `ArrayVec` is not
-  /// full, elements outside of the `ArrayVec`'s bounds with be set to their
-  /// default value.
+  /// Returns the inner array of the `ArrayVec`.
+  ///
+  /// This returns the full array, even if the `ArrayVec` length is currently
+  /// less than that.
   ///
   /// ## Example
   ///
@@ -339,37 +339,9 @@ impl<A: Array> ArrayVec<A> {
   ///
   /// ```rust
   /// # use tinyvec::ArrayVec;
-  /// # 
-  /// # struct FibonacciIterator {
-  /// #   t1: i32,
-  /// #   t2: i32,
-  /// # }
-  /// # 
-  /// # impl FibonacciIterator {
-  /// #   fn new() -> Self {
-  /// #     Self { t1: 0, t2: 1 }
-  /// #   }
-  /// # }
-  /// # 
-  /// # impl Iterator for FibonacciIterator {
-  /// #   type Item = i32;
-  /// #   
-  /// #   fn next(&mut self) -> Option<i32> {
-  /// #     let res = self.t1;
-  /// #     let next = self.t1 + self.t2;
-  /// #     self.t1 = self.t2;
-  /// #     self.t2 = next;
-  /// #     Some(res)
-  /// #  }
-  /// # }
-  /// // collect the first 10 numbers of the fibonacci sequence into an array,
-  /// // with a convenient one-liner
-  /// let fib_array: [i32; 10] =
-  ///   FibonacciIterator::new()
-  ///     .take(10)
-  ///     .collect::<ArrayVec<[i32; 10]>>()
-  ///     .into_inner();
-  /// assert_eq!(fib_array, [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]);
+  /// let arr_vec: ArrayVec<[i32; 10]> = (1..=3).cycle().take(10).collect();
+  /// let inner = arr_vec.into_inner();
+  /// assert_eq!(inner, [1, 2, 3, 1, 2, 3, 1, 2, 3, 1]);
   /// ```
   #[inline]
   pub fn into_inner(self) -> A {
