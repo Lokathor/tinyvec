@@ -859,6 +859,7 @@ impl<A: Array> TinyVec<A> {
 /// Draining iterator for `TinyVecDrain`
 ///
 /// See [`TinyVecDrain::drain`](TinyVecDrain::<A>::drain)
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 pub enum TinyVecDrain<'p, A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecDrain<'p, A::Item>),
@@ -908,6 +909,7 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
 
 /// Splicing iterator for `TinyVec`
 /// See [`TinyVec::splice`](TinyVec::<A>::splice)
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 pub struct TinyVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
   parent: &'p mut TinyVec<A>,
   removal_start: usize,
@@ -1130,6 +1132,7 @@ impl<A: Array> FromIterator<A::Item> for TinyVec<A> {
 }
 
 /// Iterator for consuming an `TinyVec` and returning owned elements.
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 pub enum TinyVecIterator<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecIterator<A>),
@@ -1439,6 +1442,7 @@ where
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
 struct TinyVecVisitor<A: Array>(PhantomData<A>);
 
 #[cfg(feature = "serde")]
