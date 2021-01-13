@@ -678,7 +678,16 @@ impl<A: Array> TinyVec<A> {
   /// ```
   #[inline]
   pub fn push(&mut self, val: A::Item) {
-    #[inline(never)]
+    // The code path for moving the inline contents to the heap produces a lot
+    // of instructions, but we have a strong guarantee that this is a cold
+    // path. LLVM doesn't know this, inlines it, and this tends to cause a
+    // cascade of other bad inlining decisions because the body of push looks
+    // huge even though nearly every call executes the same few instructions.
+    //
+    // Moving the logic out of line with #[cold] causes the hot code to  be
+    // inlined together, and we take the extra cost of a function call only
+    // in rare cases.
+    #[cold]
     fn drain_to_heap_and_push<A: Array>(
       arr: &mut ArrayVec<A>, val: A::Item,
     ) -> TinyVec<A> {
