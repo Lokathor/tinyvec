@@ -676,18 +676,25 @@ impl<A: Array> TinyVec<A> {
   /// tv.push(4);
   /// assert_eq!(tv.as_slice(), &[1, 2, 3, 4]);
   /// ```
-  #[inline(always)]
+  #[inline]
   pub fn push(&mut self, val: A::Item) {
-    let arr = match self {
-      TinyVec::Heap(v) => return v.push(val),
-      TinyVec::Inline(a) => a,
-    };
-
-    if let Some(x) = arr.try_push(val) {
+    #[inline(never)]
+    fn drain_to_heap_and_push<A: Array>(
+      arr: &mut ArrayVec<A>, val: A::Item,
+    ) -> TinyVec<A> {
       /* Make the Vec twice the size to amortize the cost of draining */
       let mut v = arr.drain_to_vec_and_reserve(arr.len());
-      v.push(x);
-      *self = TinyVec::Heap(v);
+      v.push(val);
+      TinyVec::Heap(v)
+    }
+
+    match self {
+      TinyVec::Heap(v) => v.push(val),
+      TinyVec::Inline(arr) => {
+        if let Some(x) = arr.try_push(val) {
+          *self = drain_to_heap_and_push(arr, x);
+        }
+      }
     }
   }
 
