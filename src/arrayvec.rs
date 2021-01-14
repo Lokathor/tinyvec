@@ -601,7 +601,9 @@ impl<A: Array> ArrayVec<A> {
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
     let item = take(&mut targets[0]);
-    targets.rotate_left(1);
+    for i in 0..targets.len() - 1 {
+      targets.swap(i, i + 1);
+    }
     self.len -= 1;
     item
   }
