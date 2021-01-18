@@ -480,7 +480,9 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av.try_insert(4, "five"), Some("five"));
   /// ```
   #[inline]
-  pub fn try_insert(&mut self, index: usize, item: A::Item) -> Option<A::Item> {
+  pub fn try_insert(
+    &mut self, index: usize, mut item: A::Item,
+  ) -> Option<A::Item> {
     assert!(
       index <= self.len as usize,
       "ArrayVec::try_insert> index {} is out of bounds {}",
@@ -488,11 +490,23 @@ impl<A: Array> ArrayVec<A> {
       self.len
     );
 
-    if let Some(x) = self.try_push(item) {
-      return Some(x);
+    // A previous implementation used self.try_push and slice::rotate_right
+    // rotate_right and rotate_left generate a huge amount of code and fail to
+    // inline; calling them here incurs the cost of all the cases they
+    // handle even though we're rotating a usually-small array by a constant
+    // 1 offset. This swap-based implementation benchmarks much better for
+    // small array lengths in particular.
+
+    if (self.len as usize) < A::CAPACITY {
+      self.len += 1;
+    } else {
+      return Some(item);
     }
 
-    self.as_mut_slice()[index..].rotate_right(1);
+    let target = &mut self.as_mut_slice()[index..];
+    for i in 0..target.len() {
+      core::mem::swap(&mut item, &mut target[i]);
+    }
     return None;
   }
 
@@ -610,6 +624,14 @@ impl<A: Array> ArrayVec<A> {
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
     let item = take(&mut targets[0]);
+
+    // A previous implementation used rotate_left
+    // rotate_right and rotate_left generate a huge amount of code and fail to
+    // inline; calling them here incurs the cost of all the cases they
+    // handle even though we're rotating a usually-small array by a constant
+    // 1 offset. This swap-based implementation benchmarks much better for
+    // small array lengths in particular.
+
     for i in 0..targets.len() - 1 {
       targets.swap(i, i + 1);
     }
