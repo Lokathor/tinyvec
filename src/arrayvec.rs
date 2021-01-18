@@ -403,10 +403,19 @@ impl<A: Array> ArrayVec<A> {
   pub fn fill<I: IntoIterator<Item = A::Item>>(
     &mut self, iter: I,
   ) -> I::IntoIter {
+    // If this is written as a call to push for each element in iter, the
+    // compiler emits code that updates the length for every element. The
+    // additional complexity from that length update is worth nearly 2x in
+    // the runtime of this function.
     let mut iter = iter.into_iter();
-    for element in iter.by_ref().take(self.capacity() - self.len()) {
-      self.push(element);
+    let mut pushed = 0;
+    let to_take = self.capacity() - self.len();
+    let target = &mut self.data.as_slice_mut()[self.len as usize..];
+    for element in iter.by_ref().take(to_take) {
+      target[pushed] = element;
+      pushed += 1;
     }
+    self.len += pushed as u16;
     iter
   }
 
