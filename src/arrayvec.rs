@@ -1,5 +1,5 @@
 use super::*;
-use core::convert::TryInto;
+use core::convert::{TryInto, TryFrom};
 
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
@@ -1187,6 +1187,39 @@ impl<A: Array> From<A> for ArrayVec<A> {
       .try_into()
       .expect("ArrayVec::from> lenght must be in range 0..=u16::MAX");
     Self { len, data }
+  }
+}
+
+/// The error type returned when a conversion from a slice to an [`ArrayVec`] fails.
+#[derive(Debug, Copy, Clone)]
+pub struct TryFromSliceError(());
+
+impl<T, A> TryFrom<&'_ [T]> for ArrayVec<A>
+where
+    T: Clone + Default,
+    A: Array<Item = T>,
+{
+  type Error = TryFromSliceError;
+
+  #[inline]
+  #[must_use]
+  /// The output has a length equal to that of the slice, with the same capacity as `A`.
+  fn try_from(slice: &[T]) -> Result<Self, Self::Error> {
+    if slice.len() > A::CAPACITY {
+      Err(TryFromSliceError(()))
+    } else {
+      let mut arr = ArrayVec::new();
+      // We do not use ArrayVec::extend_from_slice, because it looks like LLVM
+      // fails to deduplicate all the length-checking logic between the
+      // above if and the contents of that method, thus producing much
+      // slower code. Unlike many of the other optimizations in this
+      // crate, this one is worth keeping an eye on. I see no reason, for
+      // any element type, that these should produce different code. But
+      // they do. (rustc 1.51.0)
+      arr.set_len(slice.len());
+      arr.as_mut_slice().clone_from_slice(slice);
+      Ok(arr)
+    }
   }
 }
 

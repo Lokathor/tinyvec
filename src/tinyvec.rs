@@ -3,6 +3,7 @@
 use super::*;
 
 use alloc::vec::{self, Vec};
+use core::convert::TryFrom;
 use tinyvec_macros::impl_mirrored;
 
 #[cfg(feature = "serde")]
@@ -1114,20 +1115,10 @@ where
   #[inline]
   #[must_use]
   fn from(slice: &[T]) -> Self {
-    if slice.len() > A::CAPACITY {
-      TinyVec::Heap(slice.into())
-    } else {
-      let mut arr = ArrayVec::new();
-      // We do not use ArrayVec::extend_from_slice, because it looks like LLVM
-      // fails to deduplicate all the length-checking logic between the
-      // above if and the contents of that method, thus producing much
-      // slower code. Unlike many of the other optimizations in this
-      // crate, this one is worth keeping an eye on. I see no reason, for
-      // any element type, that these should produce different code. But
-      // they do. (rustc 1.51.0)
-      arr.set_len(slice.len());
-      arr.as_mut_slice().clone_from_slice(slice);
+    if let Ok(arr) = ArrayVec::try_from(slice) {
       TinyVec::Inline(arr)
+    } else {
+      TinyVec::Heap(slice.into())
     }
   }
 }
