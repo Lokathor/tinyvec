@@ -1,5 +1,5 @@
 use super::*;
-use core::convert::{TryInto, TryFrom};
+use core::convert::{TryFrom, TryInto};
 
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
@@ -1190,20 +1190,22 @@ impl<A: Array> From<A> for ArrayVec<A> {
   }
 }
 
-/// The error type returned when a conversion from a slice to an [`ArrayVec`] fails.
+/// The error type returned when a conversion from a slice to an [`ArrayVec`]
+/// fails.
 #[derive(Debug, Copy, Clone)]
 pub struct TryFromSliceError(());
 
 impl<T, A> TryFrom<&'_ [T]> for ArrayVec<A>
 where
-    T: Clone + Default,
-    A: Array<Item = T>,
+  T: Clone + Default,
+  A: Array<Item = T>,
 {
   type Error = TryFromSliceError;
 
   #[inline]
   #[must_use]
-  /// The output has a length equal to that of the slice, with the same capacity as `A`.
+  /// The output has a length equal to that of the slice, with the same capacity
+  /// as `A`.
   fn try_from(slice: &[T]) -> Result<Self, Self::Error> {
     if slice.len() > A::CAPACITY {
       Err(TryFromSliceError(()))
@@ -1453,11 +1455,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       Binary::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1469,7 +1477,20 @@ where
 {
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    core::fmt::Debug::fmt(self.as_slice(), f)
+    write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
+    for (i, elem) in self.iter().enumerate() {
+      if i > 0 {
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
+      }
+      Debug::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
+    }
+    write!(f, "]")
   }
 }
 
@@ -1480,11 +1501,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       Display::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1497,11 +1524,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       LowerExp::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1514,11 +1547,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       LowerHex::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1531,11 +1570,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       Octal::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1548,11 +1593,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       Pointer::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1565,11 +1616,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       UpperExp::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
@@ -1582,11 +1639,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
+    if f.alternate() {
+      write!(f, "\n    ")?;
+    }
     for (i, elem) in self.iter().enumerate() {
       if i > 0 {
-        write!(f, ", ")?;
+        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
       }
       UpperHex::fmt(elem, f)?;
+    }
+    if f.alternate() {
+      write!(f, ",\n")?;
     }
     write!(f, "]")
   }
