@@ -385,3 +385,12 @@ fn TinyVec_ser_de_heap() {
     ],
   );
 }
+
+#[test]
+fn TinyVec_pretty_debug() {
+  let tv: TinyVec<[i32; 6]> = tiny_vec![1, 2, 3];
+  let s = format!("{:#?}", tv);
+  let expected = format!("{:#?}", tv.as_slice());
+
+  assert_eq!(s, expected);
+}
