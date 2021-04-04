@@ -96,10 +96,13 @@ macro_rules! array_vec {
 ///
 /// let more_ints = ArrayVec::from_array_len([5, 6, 7, 8], 2);
 /// assert_eq!(more_ints.len(), 2);
+///
+/// let no_ints: ArrayVec<[u8; 5]> = ArrayVec::from_array_empty([1, 2, 3, 4, 5]);
+/// assert_eq!(no_ints.len(), 0);
 /// ```
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct ArrayVec<A: Array> {
+pub struct ArrayVec<A> {
   len: u16,
   pub(crate) data: A,
 }
@@ -951,6 +954,37 @@ impl<A: Array> ArrayVec<A> {
     } else {
       Err(data)
     }
+  }
+}
+
+impl<A> ArrayVec<A> {
+  /// Wraps up an array as a new empty `ArrayVec`.
+  ///
+  /// If you want to simply use the full array, use `from` instead.
+  ///
+  /// ## Examples
+  ///
+  /// This method in particular allows to create values for statics:
+  ///
+  /// ```rust
+  /// # use tinyvec::ArrayVec;
+  /// static DATA: ArrayVec<[u8; 5]> = ArrayVec::from_array_empty([0; 5]);
+  /// assert_eq!(DATA.len(), 0);
+  /// ```
+  ///
+  /// But of course it is just an normal empty `ArrayVec`:
+  ///
+  /// ```rust
+  /// # use tinyvec::ArrayVec;
+  /// let mut data = ArrayVec::from_array_empty([1, 2, 3, 4]);
+  /// assert_eq!(&data[..], &[]);
+  /// data.push(42);
+  /// assert_eq!(&data[..], &[42]);
+  /// ```
+  #[inline]
+  #[must_use]
+  pub const fn from_array_empty(data: A) -> Self {
+    Self { data, len: 0 }
   }
 }
 
