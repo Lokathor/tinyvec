@@ -101,10 +101,41 @@ macro_rules! array_vec {
 /// assert_eq!(no_ints.len(), 0);
 /// ```
 #[repr(C)]
-#[derive(Clone, Copy)]
 pub struct ArrayVec<A> {
   len: u16,
   pub(crate) data: A,
+}
+
+impl<A> Clone for ArrayVec<A>
+where
+  A: Array + Clone,
+  A::Item: Clone,
+{
+  #[inline]
+  fn clone(&self) -> Self {
+    Self { data: self.data.clone(), len: self.len }
+  }
+
+  #[inline]
+  fn clone_from(&mut self, o: &Self) {
+    let iter = self
+      .data
+      .as_slice_mut()
+      .iter_mut()
+      .zip(o.data.as_slice())
+      .take(self.len.max(o.len) as usize);
+    for (dst, src) in iter {
+      dst.clone_from(src)
+    }
+    self.len = o.len;
+  }
+}
+
+impl<A> Copy for ArrayVec<A>
+where
+  A: Array + Copy,
+  A::Item: Copy,
+{
 }
 
 impl<A: Array> Default for ArrayVec<A> {
