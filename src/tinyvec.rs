@@ -1190,6 +1190,19 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
   }
 }
 
+impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
+  impl_mirrored! {
+    type Mirror = TinyVecIterator;
+
+    #[inline]
+    fn next_back(self: &mut Self) -> Option<Self::Item>;
+
+    #[cfg(feature = "rustc_1_40")]
+    #[inline]
+    fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
+  }
+}
+
 impl<A: Array> Debug for TinyVecIterator<A>
 where
   A::Item: Debug,
