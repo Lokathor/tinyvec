@@ -180,6 +180,22 @@ where
   }
 }
 
+#[cfg(all(feature = "arbitrary", feature = "nightly_const_generics"))]
+#[cfg_attr(
+  docs_rs,
+  doc(cfg(all(feature = "arbitrary", feature = "nightly_const_generics")))
+)]
+impl<'a, T, const N: usize> arbitrary::Arbitrary<'a> for ArrayVec<[T; N]>
+where
+  T: arbitrary::Arbitrary<'a> + Default,
+{
+  fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+    let v = <[T; N]>::arbitrary(u)?;
+    let av = ArrayVec::from(v);
+    Ok(av)
+  }
+}
+
 impl<A: Array> ArrayVec<A> {
   /// Move all values from `other` into this vec.
   ///
