@@ -460,7 +460,8 @@ fn ArrayVec_try_from_slice() {
   assert!(fits.is_ok());
   assert_eq!(fits.unwrap().as_slice(), &[1, 2]);
 
-  let doesnt_fit: Result<ArrayVec<[i32; 2]>, _> = ArrayVec::try_from(&nums[..4]);
+  let doesnt_fit: Result<ArrayVec<[i32; 2]>, _> =
+    ArrayVec::try_from(&nums[..4]);
   assert!(doesnt_fit.is_err());
 }
 
