@@ -127,6 +127,9 @@ where
     for (dst, src) in iter {
       dst.clone_from(src)
     }
+    if let Some(to_drop) = self.data.get_mut(o.len()..self.len()) {
+      to_drop.for_each(|x| take(x));
+    }
     self.len = o.len;
   }
 }
