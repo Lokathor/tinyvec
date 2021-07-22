@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1
+
+* Improved the performance of the `clone_from` method [pr 144](https://github.com/Lokathor/tinyvec/pull/144)
+
 ## 1.3.0
 
 * [jeffa5](https://github.com/jeffa5) added arbitrary implementations for `TinyVec` and `ArrayVec` [pr 146](https://github.com/Lokathor/tinyvec/pull/146).
