@@ -59,12 +59,18 @@ features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "ser
 [profile.test]
 opt-level = 3
 
+[profile.bench]
+debug = 2
+
 [workspace]
 members = ["fuzz"]
 
 [dev-dependencies]
-criterion = "0.3.0"
+# Some benchmarks are optimized away with the stable black_box function
+# which is based on read_volatile
+criterion = { version = "0.3.0", features = ["real_blackbox"] }
 serde_test = "1.0"
+smallvec = "1"
 
 [[test]]
 name = "tinyvec"
@@ -72,5 +78,10 @@ required-features = ["alloc", "std"]
 
 [[bench]]
 name = "macros"
+harness = false
+required-features = ["alloc"]
+
+[[bench]]
+name = "smallvec"
 harness = false
 required-features = ["alloc"]
