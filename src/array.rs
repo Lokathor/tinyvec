@@ -8,7 +8,7 @@
 ///
 /// You are generally **not** expected to need to implement this yourself. It is
 /// already implemented for all the major array lengths (`0..=32` and the powers
-/// of 2 up to 4,096).
+/// of 2 up to 4,096), or for all array lengths with the feature `rustc_1_55`.
 ///
 /// **Additional lengths can easily be added upon request.**
 ///
@@ -41,8 +41,8 @@ pub trait Array {
   fn default() -> Self;
 }
 
-#[cfg(feature = "nightly_const_generics")]
+#[cfg(feature = "rustc_1_55")]
 mod const_generic_impl;
 
-#[cfg(not(feature = "nightly_const_generics"))]
+#[cfg(not(feature = "rustc_1_55"))]
 mod generated_impl;

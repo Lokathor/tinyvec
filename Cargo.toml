@@ -31,13 +31,14 @@ grab_spare_slice = []
 # DoubleEndedIterator::nth_back - 1.40
 rustc_1_40 = []
 
+# features that require rustc 1.55
+# use const generics to implement Array for all array lengths
+rustc_1_55 = []
+
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:
 # https://github.com/rust-lang/rust/issues/54279
 nightly_slice_partition_dedup = []
-
-# use const generics for arrays
-nightly_const_generics = []
 
 # EXPERIMENTAL: Not part of SemVer. It adds `core::fmt::Write` to `ArrayVec`
 # and `SliceVec`. It works on Stable Rust, but Vec normally supports the
@@ -46,11 +47,11 @@ nightly_const_generics = []
 experimental_write_impl = []
 
 [package.metadata.docs.rs]
-features = ["alloc", "grab_spare_slice", "rustc_1_40", "serde"]
+features = ["alloc", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
 
 [package.metadata.playground]
-features = ["alloc", "grab_spare_slice", "rustc_1_40", "serde"]
+features = ["alloc", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
 
 [profile.test]
 opt-level = 3
