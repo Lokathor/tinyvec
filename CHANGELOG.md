@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+* [saethlin](https://github.com/saethlin) stabilized the usage of const generics and array map with the `rustc_1_55` feature.
+  [pr 149](https://github.com/Lokathor/tinyvec/pull/149)
+
 ## 1.3.1
 
 * Improved the performance of the `clone_from` method [pr 144](https://github.com/Lokathor/tinyvec/pull/144)
