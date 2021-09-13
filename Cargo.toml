@@ -49,6 +49,11 @@ nightly_slice_partition_dedup = []
 # an experimental impl only for now.
 experimental_write_impl = []
 
+# Some benchmarks are optimized away with the stable black_box function
+# which is based on read_volatile. This feature requires inline assembly
+# and thus a nightly compiler, but is only used in benchmarks.
+real_blackbox = ["criterion/real_blackbox"]
+
 [package.metadata.docs.rs]
 features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
@@ -66,9 +71,7 @@ debug = 2
 members = ["fuzz"]
 
 [dev-dependencies]
-# Some benchmarks are optimized away with the stable black_box function
-# which is based on read_volatile
-criterion = { version = "0.3.0", features = ["real_blackbox"] }
+criterion = "0.3.0"
 serde_test = "1.0"
 smallvec = "1"
 
@@ -84,4 +87,4 @@ required-features = ["alloc"]
 [[bench]]
 name = "smallvec"
 harness = false
-required-features = ["alloc"]
+required-features = ["alloc", "real_blackbox"]
