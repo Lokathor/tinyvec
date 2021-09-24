@@ -22,6 +22,9 @@ default = []
 # Provide things that utilize the `alloc` crate, namely `TinyVec`.
 alloc = ["tinyvec_macros"]
 
+# Provide things that require Rust's `std` module
+std = []
+
 # (not part of Vec!) Extra methods to let you grab the slice of memory after the
 # "active" portion of an `ArrayVec` or `SliceVec`.
 grab_spare_slice = []
@@ -65,7 +68,7 @@ serde_test = "1.0"
 
 [[test]]
 name = "tinyvec"
-required-features = ["alloc"]
+required-features = ["alloc", "std"]
 
 [[bench]]
 name = "macros"
