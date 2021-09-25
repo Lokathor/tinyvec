@@ -173,6 +173,7 @@ impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "std")))]
 impl<A: Array<Item = u8>> std::io::Write for TinyVec<A> {
   #[inline(always)]
   fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
