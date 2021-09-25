@@ -50,11 +50,11 @@ nightly_slice_partition_dedup = []
 experimental_write_impl = []
 
 [package.metadata.docs.rs]
-features = ["alloc", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
+features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
 
 [package.metadata.playground]
-features = ["alloc", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
+features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
 
 [profile.test]
 opt-level = 3
