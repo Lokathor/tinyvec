@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+* [eeeebbbbrrrr](https://github.com/eeeebbbbrrrr) added an impl for [std::io::Write](https://doc.rust-lang.org/std/io/trait.Write.html) to `TinyVec` when the element type is `u8`.
+  This is gated behind the new `std` feature.
+  [pr 152](https://github.com/Lokathor/tinyvec/pull/152)
+
 ## 1.4.0
 
 * [saethlin](https://github.com/saethlin) stabilized the usage of const generics and array map with the `rustc_1_55` feature.
