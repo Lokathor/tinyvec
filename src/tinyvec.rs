@@ -107,8 +107,8 @@ where
   #[inline]
   fn clone(&self) -> Self {
     match self {
-      Self::Heap(v) => Self::Heap(v.clone()),
-      Self::Inline(v) => Self::Inline(v.clone()),
+      TinyVec::Heap(v) => TinyVec::Heap(v.clone()),
+      TinyVec::Inline(v) => TinyVec::Inline(v.clone()),
     }
   }
 
