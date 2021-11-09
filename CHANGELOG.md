@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+* [madsmtm](https://github.com/madsmtm) fixed an error with the `alloc` feature on very old rustc versions.
+  [pr 154](https://github.com/Lokathor/tinyvec/pull/154)
+
 ## 1.5.0
 
 * [eeeebbbbrrrr](https://github.com/eeeebbbbrrrr) added an impl for [std::io::Write](https://doc.rust-lang.org/std/io/trait.Write.html) to `TinyVec` when the element type is `u8`.
