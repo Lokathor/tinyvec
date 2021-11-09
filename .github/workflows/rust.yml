@@ -25,6 +25,11 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
+    - name: Build the crate on minimal version w. features.
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --features=alloc,std,grab_spare_slice
     - name: Test on Stable/Beta
       if: matrix.rust != '1.34.0'
       uses: actions-rs/cargo@v1
