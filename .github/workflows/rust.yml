@@ -11,6 +11,7 @@ jobs:
       matrix:
         rust:
         - 1.34.0
+        - 1.36.0
         - stable
         - beta
         - nightly
@@ -25,8 +26,15 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-    - name: Test on Stable/Beta
+    - name: Build the crate on 1.36 with features.
       if: matrix.rust != '1.34.0'
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        # Using `extern crate alloc` is only possible after 1.36
+        args: --features=alloc,std,grab_spare_slice
+    - name: Test on Stable/Beta
+      if: matrix.rust != '1.34.0' && matrix.rust != '1.36.0'
       uses: actions-rs/cargo@v1
       with:
         command: test
