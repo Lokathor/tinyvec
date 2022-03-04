@@ -6,6 +6,9 @@ use alloc::vec::{self, Vec};
 use core::convert::TryFrom;
 use tinyvec_macros::impl_mirrored;
 
+#[cfg(feature = "rustc_1_57")]
+use alloc::collections::TryReserveError;
+
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
 #[cfg(feature = "serde")]
@@ -300,6 +303,32 @@ impl<A: Array> TinyVec<A> {
     *self = TinyVec::Heap(v);
   }
 
+  /// Tries to move the content of the TinyVec to the heap, if it's inline.
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned and the
+  /// content is kept on the stack.
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
+  /// assert!(tv.is_inline());
+  /// assert_eq!(Ok(()), tv.try_move_to_the_heap());
+  /// assert!(tv.is_heap());
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_move_to_the_heap(&mut self) -> Result<(), TryReserveError> {
+    let arr = match self {
+      TinyVec::Heap(_) => return Ok(()),
+      TinyVec::Inline(a) => a,
+    };
+
+    let v = arr.try_drain_to_vec()?;
+    *self = TinyVec::Heap(v);
+    return Ok(());
+  }
+
   /// If TinyVec is inline, moves the content of it to the heap.
   /// Also reserves additional space.
   /// ```rust
@@ -318,6 +347,35 @@ impl<A: Array> TinyVec<A> {
 
     let v = arr.drain_to_vec_and_reserve(n);
     *self = TinyVec::Heap(v);
+  }
+
+  /// If TinyVec is inline, try to move the content of it to the heap.
+  /// Also reserves additional space.
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned.
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3);
+  /// assert!(tv.is_inline());
+  /// assert_eq!(Ok(()), tv.try_move_to_the_heap_and_reserve(32));
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 35);
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_move_to_the_heap_and_reserve(
+    &mut self, n: usize,
+  ) -> Result<(), TryReserveError> {
+    let arr = match self {
+      TinyVec::Heap(h) => return h.try_reserve(n),
+      TinyVec::Inline(a) => a,
+    };
+
+    let v = arr.try_drain_to_vec_and_reserve(n)?;
+    *self = TinyVec::Heap(v);
+    return Ok(());
   }
 
   /// Reserves additional space.
@@ -343,6 +401,37 @@ impl<A: Array> TinyVec<A> {
 
     /* In this place array has enough place, so no work is needed more */
     return;
+  }
+
+  /// Tries to reserve additional space.
+  /// Moves to the heap if array can't hold `n` more items.
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned.
+  ///
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3, 4);
+  /// assert!(tv.is_inline());
+  /// assert_eq!(Ok(()), tv.try_reserve(1));
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 5);
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_reserve(&mut self, n: usize) -> Result<(), TryReserveError> {
+    let arr = match self {
+      TinyVec::Heap(h) => return h.try_reserve(n),
+      TinyVec::Inline(a) => a,
+    };
+
+    if n > arr.capacity() - arr.len() {
+      let v = arr.try_drain_to_vec_and_reserve(n)?;
+      *self = TinyVec::Heap(v);
+    }
+
+    /* In this place array has enough place, so no work is needed more */
+    return Ok(());
   }
 
   /// Reserves additional space.
@@ -375,6 +464,43 @@ impl<A: Array> TinyVec<A> {
 
     /* In this place array has enough place, so no work is needed more */
     return;
+  }
+
+  /// Tries to reserve additional space.
+  /// Moves to the heap if array can't hold `n` more items
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned.
+  ///
+  /// From [Vec::try_reserve_exact](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.try_reserve_exact)
+  /// ```text
+  /// Note that the allocator may give the collection more space than it requests.
+  /// Therefore, capacity can not be relied upon to be precisely minimal.
+  /// Prefer `reserve` if future insertions are expected.
+  /// ```
+  /// ```rust
+  /// use tinyvec::*;
+  /// let mut tv = tiny_vec!([i32; 4] => 1, 2, 3, 4);
+  /// assert!(tv.is_inline());
+  /// assert_eq!(Ok(()), tv.try_reserve_exact(1));
+  /// assert!(tv.is_heap());
+  /// assert!(tv.capacity() >= 5);
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_reserve_exact(&mut self, n: usize) -> Result<(), TryReserveError> {
+    let arr = match self {
+      TinyVec::Heap(h) => return h.try_reserve_exact(n),
+      TinyVec::Inline(a) => a,
+    };
+
+    if n > arr.capacity() - arr.len() {
+      let v = arr.try_drain_to_vec_and_reserve(n)?;
+      *self = TinyVec::Heap(v);
+    }
+
+    /* In this place array has enough place, so no work is needed more */
+    return Ok(());
   }
 
   /// Makes a new TinyVec with _at least_ the given capacity.
