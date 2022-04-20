@@ -1744,6 +1744,9 @@ where
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+#[cfg(all(feature = "alloc", feature = "rustc_1_57"))]
+use alloc::collections::TryReserveError;
+
 #[cfg(feature = "alloc")]
 impl<A: Array> ArrayVec<A> {
   /// Drains all elements to a Vec, but reserves additional space
@@ -1763,6 +1766,34 @@ impl<A: Array> ArrayVec<A> {
     return v;
   }
 
+  /// Tries to drain all elements to a Vec, but reserves additional space.
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned.
+  ///
+  /// ```
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 7] => 1, 2, 3);
+  /// let v = av.try_drain_to_vec_and_reserve(10);
+  /// assert!(matches!(v, Ok(_)));
+  /// let v = v.unwrap();
+  /// assert_eq!(v, &[1, 2, 3]);
+  /// assert_eq!(v.capacity(), 13);
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_drain_to_vec_and_reserve(
+    &mut self, n: usize,
+  ) -> Result<Vec<A::Item>, TryReserveError> {
+    let cap = n + self.len();
+    let mut v = Vec::new();
+    v.try_reserve(cap)?;
+    let iter = self.iter_mut().map(take);
+    v.extend(iter);
+    self.set_len(0);
+    return Ok(v);
+  }
+
   /// Drains all elements to a Vec
   /// ```
   /// # use tinyvec::*;
@@ -1773,6 +1804,27 @@ impl<A: Array> ArrayVec<A> {
   /// ```
   pub fn drain_to_vec(&mut self) -> Vec<A::Item> {
     self.drain_to_vec_and_reserve(0)
+  }
+
+  /// Tries to drain all elements to a Vec.
+  ///
+  /// # Errors
+  ///
+  /// If the allocator reports a failure, then an error is returned.
+  ///
+  /// ```
+  /// # use tinyvec::*;
+  /// let mut av = array_vec!([i32; 7] => 1, 2, 3);
+  /// let v = av.try_drain_to_vec();
+  /// assert!(matches!(v, Ok(_)));
+  /// let v = v.unwrap();
+  /// assert_eq!(v, &[1, 2, 3]);
+  /// // Vec may reserve more than necessary in order to prevent more future allocations.
+  /// assert!(v.capacity() >= 3);
+  /// ```
+  #[cfg(feature = "rustc_1_57")]
+  pub fn try_drain_to_vec(&mut self) -> Result<Vec<A::Item>, TryReserveError> {
+    self.try_drain_to_vec_and_reserve(0)
   }
 }
 
