@@ -1281,6 +1281,15 @@ impl<A: Array> From<A> for ArrayVec<A> {
 #[derive(Debug, Copy, Clone)]
 pub struct TryFromSliceError(());
 
+impl core::fmt::Display for TryFromSliceError {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.write_str("could not convert slice to ArrayVec")
+  }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for TryFromSliceError {}
+
 impl<T, A> TryFrom<&'_ [T]> for ArrayVec<A>
 where
   T: Clone + Default,
