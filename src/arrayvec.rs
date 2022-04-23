@@ -1271,7 +1271,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
       .as_slice()
       .len()
       .try_into()
-      .expect("ArrayVec::from> lenght must be in range 0..=u16::MAX");
+      .expect("ArrayVec::from> length must be in range 0..=u16::MAX");
     Self { len, data }
   }
 }
