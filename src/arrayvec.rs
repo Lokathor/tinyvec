@@ -1271,7 +1271,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
       .as_slice()
       .len()
       .try_into()
-      .expect("ArrayVec::from> lenght must be in range 0..=u16::MAX");
+      .expect("ArrayVec::from> length must be in range 0..=u16::MAX");
     Self { len, data }
   }
 }
@@ -1280,6 +1280,15 @@ impl<A: Array> From<A> for ArrayVec<A> {
 /// fails.
 #[derive(Debug, Copy, Clone)]
 pub struct TryFromSliceError(());
+
+impl core::fmt::Display for TryFromSliceError {
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    f.write_str("could not convert slice to ArrayVec")
+  }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for TryFromSliceError {}
 
 impl<T, A> TryFrom<&'_ [T]> for ArrayVec<A>
 where
