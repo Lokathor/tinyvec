@@ -23,7 +23,7 @@ default = []
 alloc = ["tinyvec_macros"]
 
 # Provide things that require Rust's `std` module
-std = []
+std = ["alloc"]
 
 # (not part of Vec!) Extra methods to let you grab the slice of memory after the
 # "active" portion of an `ArrayVec` or `SliceVec`.
