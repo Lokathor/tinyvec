@@ -1573,7 +1573,7 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     write!(f, "[")?;
-    if f.alternate() {
+    if f.alternate() && !self.is_empty() {
       write!(f, "\n    ")?;
     }
     for (i, elem) in self.iter().enumerate() {
@@ -1582,7 +1582,7 @@ where
       }
       Debug::fmt(elem, f)?;
     }
-    if f.alternate() {
+    if f.alternate() && !self.is_empty() {
       write!(f, ",\n")?;
     }
     write!(f, "]")
