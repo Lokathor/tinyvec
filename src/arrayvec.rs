@@ -1398,7 +1398,7 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
     self.tail -= 1;
     return Some(take(item));
   }
-  #[cfg(feature = "rustc_1_40")]
+  #[rustversion::since(1.40)]
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     let base = self.base as usize;
@@ -1753,7 +1753,8 @@ where
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-#[cfg(all(feature = "alloc", feature = "rustc_1_57"))]
+#[cfg(feature = "alloc")]
+#[rustversion::since(1.57)]
 use alloc::collections::TryReserveError;
 
 #[cfg(feature = "alloc")]
@@ -1790,7 +1791,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 13);
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_drain_to_vec_and_reserve(
     &mut self, n: usize,
   ) -> Result<Vec<A::Item>, TryReserveError> {
@@ -1831,7 +1832,7 @@ impl<A: Array> ArrayVec<A> {
   /// // Vec may reserve more than necessary in order to prevent more future allocations.
   /// assert!(v.capacity() >= 3);
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_drain_to_vec(&mut self) -> Result<Vec<A::Item>, TryReserveError> {
     self.try_drain_to_vec_and_reserve(0)
   }

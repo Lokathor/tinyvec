@@ -3,6 +3,7 @@
 gen_impl() {
 	local len=$1
 	cat <<-END
+		#[rustversion::before(1.55)]
 		impl<T: Default> Array for [T; $len] {
 		  type Item = T;
 		  const CAPACITY: usize = $len;
@@ -43,6 +44,7 @@ cat <<-END
 	//     ./gen-array-impls.sh > src/array/generated_impl.rs
 	// from the repo root
 
+	#[rustversion::before(1.55)]
 	use super::Array;
 
 	$(for ((i = 0; i <= 33; i++)); do gen_impl $i; done)

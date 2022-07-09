@@ -304,7 +304,7 @@ fn TinyVec_reserve() {
   assert!(tv.capacity() >= 10);
 }
 
-#[cfg(feature = "rustc_1_57")]
+#[rustversion::since(1.57)]
 #[test]
 fn TinyVec_try_reserve() {
   let mut tv: TinyVec<[i32; 4]> = Default::default();
@@ -336,7 +336,7 @@ fn TinyVec_reserve_exact() {
   assert!(tv.capacity() >= 10);
 }
 
-#[cfg(feature = "rustc_1_57")]
+#[rustversion::since(1.57)]
 #[test]
 fn TinyVec_try_reserve_exact() {
   let mut tv: TinyVec<[i32; 4]> = Default::default();
@@ -374,7 +374,7 @@ fn TinyVec_move_to_heap_and_shrink() {
   assert_eq!(tv.as_slice(), [1, 2, 3, 4]);
 }
 
-#[cfg(feature = "rustc_1_57")]
+#[rustversion::since(1.57)]
 #[test]
 fn TinyVec_try_move_to_heap_and_shrink() {
   let mut tv: TinyVec<[i32; 4]> = Default::default();

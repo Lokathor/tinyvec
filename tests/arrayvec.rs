@@ -387,7 +387,7 @@ fn iter_last_nth() {
 }
 
 #[test]
-#[cfg(feature = "rustc_1_40")]
+#[rustversion::since(1.40)]
 fn reviter() {
   let mut av: ArrayVec<[i32; 10]> = Default::default();
   av.push(1);

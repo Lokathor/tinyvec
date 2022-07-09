@@ -60,7 +60,7 @@ impl<'a, T: 'a + Default> DoubleEndedIterator for ArrayVecDrain<'a, T> {
     self.iter.next_back().map(take)
   }
 
-  #[cfg(feature = "rustc_1_40")]
+  #[rustversion::since(1.40)]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     self.iter.nth_back(n).map(take)
   }

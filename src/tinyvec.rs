@@ -6,7 +6,7 @@ use alloc::vec::{self, Vec};
 use core::convert::TryFrom;
 use tinyvec_macros::impl_mirrored;
 
-#[cfg(feature = "rustc_1_57")]
+#[rustversion::since(1.57)]
 use alloc::collections::TryReserveError;
 
 #[cfg(feature = "serde")]
@@ -317,7 +317,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(Ok(()), tv.try_move_to_the_heap());
   /// assert!(tv.is_heap());
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_move_to_the_heap(&mut self) -> Result<(), TryReserveError> {
     let arr = match self {
       TinyVec::Heap(_) => return Ok(()),
@@ -364,7 +364,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 35);
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_move_to_the_heap_and_reserve(
     &mut self, n: usize,
   ) -> Result<(), TryReserveError> {
@@ -418,7 +418,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_reserve(&mut self, n: usize) -> Result<(), TryReserveError> {
     let arr = match self {
       TinyVec::Heap(h) => return h.try_reserve(n),
@@ -487,7 +487,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
-  #[cfg(feature = "rustc_1_57")]
+  #[rustversion::since(1.57)]
   pub fn try_reserve_exact(&mut self, n: usize) -> Result<(), TryReserveError> {
     let arr = match self {
       TinyVec::Heap(h) => return h.try_reserve_exact(n),
@@ -530,7 +530,7 @@ impl<A: Array> TinyVec<A> {
 
 impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
-  #[cfg(feature = "rustc_1_40")]
+  #[rustversion::since(1.37)]
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     self.reserve(other.len());
@@ -544,7 +544,7 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Move all values from `other` into this vec.
-  #[cfg(not(feature = "rustc_1_40"))]
+  #[rustversion::before(1.37)]
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     match other {
@@ -1101,7 +1101,7 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
     #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[cfg(feature = "rustc_1_40")]
+    #[rustversion::since(1.40)]
     #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }
@@ -1380,7 +1380,7 @@ impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
     #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[cfg(feature = "rustc_1_40")]
+    #[rustversion::since(1.40)]
     #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }

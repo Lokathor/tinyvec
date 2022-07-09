@@ -2,8 +2,10 @@
 //     ./gen-array-impls.sh > src/array/generated_impl.rs
 // from the repo root
 
+#[rustversion::before(1.55)]
 use super::Array;
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 0] {
   type Item = T;
   const CAPACITY: usize = 0;
@@ -26,6 +28,7 @@ impl<T: Default> Array for [T; 0] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 1] {
   type Item = T;
   const CAPACITY: usize = 1;
@@ -48,6 +51,7 @@ impl<T: Default> Array for [T; 1] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 2] {
   type Item = T;
   const CAPACITY: usize = 2;
@@ -70,6 +74,7 @@ impl<T: Default> Array for [T; 2] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 3] {
   type Item = T;
   const CAPACITY: usize = 3;
@@ -92,6 +97,7 @@ impl<T: Default> Array for [T; 3] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 4] {
   type Item = T;
   const CAPACITY: usize = 4;
@@ -114,6 +120,7 @@ impl<T: Default> Array for [T; 4] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 5] {
   type Item = T;
   const CAPACITY: usize = 5;
@@ -136,6 +143,7 @@ impl<T: Default> Array for [T; 5] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 6] {
   type Item = T;
   const CAPACITY: usize = 6;
@@ -165,6 +173,7 @@ impl<T: Default> Array for [T; 6] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 7] {
   type Item = T;
   const CAPACITY: usize = 7;
@@ -195,6 +204,7 @@ impl<T: Default> Array for [T; 7] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 8] {
   type Item = T;
   const CAPACITY: usize = 8;
@@ -226,6 +236,7 @@ impl<T: Default> Array for [T; 8] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 9] {
   type Item = T;
   const CAPACITY: usize = 9;
@@ -258,6 +269,7 @@ impl<T: Default> Array for [T; 9] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 10] {
   type Item = T;
   const CAPACITY: usize = 10;
@@ -291,6 +303,7 @@ impl<T: Default> Array for [T; 10] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 11] {
   type Item = T;
   const CAPACITY: usize = 11;
@@ -325,6 +338,7 @@ impl<T: Default> Array for [T; 11] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 12] {
   type Item = T;
   const CAPACITY: usize = 12;
@@ -360,6 +374,7 @@ impl<T: Default> Array for [T; 12] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 13] {
   type Item = T;
   const CAPACITY: usize = 13;
@@ -396,6 +411,7 @@ impl<T: Default> Array for [T; 13] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 14] {
   type Item = T;
   const CAPACITY: usize = 14;
@@ -433,6 +449,7 @@ impl<T: Default> Array for [T; 14] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 15] {
   type Item = T;
   const CAPACITY: usize = 15;
@@ -471,6 +488,7 @@ impl<T: Default> Array for [T; 15] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 16] {
   type Item = T;
   const CAPACITY: usize = 16;
@@ -510,6 +528,7 @@ impl<T: Default> Array for [T; 16] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 17] {
   type Item = T;
   const CAPACITY: usize = 17;
@@ -550,6 +569,7 @@ impl<T: Default> Array for [T; 17] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 18] {
   type Item = T;
   const CAPACITY: usize = 18;
@@ -591,6 +611,7 @@ impl<T: Default> Array for [T; 18] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 19] {
   type Item = T;
   const CAPACITY: usize = 19;
@@ -633,6 +654,7 @@ impl<T: Default> Array for [T; 19] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 20] {
   type Item = T;
   const CAPACITY: usize = 20;
@@ -676,6 +698,7 @@ impl<T: Default> Array for [T; 20] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 21] {
   type Item = T;
   const CAPACITY: usize = 21;
@@ -720,6 +743,7 @@ impl<T: Default> Array for [T; 21] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 22] {
   type Item = T;
   const CAPACITY: usize = 22;
@@ -765,6 +789,7 @@ impl<T: Default> Array for [T; 22] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 23] {
   type Item = T;
   const CAPACITY: usize = 23;
@@ -811,6 +836,7 @@ impl<T: Default> Array for [T; 23] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 24] {
   type Item = T;
   const CAPACITY: usize = 24;
@@ -858,6 +884,7 @@ impl<T: Default> Array for [T; 24] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 25] {
   type Item = T;
   const CAPACITY: usize = 25;
@@ -906,6 +933,7 @@ impl<T: Default> Array for [T; 25] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 26] {
   type Item = T;
   const CAPACITY: usize = 26;
@@ -955,6 +983,7 @@ impl<T: Default> Array for [T; 26] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 27] {
   type Item = T;
   const CAPACITY: usize = 27;
@@ -1005,6 +1034,7 @@ impl<T: Default> Array for [T; 27] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 28] {
   type Item = T;
   const CAPACITY: usize = 28;
@@ -1056,6 +1086,7 @@ impl<T: Default> Array for [T; 28] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 29] {
   type Item = T;
   const CAPACITY: usize = 29;
@@ -1108,6 +1139,7 @@ impl<T: Default> Array for [T; 29] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 30] {
   type Item = T;
   const CAPACITY: usize = 30;
@@ -1161,6 +1193,7 @@ impl<T: Default> Array for [T; 30] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 31] {
   type Item = T;
   const CAPACITY: usize = 31;
@@ -1215,6 +1248,7 @@ impl<T: Default> Array for [T; 31] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 32] {
   type Item = T;
   const CAPACITY: usize = 32;
@@ -1270,6 +1304,7 @@ impl<T: Default> Array for [T; 32] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 33] {
   type Item = T;
   const CAPACITY: usize = 33;
@@ -1326,6 +1361,7 @@ impl<T: Default> Array for [T; 33] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 64] {
   type Item = T;
   const CAPACITY: usize = 64;
@@ -1413,6 +1449,7 @@ impl<T: Default> Array for [T; 64] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 128] {
   type Item = T;
   const CAPACITY: usize = 128;
@@ -1564,6 +1601,7 @@ impl<T: Default> Array for [T; 128] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 256] {
   type Item = T;
   const CAPACITY: usize = 256;
@@ -1843,6 +1881,7 @@ impl<T: Default> Array for [T; 256] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 512] {
   type Item = T;
   const CAPACITY: usize = 512;
@@ -2378,6 +2417,7 @@ impl<T: Default> Array for [T; 512] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 1024] {
   type Item = T;
   const CAPACITY: usize = 1024;
@@ -3425,6 +3465,7 @@ impl<T: Default> Array for [T; 1024] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 2048] {
   type Item = T;
   const CAPACITY: usize = 2048;
@@ -5496,6 +5537,7 @@ impl<T: Default> Array for [T; 2048] {
   }
 }
 
+#[rustversion::before(1.55)]
 impl<T: Default> Array for [T; 4096] {
   type Item = T;
   const CAPACITY: usize = 4096;
