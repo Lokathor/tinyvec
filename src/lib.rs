@@ -98,8 +98,12 @@ mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use crate::tinyvec::*;
 
-// TODO MSRV(1.40.0): Just call the normal `core::mem::take`
-#[inline(always)]
+#[rustversion::since(1.40)]
+use core::mem::take;
+
+/// Reimplement `core::mem::take` for Rust versions that lack it.
+#[rustversion::before(1.40)]
+#[inline]
 fn take<T: Default>(from: &mut T) -> T {
   replace(from, T::default())
 }

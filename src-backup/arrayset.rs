@@ -14,7 +14,8 @@ use core::{
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct InsertError;
 
-// TODO(when std): impl std::error::Error for InsertError {}
+#[cfg(feature = "std")]
+impl std::error::Error for InsertError {}
 
 impl fmt::Display for InsertError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
