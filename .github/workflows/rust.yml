@@ -16,8 +16,8 @@ jobs:
         - beta
         - nightly
         include:
-          -rust: nightly
-          -os: windows-latest
+          - rust: nightly
+            os: windows-latest
 
     runs-on: ${{ matrix.os }}
 
