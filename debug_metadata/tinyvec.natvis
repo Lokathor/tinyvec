@@ -12,8 +12,13 @@
   </Type>
 
   <Type Name="tinyvec::slicevec::SliceVec&lt;*&gt;">
+    <DisplayString>{{ len={len} }}</DisplayString>
     <Expand>
-      <ExpandedItem>data</ExpandedItem>
+      <Item Name="[len]">len</Item>
+      <ArrayItems>
+        <Size>len</Size>
+        <ValuePointer>data.data_ptr</ValuePointer>
+      </ArrayItems>
     </Expand>
   </Type>
 </AutoVisualizer>

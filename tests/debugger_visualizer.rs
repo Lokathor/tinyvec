@@ -39,6 +39,13 @@ inline_tv.__0    : { len=0x4 } [Type: tinyvec::arrayvec::ArrayVec<array$<i32,4> 
     [2]              : 3 [Type: i32]
     [3]              : 4 [Type: i32]
 
+slice_vec        : { len=0x3 } [Type: tinyvec::slicevec::SliceVec<str>]
+    [<Raw View>]     [Type: tinyvec::slicevec::SliceVec<str>]
+    [len]            : 0x3 [Type: unsigned __int64]
+    [0]              : "a" [Type: str]
+    [1]              : "b" [Type: str]
+    [2]              : "d" [Type: str]
+
 strings          : { len=0x6 } [Type: tinyvec::arrayvec::ArrayVec<array$<str,7> >]
     [<Raw View>]     [Type: tinyvec::arrayvec::ArrayVec<array$<str,7> >]
     [len]            : 0x6 [Type: unsigned short]
