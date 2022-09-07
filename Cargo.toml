@@ -47,6 +47,11 @@ rustc_1_57 = ["rustc_1_55"]
 # https://github.com/rust-lang/rust/issues/54279
 nightly_slice_partition_dedup = []
 
+# allow use of nightly feature `debugger_visualizer`,
+# will become useless once that is stabilized:
+# https://github.com/rust-lang/rust/issues/95939
+debugger_visualizer = []
+
 # EXPERIMENTAL: Not part of SemVer. It adds `core::fmt::Write` to `ArrayVec`
 # and `SliceVec`. It works on Stable Rust, but Vec normally supports the
 # `std::io::Write` trait instead of `core::fmt::Write`, so we're keeping it as
@@ -78,6 +83,8 @@ members = ["fuzz"]
 criterion = "0.3.0"
 serde_test = "1.0"
 smallvec = "1"
+debugger_test = "0.1"
+debugger_test_parser = "0.1"
 
 [[test]]
 name = "tinyvec"
@@ -92,3 +99,9 @@ required-features = ["alloc"]
 name = "smallvec"
 harness = false
 required-features = ["alloc", "real_blackbox"]
+
+[[test]]
+path = "tests/debugger_visualizer.rs"
+name = "debugger_visualizer"
+required-features = ["debugger_visualizer"]
+test = false
