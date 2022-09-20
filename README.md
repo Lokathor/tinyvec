@@ -7,13 +7,28 @@
 
 # tinyvec
 
-A 100% safe crate of vec-like types. `#![forbid(unsafe_code)]`
+A 100% safe crate of vec-like types.
+Not just safe at the public API boundary, fully safe for all internal code too: `#![forbid(unsafe_code)]`
 
-Main types are as follows:
+The provided types are as follows:
 * `ArrayVec` is an array-backed vec-like data structure. It panics on overflow.
-* `SliceVec` is the same deal, but using a `&mut [T]`.
-* `TinyVec` (`alloc` feature) is an enum that's either an `Inline(ArrayVec)` or a `Heap(Vec)`. If a `TinyVec` is `Inline` and would overflow it automatically transitions to `Heap` and continues whatever it was doing.
+* `SliceVec` is similar, but using a `&mut [T]` as the data backing.
+* `TinyVec` (`alloc` feature) is an enum that's either an `Inline(ArrayVec)` or a `Heap(Vec)`.
+  If a `TinyVec` is `Inline` and would overflow its array it automatically transitions to `Heap` and continues whatever it was doing.
 
 To attain this "100% safe code" status there is one compromise: the element type of the vecs must implement `Default`.
 
-For more details, please see [the docs.rs documentation](https://docs.rs/tinyvec/)
+For more API details, please see [the docs.rs documentation](https://docs.rs/tinyvec/)
+
+## `tinyvec` Alternatives?
+
+Maybe you don't want to use `tinyvec`, there's other crates you might use instead!
+
+* [arrayvec](https://docs.rs/arrayvec) is a crate with array-backed structures
+* [smallvec](https://docs.rs/smallvec) is a crate where the array-backed data can be moved to the heap on overflow.
+
+The main difference is that both of those crates use `unsafe` code.
+This mostly allows them to get rid of the `Default` limitation for elements that `tinyvec` imposes.
+The `smallvec` and `arrayvec` crates are generally correct, but there's been occasional bugs leading to UB.
+With `tinvec`, any uncaught bugs *can't* lead to UB, because the crate is safe code all the way through.
+If you want that absolute level of assurace against UB, use `tinyvec`.
