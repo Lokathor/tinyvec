@@ -24,11 +24,11 @@ For more API details, please see [the docs.rs documentation](https://docs.rs/tin
 
 Maybe you don't want to use `tinyvec`, there's other crates you might use instead!
 
-* [arrayvec](https://docs.rs/arrayvec) is a crate with array-backed structures
+* [arrayvec](https://docs.rs/arrayvec) is a crate with array-backed structures.
 * [smallvec](https://docs.rs/smallvec) is a crate where the array-backed data can be moved to the heap on overflow.
 
 The main difference is that both of those crates use `unsafe` code.
 This mostly allows them to get rid of the `Default` limitation for elements that `tinyvec` imposes.
 The `smallvec` and `arrayvec` crates are generally correct, but there's been occasional bugs leading to UB.
-With `tinvec`, any uncaught bugs *can't* lead to UB, because the crate is safe code all the way through.
-If you want that absolute level of assurace against UB, use `tinyvec`.
+With `tinyvec`, any uncaught bugs *can't* lead to UB, because the crate is safe code all the way through.
+If you want that absolute level of assurance against UB, use `tinyvec`.
