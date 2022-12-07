@@ -1386,6 +1386,14 @@ impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
   }
 }
 
+impl<A: Array> ExactSizeIterator for TinyVecIterator<A> {
+  impl_mirrored! {
+    type Mirror = TinyVecIterator;
+    #[inline]
+    fn len(self: &Self) -> usize;
+  }
+}
+
 impl<A: Array> Debug for TinyVecIterator<A>
 where
   A::Item: Debug,
