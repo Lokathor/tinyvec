@@ -1420,6 +1420,13 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
   }
 }
 
+impl<A: Array> ExactSizeIterator for ArrayVecIterator<A> {
+  #[inline]
+  fn len(&self) -> usize {
+    self.size_hint().0
+  }
+}
+
 impl<A: Array> Debug for ArrayVecIterator<A>
 where
   A::Item: Debug,
