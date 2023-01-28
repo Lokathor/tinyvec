@@ -23,41 +23,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@master
       with:
-        profile: minimal
         toolchain: ${{ matrix.rust }}
-        default: true
     - name: Build the crate on minimal version.
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
+      run: |
+        cargo build
     - name: Build the crate on 1.36 with features.
       if: matrix.rust != '1.34.0'
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
+      run: |
         # Using `extern crate alloc` is only possible after 1.36
-        args: --features=alloc,std,grab_spare_slice
+        cargo build --features=alloc,std,grab_spare_slice
     - name: Test on Stable/Beta
       if: matrix.rust != '1.34.0' && matrix.rust != '1.36.0'
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --features=alloc --features=grab_spare_slice --features=rustc_1_40
+      run: |
+        cargo test --features=alloc --features=grab_spare_slice --features=rustc_1_40
     - name: Test on Nightly with All Features
       if: matrix.rust == 'nightly'
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all-features
+      run: |
+        cargo test --all-features
     # The #[debugger_visualizer] attribute is currently gated behind an unstable feature flag.
     # In order to test the visualizers for the tinyvec crate, they have to be tested on a nightly build.
     - name: Test debugger_visualizer feature on Nightly
       if: |
         matrix.os == 'windows-latest' &&
         matrix.rust == 'nightly'
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all-features --test debugger_visualizer -- --test-threads=1
+      run: |
+        cargo test --all-features --test debugger_visualizer -- --test-threads=1
