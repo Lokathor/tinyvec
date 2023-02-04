@@ -1,5 +1,7 @@
+#[rustversion::since(1.55)]
 use super::Array;
 
+#[rustversion::since(1.55)]
 impl<T: Default, const N: usize> Array for [T; N] {
   type Item = T;
   const CAPACITY: usize = N;

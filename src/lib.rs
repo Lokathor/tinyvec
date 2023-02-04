@@ -41,8 +41,6 @@
 //! ## Other Features
 //! * `grab_spare_slice` lets you get access to the "inactive" portions of an
 //!   ArrayVec.
-//! * `rustc_1_40` makes the crate assume a minimum rust version of `1.40.0`,
-//!   which allows some better internal optimizations.
 //! * `serde` provides a `Serialize` and `Deserialize` implementation for
 //!   [`TinyVec`] and [`ArrayVec`] types, provided the inner item also has an
 //!   implementation.
@@ -105,8 +103,33 @@ mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use crate::tinyvec::*;
 
-// TODO MSRV(1.40.0): Just call the normal `core::mem::take`
-#[inline(always)]
+#[rustversion::since(1.40)]
+use core::mem::take;
+
+/// Reimplement `core::mem::take` for Rust versions that lack it.
+#[rustversion::before(1.40)]
+#[inline]
 fn take<T: Default>(from: &mut T) -> T {
   replace(from, T::default())
 }
+
+#[cfg(feature = "rustc_1_57")]
+#[rustversion::before(1.57)]
+compile_error!(
+  "The crate feature `rustc_1_57` of `tinyvec` is enabled but the available \
+  Rust version is older than 1.57."
+);
+
+#[cfg(feature = "rustc_1_55")]
+#[rustversion::before(1.55)]
+compile_error!(
+  "The crate feature `rustc_1_55` of `tinyvec` is enabled but the available \
+  Rust version is older than 1.55."
+);
+
+#[cfg(feature = "rustc_1_40")]
+#[rustversion::before(1.40)]
+compile_error!(
+  "The crate feature `rustc_1_40` of `tinyvec` is enabled but the available \
+  Rust version is older than 1.40."
+);

@@ -8,9 +8,10 @@
 ///
 /// You are generally **not** expected to need to implement this yourself. It is
 /// already implemented for all the major array lengths (`0..=32` and the powers
-/// of 2 up to 4,096), or for all array lengths with the feature `rustc_1_55`.
+/// of 2 up to 4,096), or for all array lengths in Rust versions 1.55 and newer.
 ///
-/// **Additional lengths can easily be added upon request.**
+/// **Additional lengths can easily be added upon request for Rust 1.54 and
+/// older.**
 ///
 /// ## Safety Reminder
 ///
@@ -41,8 +42,12 @@ pub trait Array {
   fn default() -> Self;
 }
 
-#[cfg(feature = "rustc_1_55")]
+// These `*_impl` modules implement `Array` for primitive arrays.
+//
+// NOTE(2022-07-09): The `#[rustversion::...]` conditional compilation
+// attributes are placed on the individual implementation blocks rather than on
+// the modules because using procedural attribute macros on non-inline modules
+// is unstable.  Even if doing so becomes stable, it would be incompatible with
+// `tinyvec`'s MSRV.
 mod const_generic_impl;
-
-#[cfg(not(feature = "rustc_1_55"))]
 mod generated_impl;
