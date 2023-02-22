@@ -530,7 +530,6 @@ impl<A: Array> TinyVec<A> {
 
 impl<A: Array> TinyVec<A> {
   /// Move all values from `other` into this vec.
-  #[cfg(feature = "rustc_1_40")]
   #[inline]
   pub fn append(&mut self, other: &mut Self) {
     self.reserve(other.len());
@@ -540,16 +539,6 @@ impl<A: Array> TinyVec<A> {
       (TinyVec::Heap(sh), TinyVec::Heap(oh)) => sh.append(oh),
       (TinyVec::Inline(a), TinyVec::Heap(h)) => a.extend(h.drain(..)),
       (ref mut this, TinyVec::Inline(arr)) => this.extend(arr.drain(..)),
-    }
-  }
-
-  /// Move all values from `other` into this vec.
-  #[cfg(not(feature = "rustc_1_40"))]
-  #[inline]
-  pub fn append(&mut self, other: &mut Self) {
-    match other {
-      TinyVec::Inline(a) => self.extend(a.drain(..)),
-      TinyVec::Heap(h) => self.extend(h.drain(..)),
     }
   }
 
@@ -1101,7 +1090,6 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
     #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[cfg(feature = "rustc_1_40")]
     #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }
@@ -1380,7 +1368,6 @@ impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
     #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[cfg(feature = "rustc_1_40")]
     #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }

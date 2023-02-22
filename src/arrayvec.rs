@@ -132,7 +132,7 @@ where
     if let Some(to_drop) =
       self.data.as_slice_mut().get_mut((o.len as usize)..(self.len as usize))
     {
-      to_drop.iter_mut().for_each(|x| drop(take(x)));
+      to_drop.iter_mut().for_each(|x| drop(core::mem::take(x)));
     }
     self.len = o.len;
   }
@@ -284,7 +284,7 @@ impl<A: Array> ArrayVec<A> {
       return Some(other);
     }
 
-    let iter = other.iter_mut().map(take);
+    let iter = other.iter_mut().map(core::mem::take);
     for item in iter {
       self.push(item);
     }
@@ -605,7 +605,8 @@ impl<A: Array> ArrayVec<A> {
   pub fn pop(&mut self) -> Option<A::Item> {
     if self.len > 0 {
       self.len -= 1;
-      let out = take(&mut self.data.as_slice_mut()[self.len as usize]);
+      let out =
+        core::mem::take(&mut self.data.as_slice_mut()[self.len as usize]);
       Some(out)
     } else {
       None
@@ -680,7 +681,7 @@ impl<A: Array> ArrayVec<A> {
   #[inline]
   pub fn remove(&mut self, index: usize) -> A::Item {
     let targets: &mut [A::Item] = &mut self.deref_mut()[index..];
-    let item = take(&mut targets[0]);
+    let item = core::mem::take(&mut targets[0]);
 
     // A previous implementation used rotate_left
     // rotate_right and rotate_left generate a huge amount of code and fail to
@@ -794,7 +795,7 @@ impl<A: Array> ArrayVec<A> {
     for idx in 0..len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
       if !acceptable(&rest.items[idx]) {
-        let _ = take(&mut rest.items[idx]);
+        let _ = core::mem::take(&mut rest.items[idx]);
         self.len -= 1;
         rest.tail_start += 1;
       } else {
@@ -983,7 +984,7 @@ impl<A: Array> ArrayVec<A> {
       let len = self.len as usize;
       self.data.as_slice_mut()[new_len..len]
         .iter_mut()
-        .map(take)
+        .map(core::mem::take)
         .for_each(drop);
     }
 
@@ -1358,7 +1359,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
       &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
     let itemref = slice.first_mut()?;
     self.base += 1;
-    return Some(take(itemref));
+    return Some(core::mem::take(itemref));
   }
   #[inline(always)]
   #[must_use]
@@ -1383,7 +1384,7 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
     if let Some(x) = slice.get_mut(n) {
       /* n is in range [0 .. self.tail - self.base) so in u16 range */
       self.base += n as u16 + 1;
-      return Some(take(x));
+      return Some(core::mem::take(x));
     }
 
     self.base = self.tail;
@@ -1398,9 +1399,9 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
       &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
     let item = slice.last_mut()?;
     self.tail -= 1;
-    return Some(take(item));
+    return Some(core::mem::take(item));
   }
-  #[cfg(feature = "rustc_1_40")]
+
   #[inline]
   fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
     let base = self.base as usize;
@@ -1412,7 +1413,7 @@ impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
       let item = &mut slice[n];
       /* n is in [0..self.tail - self.base] range, so in u16 range */
       self.tail = self.base + n as u16;
-      return Some(take(item));
+      return Some(core::mem::take(item));
     }
 
     self.tail = self.base;
@@ -1778,7 +1779,7 @@ impl<A: Array> ArrayVec<A> {
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
-    let iter = self.iter_mut().map(take);
+    let iter = self.iter_mut().map(core::mem::take);
     v.extend(iter);
     self.set_len(0);
     return v;
@@ -1806,7 +1807,7 @@ impl<A: Array> ArrayVec<A> {
     let cap = n + self.len();
     let mut v = Vec::new();
     v.try_reserve(cap)?;
-    let iter = self.iter_mut().map(take);
+    let iter = self.iter_mut().map(core::mem::take);
     v.extend(iter);
     self.set_len(0);
     return Ok(v);

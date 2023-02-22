@@ -29,14 +29,12 @@ std = ["alloc"]
 # "active" portion of an `ArrayVec` or `SliceVec`.
 grab_spare_slice = []
 
-# features that require rustc 1.40
-# use Vec::append if possible in TinyVec::append - 1.37
-# DoubleEndedIterator::nth_back - 1.40
+# obsolete feature that has to stay for semver reasons
 rustc_1_40 = []
 
 # features that require rustc 1.55
 # use const generics to implement Array for all array lengths
-rustc_1_55 = ["rustc_1_40"]
+rustc_1_55 = []
 
 # features that require rustc 1.57
 # add try_reserve functions to types that heap allocate.
@@ -64,11 +62,11 @@ experimental_write_impl = []
 real_blackbox = ["criterion/real_blackbox"]
 
 [package.metadata.docs.rs]
-features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
+features = ["alloc", "std", "grab_spare_slice", "rustc_1_55", "serde"]
 rustdoc-args = ["--cfg","docs_rs"]
 
 [package.metadata.playground]
-features = ["alloc", "std", "grab_spare_slice", "rustc_1_40", "rustc_1_55", "serde"]
+features = ["alloc", "std", "grab_spare_slice", "rustc_1_55", "serde"]
 
 [profile.test]
 opt-level = 3

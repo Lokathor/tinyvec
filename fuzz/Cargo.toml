@@ -13,4 +13,4 @@ better-panic = "0.2.0"
 
 [dependencies.tinyvec]
 path = ".."
-features = ["rustc_1_40", "grab_spare_slice", "alloc", "nightly_slice_partition_dedup"]
+features = ["grab_spare_slice", "alloc", "nightly_slice_partition_dedup"]

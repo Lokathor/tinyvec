@@ -326,7 +326,7 @@ impl<'s, T> SliceVec<'s, T> {
   {
     if self.len > 0 {
       self.len -= 1;
-      let out = take(&mut self.data[self.len]);
+      let out = core::mem::take(&mut self.data[self.len]);
       Some(out)
     } else {
       None
@@ -383,7 +383,7 @@ impl<'s, T> SliceVec<'s, T> {
     T: Default,
   {
     let targets: &mut [T] = &mut self.deref_mut()[index..];
-    let item = take(&mut targets[0]);
+    let item = core::mem::take(&mut targets[0]);
     targets.rotate_left(1);
     self.len -= 1;
     item
@@ -500,7 +500,7 @@ impl<'s, T> SliceVec<'s, T> {
     for idx in 0..self.len {
       // Loop start invariant: idx = rest.done_end + rest.tail_start
       if !acceptable(&rest.items[idx]) {
-        let _ = take(&mut rest.items[idx]);
+        let _ = core::mem::take(&mut rest.items[idx]);
         self.len -= 1;
         rest.tail_start += 1;
       } else {
@@ -724,7 +724,7 @@ impl<'p, 's, T: Default> Iterator for SliceVecDrain<'p, 's, T> {
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     if self.target_index != self.target_end {
-      let out = take(&mut self.parent[self.target_index]);
+      let out = core::mem::take(&mut self.parent[self.target_index]);
       self.target_index += 1;
       Some(out)
     } else {

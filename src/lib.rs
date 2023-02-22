@@ -41,8 +41,6 @@
 //! ## Other Features
 //! * `grab_spare_slice` lets you get access to the "inactive" portions of an
 //!   ArrayVec.
-//! * `rustc_1_40` makes the crate assume a minimum rust version of `1.40.0`,
-//!   which allows some better internal optimizations.
 //! * `serde` provides a `Serialize` and `Deserialize` implementation for
 //!   [`TinyVec`] and [`ArrayVec`] types, provided the inner item also has an
 //!   implementation.
@@ -104,9 +102,3 @@ pub use slicevec::*;
 mod tinyvec;
 #[cfg(feature = "alloc")]
 pub use crate::tinyvec::*;
-
-// TODO MSRV(1.40.0): Just call the normal `core::mem::take`
-#[inline(always)]
-fn take<T: Default>(from: &mut T) -> T {
-  replace(from, T::default())
-}
