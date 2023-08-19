@@ -9,6 +9,8 @@ use serde::de::{
 };
 #[cfg(feature = "serde")]
 use serde::ser::{Serialize, SerializeSeq, Serializer};
+#[cfg(feature = "bincode")]
+use bincode::{error::{DecodeError, EncodeError}, de::Decoder, enc::Encoder, Encode, Decode};
 
 /// Helper to make an `ArrayVec`.
 ///
@@ -216,6 +218,33 @@ where
   {
     deserializer.deserialize_seq(ArrayVecVisitor(PhantomData))
   }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "bincode")))]
+impl<T> Decode for ArrayVec<T>
+where
+    T: Array + Decode + 'static,
+{
+    fn decode<D: Decoder>(decoder: &mut D) -> Result<Self, DecodeError> {
+
+      let arr = T::decode(decoder)?;
+      let vec = ArrayVec::from(arr);
+
+      Ok(vec)
+    }
+}
+
+#[cfg(feature = "bincode")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "bincode")))]
+impl<T> Encode for ArrayVec<T>
+where
+    T: Array + Encode + 'static,
+{
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+      self.data.encode(encoder)?;
+      Ok(())
+    }
 }
 
 #[cfg(feature = "arbitrary")]
