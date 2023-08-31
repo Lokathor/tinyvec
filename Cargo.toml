@@ -8,6 +8,7 @@ license = "Zlib OR Apache-2.0 OR MIT"
 keywords = ["vec", "no_std", "no-std"]
 categories = ["data-structures", "no-std"]
 repository = "https://github.com/Lokathor/tinyvec"
+exclude = ["/.github", "/*.py", "/*.sh", "/debug_metadata/*.md", "/src-backup"]
 
 [dependencies]
 tinyvec_macros = { version = "0.1", optional = true }
