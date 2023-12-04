@@ -218,6 +218,53 @@ where
   }
 }
 
+#[cfg(feature = "borsh")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "borsh")))]
+impl<A: Array> borsh::BorshSerialize for ArrayVec<A>
+where
+  <A as Array>::Item: borsh::BorshSerialize,
+{
+  fn serialize<W: borsh::io::Write>(
+    &self, writer: &mut W,
+  ) -> borsh::io::Result<()> {
+    <usize as borsh::BorshSerialize>::serialize(&self.len(), writer)?;
+    for elem in self.iter() {
+      <<A as Array>::Item as borsh::BorshSerialize>::serialize(elem, writer)?;
+    }
+    Ok(())
+  }
+}
+
+#[cfg(feature = "borsh")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "borsh")))]
+impl<A: Array> borsh::BorshDeserialize for ArrayVec<A>
+where
+  <A as Array>::Item: borsh::BorshDeserialize,
+{
+  fn deserialize_reader<R: borsh::io::Read>(
+    reader: &mut R,
+  ) -> borsh::io::Result<Self> {
+    let len = <usize as borsh::BorshDeserialize>::deserialize_reader(reader)?;
+    let mut new_arrayvec = Self::default();
+
+    for idx in 0..len {
+      let value =
+        <<A as Array>::Item as borsh::BorshDeserialize>::deserialize_reader(
+          reader,
+        )?;
+      if idx >= new_arrayvec.capacity() {
+        return Err(borsh::io::Error::new(
+          borsh::io::ErrorKind::InvalidData,
+          "invalid ArrayVec length",
+        ));
+      }
+      new_arrayvec.push(value)
+    }
+
+    Ok(new_arrayvec)
+  }
+}
+
 #[cfg(feature = "arbitrary")]
 #[cfg_attr(docs_rs, doc(cfg(feature = "arbitrary")))]
 impl<'a, A> arbitrary::Arbitrary<'a> for ArrayVec<A>
