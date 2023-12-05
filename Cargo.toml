@@ -69,9 +69,6 @@ rustdoc-args = ["--cfg","docs_rs"]
 [package.metadata.playground]
 features = ["alloc", "std", "grab_spare_slice", "rustc_1_55", "serde"]
 
-[profile.test]
-opt-level = 3
-
 [profile.bench]
 debug = 2
 
