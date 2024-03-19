@@ -146,6 +146,7 @@ where
 }
 
 impl<A: Array> Default for ArrayVec<A> {
+  #[inline]
   fn default() -> Self {
     Self { len: 0, data: A::default() }
   }
@@ -1219,6 +1220,7 @@ where
 impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
   for ArrayVecSplice<'p, A, I>
 {
+  #[inline]
   fn drop(&mut self) {
     for _ in self.by_ref() {}
 
@@ -1295,6 +1297,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
 pub struct TryFromSliceError(());
 
 impl core::fmt::Display for TryFromSliceError {
+  #[inline]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.write_str("could not convert slice to ArrayVec")
   }
@@ -1311,7 +1314,6 @@ where
   type Error = TryFromSliceError;
 
   #[inline]
-  #[must_use]
   /// The output has a length equal to that of the slice, with the same capacity
   /// as `A`.
   fn try_from(slice: &[T]) -> Result<Self, Self::Error> {

@@ -13,6 +13,10 @@
 #![warn(clippy::missing_inline_in_public_items)]
 #![warn(clippy::must_use_candidate)]
 #![warn(missing_docs)]
+#![allow(clippy::borrow_deref_ref)]
+#![allow(unused_imports)]
+#![allow(clippy::write_with_newline)]
+#![allow(clippy::needless_return)]
 
 //! `tinyvec` provides 100% safe vec-like data structures.
 //!
