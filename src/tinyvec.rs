@@ -841,14 +841,6 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// Place an element onto the end of the vec.
-  /// ## Panics
-  /// * If the length of the vec would overflow the capacity.
-  /// ```rust
-  /// use tinyvec::*;
-  /// let mut tv = tiny_vec!([i32; 10] => 1, 2, 3);
-  /// tv.push(4);
-  /// assert_eq!(tv.as_slice(), &[1, 2, 3, 4]);
-  /// ```
   #[inline]
   pub fn push(&mut self, val: A::Item) {
     // The code path for moving the inline contents to the heap produces a lot
