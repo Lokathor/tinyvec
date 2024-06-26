@@ -341,6 +341,16 @@ impl<A: Array> ArrayVec<A> {
     self.deref()
   }
 
+  /// Returns the reference to the inner array of the `ArrayVec`.
+  ///
+  /// This returns the full array, even if the `ArrayVec` length is currently
+  /// less than that.
+  #[inline(always)]
+  #[must_use]
+  pub const fn as_inner(&self) -> &A {
+    &self.data
+  }
+
   /// The capacity of the `ArrayVec`.
   ///
   /// This is fixed based on the array type, but can't yet be made a `const fn`
