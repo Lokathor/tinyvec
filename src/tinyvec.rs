@@ -660,6 +660,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv.as_slice(), &[4, 8][..]);
   /// ```
   #[inline]
+  #[cfg(feature = "rustc_1_61")]
   pub fn retain_mut<F: FnMut(&mut A::Item) -> bool>(&mut self, acceptable: F) {
     match self {
       TinyVec::Inline(i) => i.retain_mut(acceptable),
