@@ -41,6 +41,10 @@ rustc_1_55 = []
 # add try_reserve functions to types that heap allocate.
 rustc_1_57 = ["rustc_1_55"]
 
+# features that require rustc 1.61
+# add retain_mut function to TinyVec
+rustc_1_61 = []
+
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:
 # https://github.com/rust-lang/rust/issues/54279
