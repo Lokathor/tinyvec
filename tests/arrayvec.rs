@@ -447,6 +447,36 @@ fn ArrayVec_ser_de() {
   );
 }
 
+#[cfg(feature = "bincode")]
+#[test]
+fn ArrayVec_bin_de() {
+  let mut tv: ArrayVec<[i32; 4]> = Default::default();
+  let config = bincode::config::standard();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+
+  let encoded = bincode::encode_to_vec(&tv, config).unwrap();
+
+  let (decoded, _): (ArrayVec<[i32; 4]>, _) = bincode::decode_from_slice(&encoded[..], config).expect("Expected decode to ArrayVec.");
+
+  assert!(tv == decoded)
+}
+
+#[cfg(feature = "bincode")]
+#[test]
+fn ArrayVec_bin_enc() {
+  let mut tv: ArrayVec<[i32; 4]> = Default::default();
+  let config = bincode::config::standard();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+
+  bincode::encode_to_vec(&tv, config).expect("Expected encode into Vec<u8>");
+}
+
 #[test]
 fn ArrayVec_try_from_slice() {
   use std::convert::TryFrom;
