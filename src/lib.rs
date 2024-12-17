@@ -15,6 +15,7 @@
 #![warn(missing_docs)]
 #![allow(clippy::borrow_deref_ref)]
 #![allow(unused_imports)]
+#![allow(unused_mut)]
 #![allow(clippy::write_with_newline)]
 #![allow(clippy::needless_return)]
 
