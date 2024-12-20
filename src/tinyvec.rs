@@ -840,8 +840,7 @@ impl<A: Array> TinyVec<A> {
 
     if let Some(x) = arr.try_insert(index, item) {
       let mut v = Vec::with_capacity(arr.len() * 2);
-      let mut it =
-        arr.iter_mut().map(|r| core::mem::replace(r, Default::default()));
+      let mut it = arr.iter_mut().map(core::mem::take);
       v.extend(it.by_ref().take(index));
       v.push(x);
       v.extend(it);
