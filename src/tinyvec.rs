@@ -642,7 +642,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv.as_slice(), &[2, 4][..]);
   /// ```
   #[inline]
-  pub fn retain<F: FnMut(&A::Item) -> bool>(self: &mut Self, acceptable: F) {
+  pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, acceptable: F) {
     match self {
       TinyVec::Inline(i) => i.retain(acceptable),
       TinyVec::Heap(h) => h.retain(acceptable),
@@ -673,14 +673,14 @@ impl<A: Array> TinyVec<A> {
   /// Helper for getting the mut slice.
   #[inline(always)]
   #[must_use]
-  pub fn as_mut_slice(self: &mut Self) -> &mut [A::Item] {
+  pub fn as_mut_slice(&mut self) -> &mut [A::Item] {
     self.deref_mut()
   }
 
   /// Helper for getting the shared slice.
   #[inline(always)]
   #[must_use]
-  pub fn as_slice(self: &Self) -> &[A::Item] {
+  pub fn as_slice(&self) -> &[A::Item] {
     self.deref()
   }
 
