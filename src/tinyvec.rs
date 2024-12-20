@@ -275,7 +275,7 @@ impl<A: Array> TinyVec<A> {
       return vec.shrink_to_fit();
     }
 
-    let moved_vec = core::mem::replace(vec, Vec::new());
+    let moved_vec = core::mem::take(vec);
 
     let mut av = ArrayVec::default();
     let mut rest = av.fill(moved_vec);
