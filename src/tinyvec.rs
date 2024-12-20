@@ -1,5 +1,3 @@
-#![cfg(feature = "alloc")]
-
 use super::*;
 
 use alloc::vec::{self, Vec};
