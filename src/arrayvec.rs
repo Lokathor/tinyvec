@@ -572,6 +572,7 @@ impl<A: Array> ArrayVec<A> {
     }
 
     let target = &mut self.as_mut_slice()[index..];
+    #[allow(clippy::needless_range_loop)]
     for i in 0..target.len() {
       core::mem::swap(&mut item, &mut target[i]);
     }
