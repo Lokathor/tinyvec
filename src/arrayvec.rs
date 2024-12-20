@@ -1857,6 +1857,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 13);
   /// ```
+  #[inline]
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
@@ -1902,6 +1903,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 3);
   /// ```
+  #[inline]
   pub fn drain_to_vec(&mut self) -> Vec<A::Item> {
     self.drain_to_vec_and_reserve(0)
   }

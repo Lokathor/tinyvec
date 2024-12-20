@@ -339,6 +339,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 35);
   /// ```
+  #[inline]
   pub fn move_to_the_heap_and_reserve(&mut self, n: usize) {
     let arr = match self {
       TinyVec::Heap(h) => return h.reserve(n),
@@ -388,6 +389,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
+  #[inline]
   pub fn reserve(&mut self, n: usize) {
     let arr = match self {
       TinyVec::Heap(h) => return h.reserve(n),
@@ -451,6 +453,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
+  #[inline]
   pub fn reserve_exact(&mut self, n: usize) {
     let arr = match self {
       TinyVec::Heap(h) => return h.reserve_exact(n),
@@ -1205,6 +1208,7 @@ where
 impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
   for TinyVecSplice<'p, A, I>
 {
+  #[inline]
   fn drop(&mut self) {
     for _ in self.by_ref() {}
 
@@ -1286,6 +1290,7 @@ impl<A: Array> From<ArrayVec<A>> for TinyVec<A> {
 }
 
 impl<A: Array> From<A> for TinyVec<A> {
+  #[inline]
   fn from(array: A) -> Self {
     TinyVec::Inline(ArrayVec::from(array))
   }
