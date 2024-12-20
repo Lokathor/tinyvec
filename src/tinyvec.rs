@@ -264,6 +264,7 @@ impl<A: Array> TinyVec<A> {
   /// tv.shrink_to_fit();
   /// assert!(tv.is_inline());
   /// ```
+  #[inline]
   pub fn shrink_to_fit(&mut self) {
     let vec = match self {
       TinyVec::Inline(_) => return,
