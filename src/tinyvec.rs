@@ -35,7 +35,7 @@ use serde::ser::{Serialize, SerializeSeq, Serializer};
 /// let many_ints: TinyVec<[i32; 4]> = tiny_vec!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 /// ```
 #[macro_export]
-#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 macro_rules! tiny_vec {
   ($array_type:ty => $($elem:expr),* $(,)?) => {
     {
@@ -94,7 +94,7 @@ pub enum TinyVecConstructor<A: Array> {
 /// let empty_tv = tiny_vec!([u8; 16]);
 /// let some_ints = tiny_vec!([i32; 4] => 1, 2, 3);
 /// ```
-#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub enum TinyVec<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVec<A>),
@@ -1064,7 +1064,7 @@ impl<A: Array> TinyVec<A> {
 /// Draining iterator for `TinyVecDrain`
 ///
 /// See [`TinyVecDrain::drain`](TinyVecDrain::<A>::drain)
-#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub enum TinyVecDrain<'p, A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecDrain<'p, A::Item>),
@@ -1113,7 +1113,7 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
 
 /// Splicing iterator for `TinyVec`
 /// See [`TinyVec::splice`](TinyVec::<A>::splice)
-#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub struct TinyVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
   parent: &'p mut TinyVec<A>,
   removal_start: usize,
@@ -1335,7 +1335,7 @@ impl<A: Array> FromIterator<A::Item> for TinyVec<A> {
 }
 
 /// Iterator for consuming an `TinyVec` and returning owned elements.
-#[cfg_attr(docs_rs, doc(cfg(feature = "alloc")))]
+#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub enum TinyVecIterator<A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecIterator<A>),
