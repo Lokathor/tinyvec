@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust:
-        - 1.47.0
+        - 1.47.0 # approximate MSRV is Stable -30
         - stable
         - beta
         - nightly
