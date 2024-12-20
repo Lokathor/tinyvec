@@ -52,8 +52,8 @@ macro_rules! array_vec {
 /// An array-backed, vector-like data structure.
 ///
 /// * `ArrayVec` has a fixed capacity, equal to the minimum of the array size
-/// and `u16::MAX`. Note that not all capacities are necessarily supported by
-/// default. See comments in [`Array`].
+///   and `u16::MAX`. Note that not all capacities are necessarily supported by
+///   default. See comments in [`Array`].
 /// * `ArrayVec` has a variable length, as you add and remove elements. Attempts
 ///   to fill the vec beyond its capacity will cause a panic.
 /// * All of the vec's array slots are always initialized in terms of Rust's
