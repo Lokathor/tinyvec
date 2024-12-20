@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+* [e00E](https://github.com/e00E) updated the rustc features so that they all
+  correctly depend on the lower version feature.
+  [pr 199](https://github.com/Lokathor/tinyvec/pull/199)
+
 ## 1.8
 
 * [Fuuzetsu](https://github.com/Fuuzetsu) added the `ArrayVec::as_inner` method.
