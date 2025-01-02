@@ -45,6 +45,11 @@ rustc_1_57 = ["rustc_1_55"]
 # add retain_mut function to TinyVec
 rustc_1_61 = ["rustc_1_57"]
 
+# We're done with per-version featuring, this feature opts in to all the
+# abilities of the latest release of Stable rust, and we don't need a million
+# features forever now.
+latest_stable_rust = ["rustc_1_61"]
+
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:
 # https://github.com/rust-lang/rust/issues/54279
@@ -67,11 +72,11 @@ experimental_write_impl = []
 real_blackbox = ["criterion/real_blackbox"]
 
 [package.metadata.docs.rs]
-features = ["alloc", "std", "grab_spare_slice", "rustc_1_55", "serde"]
-rustdoc-args = ["--cfg","docs_rs"]
+features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde"]
+rustdoc-args = ["--cfg", "docs_rs"]
 
 [package.metadata.playground]
-features = ["alloc", "std", "grab_spare_slice", "rustc_1_55", "serde"]
+features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde"]
 
 [profile.bench]
 debug = 2
