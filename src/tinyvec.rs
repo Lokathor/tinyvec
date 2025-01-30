@@ -316,6 +316,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(Ok(()), tv.try_move_to_the_heap());
   /// assert!(tv.is_heap());
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_move_to_the_heap(&mut self) -> Result<(), TryReserveError> {
     let arr = match self {
@@ -364,6 +365,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 35);
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_move_to_the_heap_and_reserve(
     &mut self, n: usize,
@@ -419,6 +421,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_reserve(&mut self, n: usize) -> Result<(), TryReserveError> {
     let arr = match self {
@@ -489,6 +492,7 @@ impl<A: Array> TinyVec<A> {
   /// assert!(tv.is_heap());
   /// assert!(tv.capacity() >= 5);
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_reserve_exact(&mut self, n: usize) -> Result<(), TryReserveError> {
     let arr = match self {
