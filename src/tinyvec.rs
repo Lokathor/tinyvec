@@ -564,10 +564,10 @@ impl<A: Array> TinyVec<A> {
   ///
   /// `v.into_vec()` is equivalent to `Into::<Vec<_>>::into(v)`.
   ///
-  /// - For `TinyVec::Inline(_)`, `.into()` **does not** offer a performance
+  /// - For `TinyVec::Inline(_)`, `.into_vec()` **does not** offer a performance
   ///   advantage over `.to_vec()`.
-  /// - For `TinyVec::Heap(vec_data)`, `.into()` will take `vec_data` without
-  ///   heap reallocation.
+  /// - For `TinyVec::Heap(vec_data)`, `.into_vec()` will take `vec_data`
+  ///   without heap reallocation.
   ///
   /// ## Example
   ///
