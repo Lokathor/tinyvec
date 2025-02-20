@@ -543,25 +543,23 @@ impl<A: Array> TinyVec<A> {
   /// use core::mem::size_of_val as mem_size_of;
   /// use tinyvec::TinyVec;
   ///
-  /// // Initialize TinyVec with 204800 elements (exceeding inline capacity)
-  /// let v: TinyVec<[_; 102400]> = (0..204800)
+  /// // Initialize TinyVec with 240 elements (exceeding inline capacity)
+  /// let v: TinyVec<[_; 120]> = (0..240)
   ///   .map(|_| 0u8)
   ///   .collect();
   ///
   /// assert!(v.is_heap());
-  /// assert_eq!(mem_size_of(&v), 102408); // mem size of TinyVec<[u8; N]>: N+8
-  /// assert_eq!(v.len(), 204800);
+  /// assert_eq!(mem_size_of(&v), 128); // mem size of TinyVec<[u8; N]>: N+8
+  /// assert_eq!(v.len(), 240);
   ///
   /// let boxed = v.into_boxed_slice();
   /// assert_eq!(mem_size_of(&boxed), 16); // mem size of Box<[u8]>: 16 bytes (fat pointer)
-  /// assert_eq!(boxed.len(), 204800);
+  /// assert_eq!(boxed.len(), 240);
   /// ```
   #[inline]
   #[must_use]
   pub fn into_boxed_slice(self) -> alloc::boxed::Box<[A::Item]> {
-    self
-      .into_vec()
-      .into_boxed_slice()
+    self.into_vec().into_boxed_slice()
   }
 
   /// Converts a `TinyVec<[T; N]>` into a `Vec<T>`.
@@ -771,9 +769,7 @@ impl<A: Array> TinyVec<A> {
     F: FnMut(&mut A::Item, &mut A::Item) -> bool,
   {
     let len = {
-      let (dedup, _) = self
-        .as_mut_slice()
-        .partition_dedup_by(same_bucket);
+      let (dedup, _) = self.as_mut_slice().partition_dedup_by(same_bucket);
       dedup.len()
     };
     self.truncate(len);
@@ -814,7 +810,9 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv.as_slice(), &[]);
   /// ```
   #[inline]
-  pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> TinyVecDrain<'_, A> {
+  pub fn drain<R: RangeBounds<usize>>(
+    &mut self, range: R,
+  ) -> TinyVecDrain<'_, A> {
     match self {
       TinyVec::Inline(i) => TinyVecDrain::Inline(i.drain(range)),
       TinyVec::Heap(h) => TinyVecDrain::Heap(h.drain(range)),
@@ -903,9 +901,7 @@ impl<A: Array> TinyVec<A> {
 
     if let Some(x) = arr.try_insert(index, item) {
       let mut v = Vec::with_capacity(arr.len() * 2);
-      let mut it = arr
-        .iter_mut()
-        .map(core::mem::take);
+      let mut it = arr.iter_mut().map(core::mem::take);
       v.extend(it.by_ref().take(index));
       v.push(x);
       v.extend(it);
@@ -1087,7 +1083,12 @@ impl<A: Array> TinyVec<A> {
       Bound::Excluded(x) => *x,
       Bound::Unbounded => self.len(),
     };
-    assert!(start <= end, "TinyVec::splice> Illegal range, {} to {}", start, end);
+    assert!(
+      start <= end,
+      "TinyVec::splice> Illegal range, {} to {}",
+      start,
+      end
+    );
     assert!(
       end <= self.len(),
       "TinyVec::splice> Range ends at {} but length is only {}!",
@@ -1191,15 +1192,15 @@ where
     if self.removal_start < self.removal_end {
       match self.replacement.next() {
         Some(replacement) => {
-          let removed =
-            core::mem::replace(&mut self.parent[self.removal_start], replacement);
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_start],
+            replacement,
+          );
           self.removal_start += 1;
           Some(removed)
         }
         None => {
-          let removed = self
-            .parent
-            .remove(self.removal_start);
+          let removed = self.parent.remove(self.removal_start);
           self.removal_end -= 1;
           Some(removed)
         }
@@ -1244,15 +1245,15 @@ where
     if self.removal_start < self.removal_end {
       match self.replacement.next_back() {
         Some(replacement) => {
-          let removed =
-            core::mem::replace(&mut self.parent[self.removal_end - 1], replacement);
+          let removed = core::mem::replace(
+            &mut self.parent[self.removal_end - 1],
+            replacement,
+          );
           self.removal_end -= 1;
           Some(removed)
         }
         None => {
-          let removed = self
-            .parent
-            .remove(self.removal_end - 1);
+          let removed = self.parent.remove(self.removal_end - 1);
           self.removal_end -= 1;
           Some(removed)
         }
@@ -1263,7 +1264,9 @@ where
   }
 }
 
-impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop for TinyVecSplice<'p, A, I> {
+impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
+  for TinyVecSplice<'p, A, I>
+{
   #[inline]
   fn drop(&mut self) {
     for _ in self.by_ref() {}
@@ -1272,9 +1275,7 @@ impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop for TinyVecSplice<'p, A, I>
     self.parent.reserve(lower_bound);
 
     for replacement in self.replacement.by_ref() {
-      self
-        .parent
-        .insert(self.removal_end, replacement);
+      self.parent.insert(self.removal_end, replacement);
       self.removal_end += 1;
     }
   }
@@ -1428,8 +1429,8 @@ impl<A: Array> Into<Vec<A::Item>> for TinyVec<A> {
   ///   TinyVec::Heap(owned)
   /// }
   ///
-  /// let v = from_heap(vec![0u8; 10240]);
-  /// assert_eq!(v.len(), 10240);
+  /// let v = from_heap(vec![0u8; 120]);
+  /// assert_eq!(v.len(), 120);
   /// assert_eq!(mem_size_of(&v), 24);
   /// assert!(type_of(&v).ends_with("TinyVec<[u8; 1]>"));
   ///
@@ -1518,9 +1519,7 @@ where
 {
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-    f.debug_tuple("TinyVecIterator")
-      .field(&self.as_slice())
-      .finish()
+    f.debug_tuple("TinyVecIterator").field(&self.as_slice()).finish()
   }
 }
 
@@ -1564,9 +1563,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &Self) -> bool {
-    self
-      .as_slice()
-      .eq(other.as_slice())
+    self.as_slice().eq(other.as_slice())
   }
 }
 impl<A: Array> Eq for TinyVec<A> where A::Item: Eq {}
@@ -1578,9 +1575,7 @@ where
   #[inline]
   #[must_use]
   fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-    self
-      .as_slice()
-      .partial_cmp(other.as_slice())
+    self.as_slice().partial_cmp(other.as_slice())
   }
 }
 impl<A: Array> Ord for TinyVec<A>
@@ -1590,9 +1585,7 @@ where
   #[inline]
   #[must_use]
   fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-    self
-      .as_slice()
-      .cmp(other.as_slice())
+    self.as_slice().cmp(other.as_slice())
   }
 }
 
@@ -1603,9 +1596,7 @@ where
   #[inline]
   #[must_use]
   fn eq(&self, other: &&A) -> bool {
-    self
-      .as_slice()
-      .eq(other.as_slice())
+    self.as_slice().eq(other.as_slice())
   }
 }
 
@@ -1852,7 +1843,9 @@ where
 {
   type Value = TinyVec<A>;
 
-  fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+  fn expecting(
+    &self, formatter: &mut core::fmt::Formatter,
+  ) -> core::fmt::Result {
     formatter.write_str("a sequence")
   }
 
