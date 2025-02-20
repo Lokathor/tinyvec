@@ -544,12 +544,12 @@ impl<A: Array> TinyVec<A> {
   /// use tinyvec::TinyVec;
   ///
   /// // Initialize TinyVec with 240 elements (exceeding inline capacity)
-  /// let v: TinyVec<[_; 120]> = (0..240)
+  /// let v: TinyVec<[_; 128]> = (0..240)
   ///   .map(|_| 0u8)
   ///   .collect();
   ///
   /// assert!(v.is_heap());
-  /// assert_eq!(mem_size_of(&v), 128); // mem size of TinyVec<[u8; N]>: N+8
+  /// assert_eq!(mem_size_of(&v), 136); // mem size of TinyVec<[u8; N]>: N+8
   /// assert_eq!(v.len(), 240);
   ///
   /// let boxed = v.into_boxed_slice();
@@ -1407,8 +1407,8 @@ impl<A: Array> Into<Vec<A::Item>> for TinyVec<A> {
   /// use core::mem::size_of_val as mem_size_of;
   /// use tinyvec::TinyVec;
   ///
-  /// let v = TinyVec::from([0u8; 120]);
-  /// assert_eq!(mem_size_of(&v), 128);
+  /// let v = TinyVec::from([0u8; 128]);
+  /// assert_eq!(mem_size_of(&v), 136);
   ///
   /// let vec: Vec<_> = v.into();
   /// assert_eq!(mem_size_of(&vec), 24);
@@ -1429,8 +1429,8 @@ impl<A: Array> Into<Vec<A::Item>> for TinyVec<A> {
   ///   TinyVec::Heap(owned)
   /// }
   ///
-  /// let v = from_heap(vec![0u8; 120]);
-  /// assert_eq!(v.len(), 120);
+  /// let v = from_heap(vec![0u8; 128]);
+  /// assert_eq!(v.len(), 128);
   /// assert_eq!(mem_size_of(&v), 24);
   /// assert!(type_of(&v).ends_with("TinyVec<[u8; 1]>"));
   ///
