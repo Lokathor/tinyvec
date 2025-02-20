@@ -543,18 +543,16 @@ impl<A: Array> TinyVec<A> {
   /// use core::mem::size_of_val as mem_size_of;
   /// use tinyvec::TinyVec;
   ///
-  /// // Initialize TinyVec with 240 elements (exceeding inline capacity)
-  /// let v: TinyVec<[_; 128]> = (0..240)
-  ///   .map(|_| 0u8)
-  ///   .collect();
+  /// // Initialize TinyVec with 256 elements (exceeding inline capacity)
+  /// let v: TinyVec<[_; 128]> = (0u8..=255).collect();
   ///
   /// assert!(v.is_heap());
   /// assert_eq!(mem_size_of(&v), 136); // mem size of TinyVec<[u8; N]>: N+8
-  /// assert_eq!(v.len(), 240);
+  /// assert_eq!(v.len(), 256);
   ///
   /// let boxed = v.into_boxed_slice();
   /// assert_eq!(mem_size_of(&boxed), 16); // mem size of Box<[u8]>: 16 bytes (fat pointer)
-  /// assert_eq!(boxed.len(), 240);
+  /// assert_eq!(boxed.len(), 256);
   /// ```
   #[inline]
   #[must_use]
