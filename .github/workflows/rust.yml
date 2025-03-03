@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust:
-        - 1.47.0
+        - 1.47.0 # approximate MSRV is Stable -30
         - stable
         - beta
         - nightly
@@ -34,7 +34,7 @@ jobs:
     - name: Test non nightly
       if: matrix.rust != '1.47.0' && matrix.rust != 'nightly'
       run: |
-        cargo test --features=alloc,std,grab_spare_slice
+        cargo test --features=alloc,std,grab_spare_slice,latest_stable_rust
     - name: Test on Nightly with All Features
       if: matrix.rust == 'nightly'
       run: |

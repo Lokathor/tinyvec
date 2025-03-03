@@ -52,8 +52,8 @@ macro_rules! array_vec {
 /// An array-backed, vector-like data structure.
 ///
 /// * `ArrayVec` has a fixed capacity, equal to the minimum of the array size
-/// and `u16::MAX`. Note that not all capacities are necessarily supported by
-/// default. See comments in [`Array`].
+///   and `u16::MAX`. Note that not all capacities are necessarily supported by
+///   default. See comments in [`Array`].
 /// * `ArrayVec` has a variable length, as you add and remove elements. Attempts
 ///   to fill the vec beyond its capacity will cause a panic.
 /// * All of the vec's array slots are always initialized in terms of Rust's
@@ -146,6 +146,7 @@ where
 }
 
 impl<A: Array> Default for ArrayVec<A> {
+  #[inline]
   fn default() -> Self {
     Self { len: 0, data: A::default() }
   }
@@ -618,6 +619,7 @@ impl<A: Array> ArrayVec<A> {
     }
 
     let target = &mut self.as_mut_slice()[index..];
+    #[allow(clippy::needless_range_loop)]
     for i in 0..target.len() {
       core::mem::swap(&mut item, &mut target[i]);
     }
@@ -862,6 +864,63 @@ impl<A: Array> ArrayVec<A> {
     }
   }
 
+  /// Retains only the elements specified by the predicate, passing a mutable
+  /// reference to it.
+  ///
+  /// In other words, remove all elements e such that f(&mut e) returns false.
+  /// This method operates in place, visiting each element exactly once in the
+  /// original order, and preserves the order of the retained elements.
+  ///
+  ///
+  /// ## Example
+  ///
+  /// ```rust
+  /// # use tinyvec::*;
+  ///
+  /// let mut av = array_vec!([i32; 10] => 1, 1, 2, 3, 3, 4);
+  /// av.retain_mut(|x| if *x % 2 == 0 { *x *= 2; true } else { false });
+  /// assert_eq!(&av[..], [4, 8]);
+  /// ```
+  #[inline]
+  pub fn retain_mut<F>(&mut self, mut acceptable: F)
+  where
+    F: FnMut(&mut A::Item) -> bool,
+  {
+    // Drop guard to contain exactly the remaining elements when the test
+    // panics.
+    struct JoinOnDrop<'vec, Item> {
+      items: &'vec mut [Item],
+      done_end: usize,
+      // Start of tail relative to `done_end`.
+      tail_start: usize,
+    }
+
+    impl<Item> Drop for JoinOnDrop<'_, Item> {
+      fn drop(&mut self) {
+        self.items[self.done_end..].rotate_left(self.tail_start);
+      }
+    }
+
+    let mut rest = JoinOnDrop {
+      items: &mut self.data.as_slice_mut()[..self.len as usize],
+      done_end: 0,
+      tail_start: 0,
+    };
+
+    let len = self.len as usize;
+    for idx in 0..len {
+      // Loop start invariant: idx = rest.done_end + rest.tail_start
+      if !acceptable(&mut rest.items[idx]) {
+        let _ = core::mem::take(&mut rest.items[idx]);
+        self.len -= 1;
+        rest.tail_start += 1;
+      } else {
+        rest.items.swap(rest.done_end, idx);
+        rest.done_end += 1;
+      }
+    }
+  }
+
   /// Forces the length of the vector to `new_len`.
   ///
   /// ## Panics
@@ -1059,7 +1118,28 @@ impl<A: Array> ArrayVec<A> {
   /// If the given length is greater than the capacity of the array this will
   /// error, and you'll get the array back in the `Err`.
   #[inline]
+  #[cfg(not(feature = "latest_stable_rust"))]
   pub fn try_from_array_len(data: A, len: usize) -> Result<Self, A> {
+    /* Note(Soveu): Should we allow A::CAPACITY > u16::MAX for now? */
+    if len <= A::CAPACITY {
+      Ok(Self { data, len: len as u16 })
+    } else {
+      Err(data)
+    }
+  }
+
+  /// Wraps an array, using the given length as the starting length.
+  ///
+  /// If you want to use the whole length of the array, you can just use the
+  /// `From` impl.
+  ///
+  /// ## Failure
+  ///
+  /// If the given length is greater than the capacity of the array this will
+  /// error, and you'll get the array back in the `Err`.
+  #[inline]
+  #[cfg(feature = "latest_stable_rust")]
+  pub const fn try_from_array_len(data: A, len: usize) -> Result<Self, A> {
     /* Note(Soveu): Should we allow A::CAPACITY > u16::MAX for now? */
     if len <= A::CAPACITY {
       Ok(Self { data, len: len as u16 })
@@ -1172,6 +1252,18 @@ impl<A: Array> ArrayVec<A> {
   }
 }
 
+impl<A> ArrayVec<A> {
+  /// Returns the reference to the inner array of the `ArrayVec`.
+  ///
+  /// This returns the full array, even if the `ArrayVec` length is currently
+  /// less than that.
+  #[inline(always)]
+  #[must_use]
+  pub const fn as_inner(&self) -> &A {
+    &self.data
+  }
+}
+
 /// Splicing iterator for `ArrayVec`
 /// See [`ArrayVec::splice`](ArrayVec::<A>::splice)
 pub struct ArrayVecSplice<'p, A: Array, I: Iterator<Item = A::Item>> {
@@ -1266,6 +1358,7 @@ where
 impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
   for ArrayVecSplice<'p, A, I>
 {
+  #[inline]
   fn drop(&mut self) {
     for _ in self.by_ref() {}
 
@@ -1342,6 +1435,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
 pub struct TryFromSliceError(());
 
 impl core::fmt::Display for TryFromSliceError {
+  #[inline]
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     f.write_str("could not convert slice to ArrayVec")
   }
@@ -1358,7 +1452,6 @@ where
   type Error = TryFromSliceError;
 
   #[inline]
-  #[must_use]
   /// The output has a length equal to that of the slice, with the same capacity
   /// as `A`.
   fn try_from(slice: &[T]) -> Result<Self, Self::Error> {
@@ -1833,6 +1926,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 13);
   /// ```
+  #[inline]
   pub fn drain_to_vec_and_reserve(&mut self, n: usize) -> Vec<A::Item> {
     let cap = n + self.len();
     let mut v = Vec::with_capacity(cap);
@@ -1857,6 +1951,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 13);
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_drain_to_vec_and_reserve(
     &mut self, n: usize,
@@ -1878,6 +1973,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(v, &[1, 2, 3]);
   /// assert_eq!(v.capacity(), 3);
   /// ```
+  #[inline]
   pub fn drain_to_vec(&mut self) -> Vec<A::Item> {
     self.drain_to_vec_and_reserve(0)
   }
@@ -1898,6 +1994,7 @@ impl<A: Array> ArrayVec<A> {
   /// // Vec may reserve more than necessary in order to prevent more future allocations.
   /// assert!(v.capacity() >= 3);
   /// ```
+  #[inline]
   #[cfg(feature = "rustc_1_57")]
   pub fn try_drain_to_vec(&mut self) -> Result<Vec<A::Item>, TryReserveError> {
     self.try_drain_to_vec_and_reserve(0)
@@ -1936,5 +2033,47 @@ where
     }
 
     Ok(new_arrayvec)
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  #[test]
+  fn retain_mut_empty_vec() {
+    let mut av: ArrayVec<[i32; 4]> = ArrayVec::new();
+    av.retain_mut(|&mut x| x % 2 == 0);
+    assert_eq!(av.len(), 0);
+  }
+
+  #[test]
+  fn retain_mut_all_elements() {
+    let mut av: ArrayVec<[i32; 4]> = array_vec!([i32; 4] => 2, 4, 6, 8);
+    av.retain_mut(|&mut x| x % 2 == 0);
+    assert_eq!(av.len(), 4);
+    assert_eq!(av.as_slice(), &[2, 4, 6, 8]);
+  }
+
+  #[test]
+  fn retain_mut_some_elements() {
+    let mut av: ArrayVec<[i32; 4]> = array_vec!([i32; 4] => 1, 2, 3, 4);
+    av.retain_mut(|&mut x| x % 2 == 0);
+    assert_eq!(av.len(), 2);
+    assert_eq!(av.as_slice(), &[2, 4]);
+  }
+
+  #[test]
+  fn retain_mut_no_elements() {
+    let mut av: ArrayVec<[i32; 4]> = array_vec!([i32; 4] => 1, 3, 5, 7);
+    av.retain_mut(|&mut x| x % 2 == 0);
+    assert_eq!(av.len(), 0);
+  }
+
+  #[test]
+  fn retain_mut_zero_capacity() {
+    let mut av: ArrayVec<[i32; 0]> = ArrayVec::new();
+    av.retain_mut(|&mut x| x % 2 == 0);
+    assert_eq!(av.len(), 0);
   }
 }

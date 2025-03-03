@@ -558,7 +558,7 @@ impl<'s, T> SliceVec<'s, T> {
   #[inline]
   pub fn split_off<'a>(&'a mut self, at: usize) -> SliceVec<'s, T> {
     let mut new = Self::default();
-    let backing: &'s mut [T] = replace(&mut self.data, &mut []);
+    let backing: &'s mut [T] = core::mem::take(&mut self.data);
     let (me, other) = backing.split_at_mut(at);
     new.len = self.len - at;
     new.data = other;
@@ -655,6 +655,7 @@ impl<'s, T> SliceVec<'s, T> {
   /// sv.push(13);
   /// assert_eq!(sv.grab_spare_slice().len(), 0);
   /// ```
+  #[must_use]
   #[inline(always)]
   pub fn grab_spare_slice(&self) -> &[T] {
     &self.data[self.len..]
@@ -686,6 +687,7 @@ impl<'s, T> From<&'s mut [T]> for SliceVec<'s, T> {
   /// let mut arr = [0_i32; 2];
   /// let mut sv = SliceVec::from(&mut arr[..]);
   /// ```
+  #[inline]
   fn from(data: &'s mut [T]) -> Self {
     let len = data.len();
     Self { data, len }
@@ -703,6 +705,7 @@ where
   /// let mut arr = [0, 0];
   /// let mut sv = SliceVec::from(&mut arr);
   /// ```
+  #[inline]
   fn from(a: &'s mut A) -> Self {
     let data = a.as_mut();
     let len = data.len();
