@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         rust:
-        - 1.47.0 # approximate MSRV is Stable -30
+        - 1.55.0 # approximate MSRV is Stable -30
         - stable
         - beta
         - nightly
@@ -28,11 +28,11 @@ jobs:
         toolchain: ${{ matrix.rust }}
     # On MSRV some dev-dependencies don't build so we can't run tests.
     - name: Check MSRV
-      if: matrix.rust == '1.47.0'
+      if: matrix.rust == '1.55.0'
       run: |
         cargo check --features=alloc,std,grab_spare_slice
     - name: Test non nightly
-      if: matrix.rust != '1.47.0' && matrix.rust != 'nightly'
+      if: matrix.rust != '1.55.0' && matrix.rust != 'nightly'
       run: |
         cargo test --features=alloc,std,grab_spare_slice,latest_stable_rust
     - name: Test on Nightly with All Features
