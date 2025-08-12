@@ -8,13 +8,11 @@ impl<T: Default, N: ArrayLength> Array for GenericArray<T, N> {
   const CAPACITY: usize = N::USIZE;
 
   #[inline(always)]
-  #[must_use]
   fn as_slice(&self) -> &[T] {
     &*self
   }
 
   #[inline(always)]
-  #[must_use]
   fn as_slice_mut(&mut self) -> &mut [T] {
     &mut *self
   }
