@@ -130,7 +130,6 @@ where
 
 impl<A: Array> Default for TinyVec<A> {
   #[inline]
-  #[must_use]
   fn default() -> Self {
     TinyVec::Inline(ArrayVec::default())
   }
@@ -159,7 +158,6 @@ impl<A: Array> DerefMut for TinyVec<A> {
 impl<A: Array, I: SliceIndex<[A::Item]>> Index<I> for TinyVec<A> {
   type Output = <I as SliceIndex<[A::Item]>>::Output;
   #[inline(always)]
-  #[must_use]
   fn index(&self, index: I) -> &Self::Output {
     &self.deref()[index]
   }
@@ -167,7 +165,6 @@ impl<A: Array, I: SliceIndex<[A::Item]>> Index<I> for TinyVec<A> {
 
 impl<A: Array, I: SliceIndex<[A::Item]>> IndexMut<I> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn index_mut(&mut self, index: I) -> &mut Self::Output {
     &mut self.deref_mut()[index]
   }
@@ -194,7 +191,6 @@ impl<A: Array> Serialize for TinyVec<A>
 where
   A::Item: Serialize,
 {
-  #[must_use]
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
     S: Serializer,
@@ -1326,7 +1322,6 @@ impl<'p, A: Array, I: Iterator<Item = A::Item>> Drop
 
 impl<A: Array> AsMut<[A::Item]> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn as_mut(&mut self) -> &mut [A::Item] {
     &mut *self
   }
@@ -1334,7 +1329,6 @@ impl<A: Array> AsMut<[A::Item]> for TinyVec<A> {
 
 impl<A: Array> AsRef<[A::Item]> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn as_ref(&self) -> &[A::Item] {
     &*self
   }
@@ -1342,7 +1336,6 @@ impl<A: Array> AsRef<[A::Item]> for TinyVec<A> {
 
 impl<A: Array> Borrow<[A::Item]> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn borrow(&self) -> &[A::Item] {
     &*self
   }
@@ -1350,7 +1343,6 @@ impl<A: Array> Borrow<[A::Item]> for TinyVec<A> {
 
 impl<A: Array> BorrowMut<[A::Item]> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn borrow_mut(&mut self) -> &mut [A::Item] {
     &mut *self
   }
@@ -1385,7 +1377,6 @@ impl<A: Array> Extend<A::Item> for TinyVec<A> {
 
 impl<A: Array> From<ArrayVec<A>> for TinyVec<A> {
   #[inline(always)]
-  #[must_use]
   fn from(arr: ArrayVec<A>) -> Self {
     TinyVec::Inline(arr)
   }
@@ -1404,7 +1395,6 @@ where
   A: Array<Item = T>,
 {
   #[inline]
-  #[must_use]
   fn from(slice: &[T]) -> Self {
     if let Ok(arr) = ArrayVec::try_from(slice) {
       TinyVec::Inline(arr)
@@ -1420,7 +1410,6 @@ where
   A: Array<Item = T>,
 {
   #[inline]
-  #[must_use]
   fn from(slice: &mut [T]) -> Self {
     Self::from(&*slice)
   }
@@ -1428,7 +1417,6 @@ where
 
 impl<A: Array> FromIterator<A::Item> for TinyVec<A> {
   #[inline]
-  #[must_use]
   fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
     let mut av = Self::default();
     av.extend(iter);
@@ -1482,7 +1470,6 @@ impl<A: Array> Into<Vec<A::Item>> for TinyVec<A> {
   /// assert!(type_of(&vec).ends_with("Vec<u8>"));
   /// ```
   #[inline]
-  #[must_use]
   fn into(self) -> Vec<A::Item> {
     match self {
       Self::Heap(inner) => inner,
@@ -1570,7 +1557,6 @@ impl<A: Array> IntoIterator for TinyVec<A> {
   type Item = A::Item;
   type IntoIter = TinyVecIterator<A>;
   #[inline(always)]
-  #[must_use]
   fn into_iter(self) -> Self::IntoIter {
     match self {
       TinyVec::Inline(a) => TinyVecIterator::Inline(a.into_iter()),
@@ -1583,7 +1569,6 @@ impl<'a, A: Array> IntoIterator for &'a mut TinyVec<A> {
   type Item = &'a mut A::Item;
   type IntoIter = core::slice::IterMut<'a, A::Item>;
   #[inline(always)]
-  #[must_use]
   fn into_iter(self) -> Self::IntoIter {
     self.iter_mut()
   }
@@ -1593,7 +1578,6 @@ impl<'a, A: Array> IntoIterator for &'a TinyVec<A> {
   type Item = &'a A::Item;
   type IntoIter = core::slice::Iter<'a, A::Item>;
   #[inline(always)]
-  #[must_use]
   fn into_iter(self) -> Self::IntoIter {
     self.iter()
   }
@@ -1604,7 +1588,6 @@ where
   A::Item: PartialEq,
 {
   #[inline]
-  #[must_use]
   fn eq(&self, other: &Self) -> bool {
     self.as_slice().eq(other.as_slice())
   }
@@ -1616,7 +1599,6 @@ where
   A::Item: PartialOrd,
 {
   #[inline]
-  #[must_use]
   fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
     self.as_slice().partial_cmp(other.as_slice())
   }
@@ -1626,7 +1608,6 @@ where
   A::Item: Ord,
 {
   #[inline]
-  #[must_use]
   fn cmp(&self, other: &Self) -> core::cmp::Ordering {
     self.as_slice().cmp(other.as_slice())
   }
@@ -1637,7 +1618,6 @@ where
   A::Item: PartialEq,
 {
   #[inline]
-  #[must_use]
   fn eq(&self, other: &&A) -> bool {
     self.as_slice().eq(other.as_slice())
   }
@@ -1648,7 +1628,6 @@ where
   A::Item: PartialEq,
 {
   #[inline]
-  #[must_use]
   fn eq(&self, other: &&[A::Item]) -> bool {
     self.as_slice().eq(*other)
   }
