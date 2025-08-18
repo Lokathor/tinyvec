@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10
+
+* Minimum rust version is now 1.55, and the non-const-generic impls are removed.
+  This reduces build times by over a second on average, which is
+  significant enough for a library crate.
+
 ## 1.9
 
 * Adds a `latest_stable_rust` cargo feature, which will automatically pull in
