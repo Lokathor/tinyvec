@@ -499,3 +499,25 @@ fn TinyVec_std_io_write() {
   assert!(tv.is_heap());
   assert_eq!(tv, tiny_vec![b'f', b'o', b'o', b'b', b'a', b'r']);
 }
+
+#[cfg(feature = "alloc")]
+#[test]
+fn TinyVec_array_like_debug() {
+  #[derive(Debug, Default, Copy, Clone)]
+  struct S {
+    x: u8,
+    y: u8,
+  }
+
+  use core::fmt::Write;
+
+  let mut ar: [S; 2] = [S { x: 1, y: 2 }, S { x: 3, y: 4 }];
+  let mut buf_ar = alloc::string::String::new();
+  write!(&mut buf_ar, "{ar:#?}");
+
+  let av: TinyVec<[S; 2]> = TinyVec::from(ar);
+  let mut buf_av = alloc::string::String::new();
+  write!(&mut buf_av, "{av:#?}");
+
+  assert_eq!(buf_av, buf_ar)
+}
