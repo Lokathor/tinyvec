@@ -1712,20 +1712,7 @@ where
 {
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
-    write!(f, "[")?;
-    if f.alternate() && !self.is_empty() {
-      write!(f, "\n    ")?;
-    }
-    for (i, elem) in self.iter().enumerate() {
-      if i > 0 {
-        write!(f, ",{}", if f.alternate() { "\n    " } else { " " })?;
-      }
-      Debug::fmt(elem, f)?;
-    }
-    if f.alternate() && !self.is_empty() {
-      write!(f, ",\n")?;
-    }
-    write!(f, "]")
+    <[A::Item] as Debug>::fmt(self.as_slice(), f)
   }
 }
 
@@ -2055,5 +2042,27 @@ mod test {
     let mut av: ArrayVec<[i32; 0]> = ArrayVec::new();
     av.retain_mut(|&mut x| x % 2 == 0);
     assert_eq!(av.len(), 0);
+  }
+
+  #[cfg(feature = "alloc")]
+  #[test]
+  fn array_like_debug() {
+    #[derive(Debug, Default, Copy, Clone)]
+    struct S {
+      x: u8,
+      y: u8,
+    }
+
+    use core::fmt::Write;
+
+    let mut ar: [S; 2] = [S { x: 1, y: 2 }, S { x: 3, y: 4 }];
+    let mut buf_ar = alloc::string::String::new();
+    write!(&mut buf_ar, "{ar:#?}");
+
+    let av: ArrayVec<[S; 2]> = ArrayVec::from(ar);
+    let mut buf_av = alloc::string::String::new();
+    write!(&mut buf_av, "{av:#?}");
+
+    assert_eq!(buf_av, buf_ar)
   }
 }
