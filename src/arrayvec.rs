@@ -57,7 +57,7 @@ macro_rules! array_vec {
 /// * `ArrayVec` has a variable length, as you add and remove elements. Attempts
 ///   to fill the vec beyond its capacity will cause a panic.
 /// * All of the vec's array slots are always initialized in terms of Rust's
-///   memory model. When you remove a element from a location, the old value at
+///   memory model. When you remove an element from a location, the old value at
 ///   that location is replaced with the type's default value.
 ///
 /// The overall API of this type is intended to, as much as possible, emulate
@@ -87,7 +87,7 @@ macro_rules! array_vec {
 /// assert_eq!(some_ints, more_ints);
 /// ```
 ///
-/// If you have an array and want the _whole thing_ so count as being "in" the
+/// If you have an array and want the _whole thing_ to count as being "in" the
 /// new `ArrayVec` you can use one of the `from` implementations. If you want
 /// _part of_ the array then you can use
 /// [`from_array_len`](ArrayVec::from_array_len):
