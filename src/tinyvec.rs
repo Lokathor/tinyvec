@@ -10,9 +10,9 @@ use alloc::collections::TryReserveError;
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
 #[cfg(feature = "serde")]
-use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+use serde_core::de::{Deserialize, Deserializer, SeqAccess, Visitor};
 #[cfg(feature = "serde")]
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use serde_core::ser::{Serialize, SerializeSeq, Serializer};
 
 /// Helper to make a `TinyVec`.
 ///

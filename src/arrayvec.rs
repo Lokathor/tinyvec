@@ -4,11 +4,11 @@ use core::convert::{TryFrom, TryInto};
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
 #[cfg(feature = "serde")]
-use serde::de::{
+use serde_core::de::{
   Deserialize, Deserializer, Error as DeserializeError, SeqAccess, Visitor,
 };
 #[cfg(feature = "serde")]
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use serde_core::ser::{Serialize, SerializeSeq, Serializer};
 
 /// Helper to make an `ArrayVec`.
 ///
