@@ -24,6 +24,8 @@ generic-array = { version = "1.1.1", optional = true, default-features = false }
 bin-proto = { version = "0.12.5", optional = true, default-features = false }
 # Provides `Format` implementations
 defmt = { version = "1.0", optional = true }
+# Provides `JsonSchema` implementations
+schemars = { version = "1.0", optional = true, default-features = false }
 
 
 [features]
@@ -82,12 +84,14 @@ experimental_write_impl = []
 # and thus a nightly compiler, but is only used in benchmarks.
 real_blackbox = ["criterion/real_blackbox"]
 
+schemars = ["dep:schemars", "alloc"]
+
 [package.metadata.docs.rs]
-features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde", "borsh", "defmt", "bin-proto"]
+features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde", "borsh", "defmt", "bin-proto", "schemars"]
 rustdoc-args = ["--cfg","docs_rs"]
 
 [package.metadata.playground]
-features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde", "borsh"]
+features = ["alloc", "std", "grab_spare_slice", "latest_stable_rust", "serde", "borsh", "schemars"]
 
 [profile.dev]
 lto = "thin"

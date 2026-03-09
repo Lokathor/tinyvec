@@ -132,7 +132,7 @@ fn ArrayVec_append() {
   //
   av.append(&mut av2);
   assert_eq!(av.as_slice(), &[1_i32, 2, 3, 4, 5, 6]);
-  assert_eq!(av2.as_slice(), &[]);
+  assert_eq!(av2.as_slice(), &[] as &[i32]);
 }
 
 #[test]
@@ -167,7 +167,7 @@ fn ArrayVec_swap_remove() {
   assert_eq!(av.swap_remove(0), 3);
   assert_eq!(&av[..], &[2][..]);
   assert_eq!(av.swap_remove(0), 2);
-  assert_eq!(&av[..], &[][..]);
+  assert_eq!(&av[..], &[][..] as &[i32]);
 }
 
 #[test]
@@ -552,7 +552,7 @@ fn ArrayVec_try_from_slice() {
 
   let empty: Result<ArrayVec<[i32; 2]>, _> = ArrayVec::try_from(&nums[..0]);
   assert!(empty.is_ok());
-  assert_eq!(empty.unwrap().as_slice(), &[]);
+  assert_eq!(empty.unwrap().as_slice(), &[] as &[i32]);
 
   let fits: Result<ArrayVec<[i32; 2]>, _> = ArrayVec::try_from(&nums[..2]);
   assert!(fits.is_ok());

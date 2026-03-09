@@ -143,7 +143,7 @@ impl<'s, T> SliceVec<'s, T> {
   /// assert_eq!(drained_values.as_slice(), &[7, 8][..]);
   ///
   /// sv.drain(..);
-  /// assert_eq!(sv.as_slice(), &[]);
+  /// assert_eq!(sv.as_slice(), &[] as &[i32]);
   /// ```
   #[inline]
   pub fn drain<'p, R: RangeBounds<usize>>(
@@ -345,7 +345,7 @@ impl<'s, T> SliceVec<'s, T> {
   /// # use tinyvec::*;
   /// let mut arr = [0, 0];
   /// let mut sv = SliceVec::from_slice_len(&mut arr, 0);
-  /// assert_eq!(&sv[..], []);
+  /// assert_eq!(&sv[..], [] as [i32; 0]);
   /// sv.push(1);
   /// assert_eq!(&sv[..], [1]);
   /// sv.push(2);

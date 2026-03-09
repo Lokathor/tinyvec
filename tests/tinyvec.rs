@@ -23,7 +23,7 @@ fn TinyVec_swap_remove() {
   assert_eq!(tv.swap_remove(0), 3);
   assert_eq!(&tv[..], &[2][..]);
   assert_eq!(tv.swap_remove(0), 2);
-  assert_eq!(&tv[..], &[][..]);
+  assert_eq!(&tv[..], &[][..] as &[i32]);
 }
 
 #[test]

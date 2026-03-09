@@ -339,6 +339,33 @@ where
   }
 }
 
+#[cfg(feature = "schemars")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "schemars")))]
+impl<A> schemars::JsonSchema for TinyVec<A>
+where
+  A: Array,
+  <A as Array>::Item: schemars::JsonSchema,
+{
+  fn schema_name() -> alloc::borrow::Cow<'static, str> {
+    alloc::format!(
+      "Array_up_to_size_{}_of_{}",
+      A::CAPACITY,
+      <A as Array>::Item::schema_name()
+    )
+    .into()
+  }
+
+  fn json_schema(
+    generator: &mut schemars::SchemaGenerator,
+  ) -> schemars::Schema {
+    schemars::json_schema!({
+        "type": "array",
+        "items": generator.subschema_for::<<A as Array>::Item>(),
+        "maxItems": A::CAPACITY
+    })
+  }
+}
+
 impl<A: Array> TinyVec<A> {
   /// Returns whether elements are on heap
   #[inline(always)]
@@ -912,7 +939,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   ///
   /// tv.drain(..);
-  /// assert_eq!(tv.as_slice(), &[]);
+  /// assert_eq!(tv.as_slice(), &[] as &[i32]);
   /// ```
   #[inline]
   pub fn drain<R: RangeBounds<usize>>(
@@ -1167,7 +1194,7 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   ///
   /// tv.splice(.., None);
-  /// assert_eq!(tv.as_slice(), &[]);
+  /// assert_eq!(tv.as_slice(), &[] as &[i32]);
   /// ```
   #[inline]
   pub fn splice<R, I>(
