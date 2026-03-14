@@ -23,6 +23,7 @@ arbitrary_stateful_operations! {
             fn extend_from_slice(&mut self, sli: &Box<[T]>);
             fn insert(&mut self, index: usize, item: T);
             fn is_empty(&self) -> bool;
+            fn is_full(&self) -> bool;
             fn len(&self) -> usize;
             fn pop(&mut self) -> Option<T>;
             fn push(&mut self, item: T);

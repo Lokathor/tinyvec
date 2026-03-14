@@ -4,11 +4,11 @@ use core::convert::{TryFrom, TryInto};
 #[cfg(feature = "serde")]
 use core::marker::PhantomData;
 #[cfg(feature = "serde")]
-use serde::de::{
+use serde_core::de::{
   Deserialize, Deserializer, Error as DeserializeError, SeqAccess, Visitor,
 };
 #[cfg(feature = "serde")]
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use serde_core::ser::{Serialize, SerializeSeq, Serializer};
 
 /// Helper to make an `ArrayVec`.
 ///
@@ -703,6 +703,13 @@ impl<A: Array> ArrayVec<A> {
     self.len == 0
   }
 
+  /// Checks if the length is equal to capacity.
+  #[inline(always)]
+  #[must_use]
+  pub fn is_full(&self) -> bool {
+    self.len() == self.capacity()
+  }
+
   /// The length of the `ArrayVec` (in elements).
   #[inline(always)]
   #[must_use]
@@ -1332,6 +1339,17 @@ impl<A> ArrayVec<A> {
   pub const fn as_inner(&self) -> &A {
     &self.data
   }
+
+  /// Returns a mutable reference to the inner array of the `ArrayVec`.
+  ///
+  /// This returns the full array, even if the `ArrayVec` length is currently
+  /// less than that.
+  #[inline(always)]
+  #[must_use]
+  #[cfg(feature = "latest_stable_rust")]
+  pub const fn as_mut_inner(&mut self) -> &mut A {
+    &mut self.data
+  }
 }
 
 /// Splicing iterator for `ArrayVec`
@@ -1497,6 +1515,7 @@ impl<A: Array> From<A> for ArrayVec<A> {
 /// The error type returned when a conversion from a slice to an [`ArrayVec`]
 /// fails.
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TryFromSliceError(());
 
 impl core::fmt::Display for TryFromSliceError {
@@ -1651,6 +1670,17 @@ where
   }
 }
 
+#[cfg(feature = "defmt")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "defmt")))]
+impl<A: Array> defmt::Format for ArrayVecIterator<A>
+where
+  A::Item: defmt::Format,
+{
+  fn format(&self, fmt: defmt::Formatter<'_>) {
+    defmt::write!(fmt, "ArrayVecIterator({:?})", self.as_slice())
+  }
+}
+
 impl<A: Array> IntoIterator for ArrayVec<A> {
   type Item = A::Item;
   type IntoIter = ArrayVecIterator<A>;
@@ -1788,6 +1818,17 @@ where
   #[allow(clippy::missing_inline_in_public_items)]
   fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
     <[A::Item] as Debug>::fmt(self.as_slice(), f)
+  }
+}
+
+#[cfg(feature = "defmt")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "defmt")))]
+impl<A: Array> defmt::Format for ArrayVec<A>
+where
+  A::Item: defmt::Format,
+{
+  fn format(&self, fmt: defmt::Formatter<'_>) {
+    defmt::Format::format(self.as_slice(), fmt)
   }
 }
 
