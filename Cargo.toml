@@ -99,7 +99,7 @@ debug = 2
 members = ["fuzz"]
 
 [dev-dependencies]
-criterion = "0.3.0"
+criterion = "0.8.0"
 serde_test = "1.0"
 smallvec = "1"
 debugger_test = "0.1"
