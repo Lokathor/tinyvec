@@ -42,3 +42,6 @@ mod const_generic_impl;
 
 #[cfg(feature = "generic-array")]
 mod generic_array_impl;
+
+#[cfg(feature = "hybrid-array")]
+mod hybrid_array_impl;
