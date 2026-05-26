@@ -85,11 +85,11 @@ mod test {
 
     let mut ar: ConstGenericArray<S, 2> = ConstGenericArray::<S, 2>::from_array([S { x: 1, y: 2 }, S { x: 3, y: 4 }]);
     let mut buf_ar = String::new();
-    write!(&mut buf_ar, "{ar:#?}");
+    write!(&mut buf_ar, "{:#?}", ar.as_slice()).unwrap();
 
     let av: TinyGenericVec<S, 2> = TinyGenericVec::<S, 2>::from_array_len(ar, 2);
     let mut buf_av = String::new();
-    write!(&mut buf_av, "{av:#?}");
+    write!(&mut buf_av, "{av:#?}").unwrap();
 
     assert_eq!(buf_av, buf_ar)
   }
