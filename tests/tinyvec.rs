@@ -478,6 +478,20 @@ fn TinyVec_borsh_de_heap() {
   assert_eq!(tv, des);
 }
 
+#[cfg(feature = "borsh")]
+#[test]
+fn TinyVec_borsh_de_hostile_length_no_abort() {
+  // A tiny buffer that claims an enormous element count but supplies no
+  // elements. Before the cautious-capacity fix this drove
+  // `with_capacity(huge)` and aborted the process; now the eager reservation
+  // is bounded and decoding simply fails on the missing element bytes.
+  let huge: u64 = 1u64 << 60;
+  let mut buffer = Vec::new();
+  buffer.extend_from_slice(&huge.to_le_bytes());
+  let des: Result<TinyVec<[u32; 4]>, _> = borsh::from_slice(&buffer);
+  assert!(des.is_err());
+}
+
 #[cfg(feature = "bin-proto")]
 #[test]
 fn TinyVec_bin_proto_encode_untagged() {
