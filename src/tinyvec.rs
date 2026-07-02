@@ -234,6 +234,25 @@ where
   }
 }
 
+/// Caps an untrusted, deserialized element count before it is handed to
+/// `with_capacity`, so a hostile length prefix cannot force a huge eager
+/// allocation (and its allocation-abort DoS) before a single element has been
+/// read. The reservation is limited to `MAX_PREALLOC_BYTES` worth of items; the
+/// container still grows to the real length via `push` as elements actually
+/// arrive, so well-formed input is unaffected.
+#[cfg(any(feature = "borsh", feature = "bin-proto", feature = "serde"))]
+fn cautious_capacity<T>(len: usize) -> usize {
+  // Mirrors serde's `size_hint::cautious`: never trust a wire-provided length
+  // as an allocation size.
+  const MAX_PREALLOC_BYTES: usize = 4096;
+  let item_size = core::mem::size_of::<T>();
+  if item_size == 0 {
+    len
+  } else {
+    core::cmp::min(len, MAX_PREALLOC_BYTES / item_size)
+  }
+}
+
 #[cfg(feature = "borsh")]
 #[cfg_attr(docs_rs, doc(cfg(feature = "borsh")))]
 impl<A: Array> borsh::BorshDeserialize for TinyVec<A>
@@ -244,7 +263,8 @@ where
     reader: &mut R,
   ) -> borsh::io::Result<Self> {
     let len = <usize as borsh::BorshDeserialize>::deserialize_reader(reader)?;
-    let mut new_tinyvec = Self::with_capacity(len);
+    let mut new_tinyvec =
+      Self::with_capacity(cautious_capacity::<A::Item>(len));
 
     for _ in 0..len {
       new_tinyvec.push(
@@ -313,7 +333,8 @@ where
   {
     let item_count =
       tag.0.try_into().map_err(|_| bin_proto::Error::TagConvert)?;
-    let mut values = Self::with_capacity(item_count);
+    let mut values =
+      Self::with_capacity(cautious_capacity::<A::Item>(item_count));
     for _ in 0..item_count {
       values.push(bin_proto::BitDecode::<_, _>::decode::<_, E>(read, ctx, ())?);
     }
@@ -1951,7 +1972,9 @@ where
     S: SeqAccess<'de>,
   {
     let mut new_tinyvec = match seq.size_hint() {
-      Some(expected_size) => TinyVec::with_capacity(expected_size),
+      Some(expected_size) => {
+        TinyVec::with_capacity(cautious_capacity::<A::Item>(expected_size))
+      }
       None => Default::default(),
     };
 
