@@ -362,6 +362,33 @@ where
   }
 }
 
+#[cfg(feature = "schemars")]
+#[cfg_attr(docs_rs, doc(cfg(feature = "schemars")))]
+impl<A> schemars::JsonSchema for ArrayVec<A>
+where
+  A: Array,
+  <A as Array>::Item: schemars::JsonSchema,
+{
+  fn schema_name() -> alloc::borrow::Cow<'static, str> {
+    alloc::format!(
+      "Array_up_to_size_{}_of_{}",
+      A::CAPACITY,
+      <A as Array>::Item::schema_name()
+    )
+    .into()
+  }
+
+  fn json_schema(
+    generator: &mut schemars::SchemaGenerator,
+  ) -> schemars::Schema {
+    schemars::json_schema!({
+        "type": "array",
+        "items": generator.subschema_for::<<A as Array>::Item>(),
+        "maxItems": A::CAPACITY
+    })
+  }
+}
+
 impl<A: Array> ArrayVec<A> {
   /// Move all values from `other` into this vec.
   ///
@@ -493,7 +520,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
   ///
   /// av.drain(..);
-  /// assert_eq!(av.as_slice(), &[]);
+  /// assert_eq!(av.as_slice(), &[] as &[i32]);
   /// ```
   #[inline]
   pub fn drain<R>(&mut self, range: R) -> ArrayVecDrain<'_, A::Item>
@@ -758,7 +785,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// # use tinyvec::*;
   /// let mut av = array_vec!([i32; 2]);
-  /// assert_eq!(&av[..], []);
+  /// assert_eq!(&av[..], [] as [i32; 0]);
   /// av.push(1);
   /// assert_eq!(&av[..], [1]);
   /// av.push(2);
@@ -777,7 +804,7 @@ impl<A: Array> ArrayVec<A> {
   /// ```rust
   /// # use tinyvec::*;
   /// let mut av = array_vec!([i32; 2]);
-  /// assert_eq!(av.as_slice(), []);
+  /// assert_eq!(av.as_slice(), [] as [i32; 0]);
   /// assert_eq!(av.try_push(1), None);
   /// assert_eq!(&av[..], [1]);
   /// assert_eq!(av.try_push(2), None);
@@ -1090,7 +1117,7 @@ impl<A: Array> ArrayVec<A> {
   /// assert_eq!(av2.as_slice(), &[2, 3][..]);
   ///
   /// av.splice(.., None);
-  /// assert_eq!(av.as_slice(), &[]);
+  /// assert_eq!(av.as_slice(), &[] as &[i32]);
   /// ```
   #[inline]
   pub fn splice<R, I>(
@@ -1246,7 +1273,7 @@ impl<A> ArrayVec<A> {
   /// ```rust
   /// # use tinyvec::ArrayVec;
   /// let mut data = ArrayVec::from_array_empty([1, 2, 3, 4]);
-  /// assert_eq!(&data[..], &[]);
+  /// assert_eq!(&data[..], &[] as &[i32]);
   /// data.push(42);
   /// assert_eq!(&data[..], &[42]);
   /// ```
