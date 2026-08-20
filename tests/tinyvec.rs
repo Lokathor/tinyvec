@@ -33,6 +33,22 @@ fn TinyVec_capacity() {
   tv.move_to_the_heap();
   tv.extend_from_slice(&[1, 2, 3, 4]);
   assert_eq!(tv.capacity(), 4);
+
+  let tv = TinyVec::<[i32; 10]>::with_capacity(5);
+  assert!(tv.is_inline());
+  assert!(tv.capacity() >= 5);
+
+  let tv = TinyVec::<[i32; 10]>::with_capacity(20);
+  assert!(tv.is_heap());
+  assert!(tv.capacity() >= 20);
+
+  let tv = TinyVec::<[i32; 10]>::with_initial_len(5);
+  assert!(tv.is_inline());
+  assert_eq!(tv.len(), 5);
+
+  let tv = TinyVec::<[i32; 10]>::with_initial_len(20);
+  assert!(tv.is_heap());
+  assert_eq!(tv.len(), 20);
 }
 
 #[test]

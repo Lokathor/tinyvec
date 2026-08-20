@@ -1,5 +1,9 @@
 # Changelog
 
+## Next (Unreleased)
+
+* Adds `TinyVec::with_initial_len`
+
 ## 1.12
 
 * Add `schemars` support.
