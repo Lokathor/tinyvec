@@ -2220,6 +2220,6 @@ mod test {
     assert_eq!(buffer.len(), 0);
     use core::fmt::Write;
     write!(buffer, "abc").unwrap();
-    assert_eq!(buffer.len(), 3);
+    assert_eq!(buffer.as_slice(), b"abc");
   }
 }
