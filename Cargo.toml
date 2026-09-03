@@ -100,7 +100,7 @@ lto = "thin"
 debug = 2
 
 [workspace]
-members = ["fuzz"]
+#members = ["fuzz"]
 
 [dev-dependencies]
 criterion = "0.8.0"
