@@ -46,7 +46,7 @@ macro_rules! tiny_vec {
           f($crate::array_vec!($array_type => $($elem),*))
         }
         $crate::TinyVecConstructor::Heap(f) => {
-          f(vec!($($elem),*))
+          f(vec![$($elem),*])
         }
       }
     }
