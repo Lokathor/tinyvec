@@ -1797,13 +1797,15 @@ where
 
 #[cfg(feature = "experimental_write_impl")]
 impl<A: Array<Item = u8>> core::fmt::Write for ArrayVec<A> {
+  #[allow(clippy::missing_inline_in_public_items)]
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
     let my_len = self.len();
-    let str_len = s.as_bytes().len();
+    let str_len = s.len();
     if my_len + str_len <= A::CAPACITY {
       let remainder = &mut self.data.as_slice_mut()[my_len..];
       let target = &mut remainder[..str_len];
       target.copy_from_slice(s.as_bytes());
+      self.len += str_len as u16;
       Ok(())
     } else {
       Err(core::fmt::Error)
@@ -2200,12 +2202,23 @@ mod test {
 
     let mut ar: [S; 2] = [S { x: 1, y: 2 }, S { x: 3, y: 4 }];
     let mut buf_ar = alloc::string::String::new();
-    write!(&mut buf_ar, "{ar:#?}");
+    write!(&mut buf_ar, "{ar:#?}").unwrap();
 
     let av: ArrayVec<[S; 2]> = ArrayVec::from(ar);
     let mut buf_av = alloc::string::String::new();
-    write!(&mut buf_av, "{av:#?}");
+    write!(&mut buf_av, "{av:#?}").unwrap();
 
     assert_eq!(buf_av, buf_ar)
+  }
+
+  #[cfg(feature = "experimental_write_impl")]
+  #[test]
+  #[allow(non_snake_case)]
+  fn test_ArrayVec_experimental_write_impl() {
+    let mut buffer: ArrayVec<[u8; 10]> = ArrayVec::default();
+    assert_eq!(buffer.len(), 0);
+    use core::fmt::Write;
+    write!(buffer, "abc").unwrap();
+    assert_eq!(buffer.len(), 3);
   }
 }
