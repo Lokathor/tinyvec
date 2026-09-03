@@ -2193,6 +2193,7 @@ mod test {
   #[test]
   fn array_like_debug() {
     #[derive(Debug, Default, Copy, Clone)]
+    #[allow(unused)]
     struct S {
       x: u8,
       y: u8,
