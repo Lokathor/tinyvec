@@ -31,6 +31,10 @@ jobs:
       if: matrix.rust == '1.60.0'
       run: |
         cargo check --features=alloc,std,grab_spare_slice
+    - name: Check no_std with alloc
+      if: matrix.rust != '1.60.0'
+      run: |
+        cargo check --no-default-features --features=alloc,grab_spare_slice,latest_stable_rust
     - name: Test non nightly
       if: matrix.rust != '1.60.0' && matrix.rust != 'nightly'
       run: |

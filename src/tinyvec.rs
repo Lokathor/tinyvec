@@ -707,7 +707,7 @@ impl<A: Array> TinyVec<A> {
     if len <= A::CAPACITY {
       TinyVec::Inline(ArrayVec::from_array_len(A::default(), len))
     } else {
-      TinyVec::Heap(vec![A::Item::default(); len])
+      TinyVec::Heap(alloc::vec![A::Item::default(); len])
     }
   }
 
