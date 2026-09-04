@@ -113,6 +113,10 @@ debugger_test_parser = "0.1"
 name = "tinyvec"
 required-features = ["alloc", "std"]
 
+[[test]]
+name = "no_std_macro"
+required-features = ["alloc"]
+
 [[bench]]
 name = "macros"
 harness = false

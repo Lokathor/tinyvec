@@ -1,6 +1,6 @@
 use super::*;
 
-use alloc::vec::{self, Vec};
+use alloc::vec::{Drain, Vec};
 use core::convert::TryFrom;
 use tinyvec_macros::impl_mirrored;
 
@@ -46,7 +46,7 @@ macro_rules! tiny_vec {
           f($crate::array_vec!($array_type => $($elem),*))
         }
         $crate::TinyVecConstructor::Heap(f) => {
-          f(vec![$($elem),*])
+          f($crate::alloc::vec![$($elem),*])
         }
       }
     }
@@ -1308,7 +1308,7 @@ pub enum TinyVecDrain<'p, A: Array> {
   #[allow(missing_docs)]
   Inline(ArrayVecDrain<'p, A::Item>),
   #[allow(missing_docs)]
-  Heap(vec::Drain<'p, A::Item>),
+  Heap(Drain<'p, A::Item>),
 }
 
 impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
