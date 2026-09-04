@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.2
+
+* Another bug having to do with macro expansion on `no_std` targets was fixed.
+
 ## 1.13.1
 
 * fix bug where crate couldn't build for `alloc` without `std` too.
