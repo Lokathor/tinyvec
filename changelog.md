@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.1
+
+* fix bug where crate couldn't build for `alloc` without `std` too.
+
 ## 1.13
 
 * Adds `TinyVec::with_initial_len`
