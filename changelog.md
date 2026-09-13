@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.3
+
+* The `tinyvec_macros` crate is no longer depended on by this crate, but a cargo feature of the same name was added to avoid edge case breakage.
+
 ## 1.13.2
 
 * Another bug having to do with macro expansion on `no_std` targets was fixed.
