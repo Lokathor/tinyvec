@@ -11,7 +11,6 @@ repository = "https://github.com/Lokathor/tinyvec"
 exclude = ["/.github", "/*.py", "/*.sh", "/src-backup"]
 
 [dependencies]
-tinyvec_macros = { version = "0.1", optional = true }
 # Provides `Serialize` and `Deserialize` implementations
 serde_core = { version = "1.0", optional = true, default-features = false }
 # Provides derived `Arbitrary` implementations
@@ -27,12 +26,11 @@ defmt = { version = "1.0", optional = true }
 # Provides `JsonSchema` implementations
 schemars = { version = "1.0", optional = true, default-features = false }
 
-
 [features]
 default = []
 
 # Provide things that utilize the `alloc` crate, namely `TinyVec`.
-alloc = ["tinyvec_macros"]
+alloc = []
 
 # Provide things that require Rust's `std` module
 std = ["alloc"]
@@ -62,6 +60,9 @@ rustc_1_61 = ["rustc_1_57"]
 # abilities of the latest release of Stable rust, and we don't need a million
 # features forever now.
 latest_stable_rust = ["rustc_1_61"]
+
+# this was an optional dependency once, and is now a do-nothing feature to avoid breakage.
+tinyvec_macros = []
 
 # allow use of nightly feature `slice_partition_dedup`,
 # will become useless once that is stabilized:

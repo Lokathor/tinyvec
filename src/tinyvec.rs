@@ -2,7 +2,6 @@ use super::*;
 
 use alloc::vec::{Drain, Vec};
 use core::convert::TryFrom;
-use tinyvec_macros::impl_mirrored;
 
 #[cfg(feature = "rustc_1_57")]
 use alloc::collections::TryReserveError;
@@ -13,6 +12,27 @@ use core::marker::PhantomData;
 use serde_core::de::{Deserialize, Deserializer, SeqAccess, Visitor};
 #[cfg(feature = "serde")]
 use serde_core::ser::{Serialize, SerializeSeq, Serializer};
+
+macro_rules! impl_mirrored {
+  {
+  type Mirror = $tinyname:ident;
+  $(
+    $(#[$attr:meta])*
+    $v:vis fn $fname:ident ($seif:ident : $seifty:ty $(,$argname:ident : $argtype:ty)*) $(-> $ret:ty)? ;
+  )*
+  } => {
+    $(
+    $(#[$attr])*
+    #[inline(always)]
+    $v fn $fname($seif : $seifty, $($argname: $argtype),*) $(-> $ret)? {
+      match $seif {
+        $tinyname::Inline(i) => i.$fname($($argname),*),
+        $tinyname::Heap(h) => h.$fname($($argname),*),
+      }
+    }
+    )*
+  };
+}
 
 /// Helper to make a `TinyVec`.
 ///
