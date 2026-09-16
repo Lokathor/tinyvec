@@ -559,6 +559,12 @@ impl<'s, T> SliceVec<'s, T> {
   /// ```
   #[inline]
   pub fn split_off<'a>(&'a mut self, at: usize) -> SliceVec<'s, T> {
+    if at > self.len() {
+      panic!(
+        "SliceVec::split_off> at value {} exceeds length of {}",
+        at, self.len
+      );
+    }
     let mut new = Self::default();
     let backing: &'s mut [T] = core::mem::take(&mut self.data);
     let (me, other) = backing.split_at_mut(at);
@@ -1121,5 +1127,24 @@ mod test {
     write!(&mut buf_av, "{av:#?}").unwrap();
 
     assert_eq!(buf_av, buf_ar)
+  }
+
+  #[test]
+  #[should_panic]
+  fn split_off_past_len_panics() {
+    // `at` is within the backing slice but past the vec's length, so this
+    // must panic the same way `ArrayVec::split_off` does.
+    let mut arr = [1, 2, 3, 4, 5];
+    let mut sv = SliceVec::from_slice_len(&mut arr, 2);
+    let _ = sv.split_off(3);
+  }
+
+  #[test]
+  fn split_off_at_len_is_allowed() {
+    let mut arr = [1, 2, 3, 4, 5];
+    let mut sv = SliceVec::from_slice_len(&mut arr, 2);
+    let sv2 = sv.split_off(2);
+    assert_eq!(&sv[..], [1, 2]);
+    assert_eq!(&sv2[..], [] as [i32; 0]);
   }
 }
