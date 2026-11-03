@@ -160,8 +160,6 @@ impl<A: Array> Deref for TinyVec<A> {
 
   impl_mirrored! {
     type Mirror = TinyVec;
-    #[inline(always)]
-    #[must_use]
     fn deref(self: &Self) -> &Self::Target;
   }
 }
@@ -169,8 +167,6 @@ impl<A: Array> Deref for TinyVec<A> {
 impl<A: Array> DerefMut for TinyVec<A> {
   impl_mirrored! {
     type Mirror = TinyVec;
-    #[inline(always)]
-    #[must_use]
     fn deref_mut(self: &mut Self) -> &mut Self::Target;
   }
 }
@@ -824,14 +820,12 @@ impl<A: Array> TinyVec<A> {
     /// assert_eq!(tv.swap_remove(0), "foo");
     /// assert_eq!(tv.as_slice(), &["quack", "zap"][..]);
     /// ```
-    #[inline]
     pub fn swap_remove(self: &mut Self, index: usize) -> A::Item;
 
     /// Remove and return the last element of the vec, if there is one.
     ///
     /// ## Failure
     /// * If the vec is empty you get `None`.
-    #[inline]
     pub fn pop(self: &mut Self) -> Option<A::Item>;
 
     /// Removes the item at `index`, shifting all others down by one index.
@@ -850,11 +844,9 @@ impl<A: Array> TinyVec<A> {
     /// assert_eq!(tv.remove(1), 2);
     /// assert_eq!(tv.as_slice(), &[1, 3][..]);
     /// ```
-    #[inline]
     pub fn remove(self: &mut Self, index: usize) -> A::Item;
 
     /// The length of the vec (in elements).
-    #[inline(always)]
     #[must_use]
     pub fn len(self: &Self) -> usize;
 
@@ -862,14 +854,12 @@ impl<A: Array> TinyVec<A> {
     ///
     /// When not heap allocated this is fixed based on the array type.
     /// Otherwise its the result of the underlying Vec::capacity.
-    #[inline(always)]
     #[must_use]
     pub fn capacity(self: &Self) -> usize;
 
     /// Reduces the vec's length to the given value.
     ///
     /// If the vec is already shorter than the input, nothing happens.
-    #[inline]
     pub fn truncate(self: &mut Self, new_len: usize);
 
     /// A mutable pointer to the backing array.
@@ -877,7 +867,6 @@ impl<A: Array> TinyVec<A> {
     /// ## Safety
     ///
     /// This pointer has provenance over the _entire_ backing array/buffer.
-    #[inline(always)]
     #[must_use]
     pub fn as_mut_ptr(self: &mut Self) -> *mut A::Item;
 
@@ -886,7 +875,6 @@ impl<A: Array> TinyVec<A> {
     /// ## Safety
     ///
     /// This pointer has provenance over the _entire_ backing array/buffer.
-    #[inline(always)]
     #[must_use]
     pub fn as_ptr(self: &Self) -> *const A::Item;
   }
@@ -1110,21 +1098,18 @@ impl<A: Array> TinyVec<A> {
   }
 
   /// If the vec is empty.
-  #[inline(always)]
   #[must_use]
   pub fn is_empty(&self) -> bool {
     self.len() == 0
   }
 
   /// Makes a new, empty vec.
-  #[inline(always)]
   #[must_use]
   pub fn new() -> Self {
     Self::default()
   }
 
   /// Place an element onto the end of the vec.
-  #[inline]
   pub fn push(&mut self, val: A::Item) {
     // The code path for moving the inline contents to the heap produces a lot
     // of instructions, but we have a strong guarantee that this is a cold
@@ -1173,7 +1158,6 @@ impl<A: Array> TinyVec<A> {
   /// tv.resize(2, 0);
   /// assert_eq!(tv.as_slice(), &[1, 2][..]);
   /// ```
-  #[inline]
   pub fn resize(&mut self, new_len: usize, new_val: A::Item)
   where
     A::Item: Clone,
@@ -1203,7 +1187,6 @@ impl<A: Array> TinyVec<A> {
   /// });
   /// assert_eq!(tv.as_slice(), &[2, 4, 8, 16][..]);
   /// ```
-  #[inline]
   pub fn resize_with<F: FnMut() -> A::Item>(&mut self, new_len: usize, f: F) {
     match new_len.checked_sub(self.len()) {
       None => return self.truncate(new_len),
@@ -1233,7 +1216,6 @@ impl<A: Array> TinyVec<A> {
   /// assert_eq!(tv.as_slice(), &[1][..]);
   /// assert_eq!(tv2.as_slice(), &[2, 3][..]);
   /// ```
-  #[inline]
   pub fn split_off(&mut self, at: usize) -> Self {
     match self {
       TinyVec::Inline(a) => TinyVec::Inline(a.split_off(at)),
@@ -1264,7 +1246,6 @@ impl<A: Array> TinyVec<A> {
   /// tv.splice(.., None);
   /// assert_eq!(tv.as_slice(), &[] as &[i32]);
   /// ```
-  #[inline]
   pub fn splice<R, I>(
     &mut self, range: R, replacement: I,
   ) -> TinyVecSplice<'_, A, core::iter::Fuse<I::IntoIter>>
@@ -1337,15 +1318,10 @@ impl<'p, A: Array> Iterator for TinyVecDrain<'p, A> {
   impl_mirrored! {
     type Mirror = TinyVecDrain;
 
-    #[inline]
     fn next(self: &mut Self) -> Option<Self::Item>;
-    #[inline]
     fn nth(self: &mut Self, n: usize) -> Option<Self::Item>;
-    #[inline]
     fn size_hint(self: &Self) -> (usize, Option<usize>);
-    #[inline]
     fn last(self: Self) -> Option<Self::Item>;
-    #[inline]
     fn count(self: Self) -> usize;
   }
 
@@ -1362,10 +1338,8 @@ impl<'p, A: Array> DoubleEndedIterator for TinyVecDrain<'p, A> {
   impl_mirrored! {
     type Mirror = TinyVecDrain;
 
-    #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }
 }
@@ -1652,7 +1626,6 @@ impl<A: Array> TinyVecIterator<A> {
   impl_mirrored! {
     type Mirror = TinyVecIterator;
     /// Returns the remaining items of this iterator as a slice.
-    #[inline]
     #[must_use]
     pub fn as_slice(self: &Self) -> &[A::Item];
   }
@@ -1666,20 +1639,14 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
   impl_mirrored! {
     type Mirror = TinyVecIterator;
 
-    #[inline]
     fn next(self: &mut Self) -> Option<Self::Item>;
 
-    #[inline(always)]
-    #[must_use]
     fn size_hint(self: &Self) -> (usize, Option<usize>);
 
-    #[inline(always)]
     fn count(self: Self) -> usize;
 
-    #[inline]
     fn last(self: Self) -> Option<Self::Item>;
 
-    #[inline]
     fn nth(self: &mut Self, n: usize) -> Option<A::Item>;
   }
 }
@@ -1688,10 +1655,8 @@ impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
   impl_mirrored! {
     type Mirror = TinyVecIterator;
 
-    #[inline]
     fn next_back(self: &mut Self) -> Option<Self::Item>;
 
-    #[inline]
     fn nth_back(self: &mut Self, n: usize) -> Option<Self::Item>;
   }
 }
@@ -1699,7 +1664,6 @@ impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
 impl<A: Array> ExactSizeIterator for TinyVecIterator<A> {
   impl_mirrored! {
     type Mirror = TinyVecIterator;
-    #[inline]
     fn len(self: &Self) -> usize;
   }
 }
