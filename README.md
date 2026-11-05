@@ -7,7 +7,7 @@
 
 # tinyvec
 
-A 100% safe crate of vec-like types.
+A 100% safe crate of small vec-like types.
 Not just safe at the public API boundary, fully safe for all internal code too: `#![forbid(unsafe_code)]`
 
 The provided types are as follows:
