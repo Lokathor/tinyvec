@@ -1682,6 +1682,17 @@ impl<A: Array> Iterator for TinyVecIterator<A> {
     #[inline]
     fn nth(self: &mut Self, n: usize) -> Option<A::Item>;
   }
+
+  #[inline]
+  fn fold<B, F>(self, init: B, f: F) -> B
+  where
+    F: FnMut(B, Self::Item) -> B,
+  {
+    match self {
+      TinyVecIterator::Inline(i) => i.fold(init, f),
+      TinyVecIterator::Heap(h) => h.fold(init, f),
+    }
+  }
 }
 
 impl<A: Array> DoubleEndedIterator for TinyVecIterator<A> {
