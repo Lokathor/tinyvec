@@ -1649,6 +1649,15 @@ impl<A: Array> Iterator for ArrayVecIterator<A> {
     self.base = self.tail;
     return None;
   }
+  #[inline]
+  fn fold<B, F>(mut self, init: B, f: F) -> B
+  where
+    F: FnMut(B, Self::Item) -> B,
+  {
+    let slice =
+      &mut self.data.as_slice_mut()[self.base as usize..self.tail as usize];
+    slice.iter_mut().map(core::mem::take).fold(init, f)
+  }
 }
 
 impl<A: Array> DoubleEndedIterator for ArrayVecIterator<A> {
